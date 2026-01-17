@@ -1,0 +1,397 @@
+
+{
+  "dashboard": {
+    "rosterTitle": "Crew Roster",
+    "actionsTitle": "Campaign Actions",
+    "otherActions": "Other Actions",
+    "campaignTurn": "Campaign Turn",
+    "crewSize": "Crew Size",
+    "crewAssignments": {
+      "title": "Crew Assignments",
+      "availableMembers": "Available for Tasks",
+      "resultsTitle": "Task Results This Turn",
+      "noTasksRun": "No tasks performed yet this turn.",
+      "noAvailable": "No crew members are available for tasks.",
+      "selectTask": "Select a task...",
+      "unavailable": "Unavailable Members",
+      "disgruntled": "Disgruntled",
+      "recovering": "Recovering",
+      "speciesRestricted": "Species restricted on this world",
+      "tasksFinalized": "Tasks for this turn have been resolved.",
+      "extraTaskTitle": "Extra Task",
+      "extraTaskUsed": "You have already used a story point for an extra task this turn.",
+      "selectCompleted": "Select completed member...",
+      "noSPForTask": "Not enough Story Points for an extra task.",
+      "extraTaskButton": "Grant Task (1 SP)",
+      "buyExtraRoll": "Buy Extra Roll (3cr)"
+    },
+    "jobBoard": {
+      "title": "Job Board",
+      "reward": "Reward",
+      "noOffers": "No job offers available. Advance the turn to refresh.",
+      "patron": "Patron",
+      "dangerPay": "Danger Pay",
+      "timeFrame": "Time Frame",
+      "benefit": "Benefit",
+      "hazard": "Hazard",
+      "condition": "Condition",
+      "blacklisted": "You have been blacklisted from Patron jobs on this world."
+    },
+    "activeMission": {
+      "title": "Active Mission",
+      "deadline": "Deadline: End of turn {turn}"
+    },
+    "shipHull": "Ship Hull",
+    "debt": "Debt",
+    "fuelCredits": "Fuel Credits",
+    "contacts": {
+      "title": "Contacts & Adversaries",
+      "patrons": "Patrons",
+      "rivals": "Rivals",
+      "noPatrons": "No active patrons.",
+      "noRivals": "No active rivals."
+    },
+    "shipStash": {
+      "title": "Ship Stash & Systems",
+      "onBoardSystems": "On-Board Systems",
+      "gearLocker": "Gear Locker",
+      "shipUpgrades": "Ship Upgrades",
+      "installedComponents": "Installed Components",
+      "availableUpgrades": "Available Upgrades",
+      "noOnBoardItems": "No on-board systems installed.",
+      "selectCrew": "Select Crew...",
+      "weapons": "Weapons",
+      "protectiveGear": "Protective Gear",
+      "consumables": "Consumables",
+      "none": "None",
+      "armor": "Armor",
+      "screen": "Screen"
+    },
+    "worldInfo": {
+      "title": "Current World",
+      "licenseRequired": "License Required ({cost}cr)",
+      "licenseOwned": "Freelancer License Owned",
+      "redZoneWarning": "WARNING: RED ZONE",
+      "licenseNeededTooltip": "A Freelancer License is required to accept Patron jobs on this world.",
+      "forgeTitle": "Attempt License Forgery",
+      "forgeDescription": "Select a crew member to attempt the forgery. This can only be attempted once per world. A roll of 6+ on 1D6+Savvy is required. A natural 1 on the roll will attract unwanted attention.",
+      "selectCharacter": "Select a character...",
+      "forgeryAttempted": "A forgery has already been attempted on this world.",
+      "interdictionWarning": "Interdiction in effect. You must leave this system in {turns} turn(s) or obtain an extension.",
+      "interdictionEnforced": "Interdiction enforced! You must leave this system this turn.",
+      "licenseExtensionButton": "Request License Extension",
+      "licenseAttempted": "You have already petitioned the local authorities."
+    },
+    "invasion": {
+      "title": "INVASION!",
+      "description": "This world is being invaded! You must attempt to flee or be forced into an Invasion Battle. An 8+ on 2D6 is required to escape."
+    },
+    "sp_actions": {
+        "title": "Story Point Actions",
+        "get_credits": "Get 3 Credits",
+        "get_xp": "Give +3 XP",
+        "select_char": "Select character...",
+        "used_this_turn": "Used this turn.",
+        "get_credits_button": "3 Credits (1 SP)",
+        "get_xp_button": "+3 XP (1 SP)"
+    },
+    "rivalAttack": {
+      "title": "Rival Attack!",
+      "description": "{rivalName} has tracked you down! You must confront them now."
+    },
+    "tooltips": {
+      "actions": {
+        "finalizeTasksFirst": "You must finalize your crew's tasks for the turn before taking on a mission or advancing.",
+        "insufficientFuelDetailed": "Not enough credits for fuel. Total cost: {total}cr (Requires {credits}cr + {fuel} from fuel credits).",
+        "emergencyTakeoff": "Warning: The ship is damaged! An emergency take-off is risky and will cause further hull damage (3D6).",
+        "redZoneRequirements": "Requires: Turn > 10, Crew >= 7, 15 Credits for license.",
+        "insufficientCreditsCommercial": "Not enough credits for passage (requires {cost}cr).",
+        "sellGearForFuelTooltip": "Only available when you lack sufficient credits for fuel to travel."
+      }
+    },
+    "tradeModal": {
+      "instruction_book_prompt": "Select a crew member to receive +1 XP:",
+      "item_choice_prompt": "Choose one of the following items:",
+      "ordnance_prompt": "Select up to 3 grenades. You have selected {count}/{total}.",
+      "luxury_trinket_prompt": "You found a luxury trinket. You can use it as a gift when recruiting for a +2 bonus, or you can sell it.",
+      "luxury_trinket_recruit": "Keep as a gift (+2 Recruit bonus)",
+      "luxury_trinket_sell": "Sell it (Roll twice on Trade Table)",
+      "contraband_prompt": "You're offered a chance to move contraband for 1D6 credits. On a roll of 4-6 for the pay, you'll also gain a Rival.",
+      "contraband_accept": "Accept the job",
+      "contraband_decline": "Decline the job",
+      "rare_sale_prompt": "A cloaked figure offers you a rare item for 3 credits. Do you buy it?",
+      "odd_device_prompt": "You find an odd device for sale for just 1 credit. Do you buy it?",
+      "buy": "Buy ({cost}cr)",
+      "pass": "Pass",
+      "unload_stuff_prompt": "You find a buyer for unwanted gear. You can sell any weapon for 2 credits, provided it is not damaged.",
+      "unload_stuff_none": "You have no undamaged weapons to sell.",
+      "unload_stuff_done": "Finish selling"
+    },
+    "tradeGoodsModal": {
+      "title": "Trade Goods",
+      "description": "You have arrived on a new world with Trade Goods. Do you want to try and sell them now?",
+      "sellButton": "Sell Goods (1D6cr)",
+      "waitButton": "Wait for a better market"
+    },
+    "freeTradeChoiceModal": {
+      "title": "Free Trade Zone",
+      "description": "{name} rolled twice on the Trade Table thanks to the world's trait. Choose one outcome to pursue:"
+    },
+    "recruitChoiceModal": {
+        "title": "Adventurous Population",
+        "description": "Thanks to the adventurous local population, your recruitment efforts have turned up two potential candidates. Choose one to hire.",
+        "hireButton": "Hire Candidate"
+    },
+    "tradeResults": {
+      "pending": "{name} is making a trade...",
+      "personal_weapon": "{name} found a personal weapon: a {item}.",
+      "sell_cargo": "{name} sold some cargo for a profit of {profit} credits.",
+      "find_useful": "{name} found a useful piece of gear: a {item}.",
+      "quality_food": "{name} found a source of quality food, attracting a potential new recruit.",
+      "instruction_book": "{name} found an instruction book.",
+      "instruction_book_success": "{targetName} studied the book and gained 1 XP.",
+      "bits_of_scrap": "{name} gathered some bits of scrap for {profit} credits.",
+      "medical_pack": "{name} came across some medical supplies.",
+      "item_choice_success": "You chose to take the {item}.",
+      "local_maps": "{name} acquired local star maps, making exploration easier.",
+      "luxury_trinket": "{name} acquired a luxury trinket.",
+      "luxury_trinket_recruit": "You successfully recruited a new crew member!",
+      "luxury_trinket_sell": "You sold the trinket for {credits} credits.",
+      "basic_supplies": "{name} stocked up on basic supplies.",
+      "contraband": "{name} was offered a shady deal.",
+      "contraband_success": "You moved the contraband and earned {credits} credits.",
+      "contraband_decline": "You declined the risky job.",
+      "contraband_trouble": "The deal was profitable, but it attracted unwanted attention! Gained a Rival.",
+      "gun_upgrade_kit": "{name} found a gun upgrade kit.",
+      "trade_goods": "{name} acquired some trade goods to sell later.",
+      "something_interesting": "{name} found something interesting on the market: a {item}!",
+      "fuel": "{name} secured some extra fuel.",
+      "spare_parts": "{name} found some spare parts for the ship.",
+      "rare_sale": "{name} was offered a rare item for sale.",
+      "buy_success": "You bought the item, it was a {item}!",
+      "buy_pass": "You passed on the offer.",
+      "weapon_license_fee": "An additional 1 credit was paid for a weapon license.",
+      "weapon_license_fail": "Could not afford the 1 credit weapon license fee! The weapon was confiscated.",
+      "equip_success": "{name} equipped the {item}.",
+      "stash_success": "The {item} was added to the ship's stash.",
+      "ordnance": "{name} found a stash of ordnance.",
+      "ordnance_success": "You took the grenades.",
+      "basic_firearms": "{name} found a seller of basic firearms.",
+      "odd_device": "{name} found an odd device for sale.",
+      "military_fuel_cell": "{name} found a military-grade fuel cell.",
+      "hot_tip": "{name} got a hot tip, gaining a new rumor.",
+      "insider_information": "{name} acquired some insider information.",
+      "army_surplus": "{name} found a dealer in army surplus gear.",
+      "unload_stuff": "{name} found a buyer for unwanted gear.",
+      "unload_stuff_sold": "You sold a weapon for 2 credits.",
+      "unload_stuff_done": "You finished selling your gear.",
+      "blinking_lights": "{name} bought a strange device with blinking lights. It turned out to be a {item}!",
+      "gently_used": "{name} bought a 'gently used' piece of gear. It turned out to be a {item}!",
+      "pre_owned": "{name} bought a pre-owned item that turned out to be a {item}.",
+      "medical_reserves": "{name} found a stash of medical reserves.",
+      "starship_parts": "{name} found some valuable starship parts.",
+      "trinket_success": "After a closer look (Roll: {roll}), the trinket turned out to be significant! Gained 1 story point.",
+      "trinket_fail": "After a closer look (Roll: {roll}), the trinket was indeed worthless."
+    },
+    "training": {
+      "pilot": { "name": "Pilot Training", "effect": "Reroll Savvy tests during Starship Travel events." },
+      "mechanic": { "name": "Mechanic Training", "effect": "Repair +1 additional ship Hull Point during each Upkeep phase." },
+      "medical": { "name": "Medical School", "effect": "If this character survives a battle, one casualty may roll twice on the Injury Table." },
+      "merchant": { "name": "Merchant School", "effect": "When this character performs the Trade task, you may reroll the result once." },
+      "security": { "name": "Security Training", "effect": "If this character is in a battle, add +1 to Seize the Initiative rolls." },
+      "broker": { "name": "Broker Training", "effect": "+1 to rolls for licenses, Advanced Training applications, and finding Patrons." },
+      "bot_technician": { "name": "Bot Technician", "effect": "All Bot upgrades are 1 credit cheaper. Bots may reroll on the Injury Table." }
+    },
+    "shipAcquisition": {
+      "title": "Ship Acquisition",
+      "searchPrompt": "Your crew is grounded. Search the local starport for a vessel for sale.",
+      "searchButton": "Search for New Ship",
+      "searchedThisTurn": "You have already searched for a ship this turn.",
+      "offerFound": "A ship has been found!",
+      "cost": "Cost",
+      "declineButton": "Decline Offer",
+      "financeOption": "Finance 70cr of the cost (pay {upfront}cr now)."
+    },
+    "shipGrounded": {
+      "title": "Ship Grounded",
+      "description": "The ship's drive is unstable and requires repairs. You cannot travel for {turns} more turn(s). You can perform an Emergency Take-off, but it will damage the hull."
+    },
+    "fixerModal": {
+      "noDamagedItems": "No damaged items to repair."
+    }
+  },
+  "tasks": {
+    "idle": "Idle",
+    "trade": "Trade",
+    "train": "Train",
+    "heal": "Heal",
+    "find_patron": "Find a Patron",
+    "recruit": "Recruit",
+    "explore": "Explore",
+    "track_rival": "Track a Rival",
+    "repair": "Repair Kit",
+    "decoy_rival": "Create a Decoy"
+  },
+  "upkeep": {
+    "title": "Upkeep Phase",
+    "description": "It's time to pay the crew, manage your ship, and tend to the wounded before the next turn begins.",
+    "cost": "Upkeep Cost: {cost} Credits",
+    "insufficientFunds": "Warning: You have insufficient funds!",
+    "button": "Pay Upkeep & Continue",
+    "crewManagementTitle": "Crew Management",
+    "activeCrew": "Active Crew: {count}",
+    "sellGearPrompt": "Sell gear to help cover costs.",
+    "sell": "Sell",
+    "dismiss": "Dismiss",
+    "dismissModalTitle": "Dismiss {name}?",
+    "dismissModalPrompt": "They will leave with their gear. You may keep one item.",
+    "dismissModalNoItems": "This crew member has no items to keep.",
+    "dismissModalKeepItem": "Item to keep:",
+    "dismissModalKeepNothing": "Keep nothing",
+    "confirmDismiss": "Confirm Dismissal",
+    "shipMaintenanceTitle": "Ship Maintenance",
+    "debtPayment": "Debt Payment",
+    "pay": "Pay",
+    "hullRepairs": "Hull Repairs",
+    "freeRepair": "1 HP repaired for free.",
+    "repairCost": "1 Credit per HP",
+    "repair": "Repair",
+    "medicalBayTitle": "Medical Bay",
+    "medicalBayBenefit": "Medical Bay: Select one crew member with 2+ turns remaining to recover for 2 turns this upkeep phase.",
+    "medicalCare": "Medical Care",
+    "noInjured": "No one is in the med bay.",
+    "remaining": "{turns} turns remaining",
+    "expressTreatment": "Express Treatment (-1 Turn)",
+    "costFourCreds": "(4 Credits)",
+    "finalizeButton": "Finalize Upkeep & Proceed",
+    "rationsApplied": "Ration packs applied. Upkeep cost is 0.",
+    "useRationPacks": "Use Ration Packs",
+    "useMedPatch": "Use Med-Patch",
+    "sellPrice": "(1 Credit)",
+    "itemSold": "Item sold successfully!",
+    "lacksFacilitiesWarning": "This world lacks starship facilities. Repairs are limited to 3 credits per turn.",
+    "repairPartsAvailable": "You have {amount}cr worth of repair parts available. These will be used first.",
+    "basicSupplies": {
+      "prompt": "Basic Supplies Available!",
+      "description": "You have enough basic supplies to skip the upkeep cost for this turn. This will still advance recovery for injured crew.",
+      "button": "Use Supplies & Skip Upkeep"
+    }
+  },
+  "quests": {
+    "activeQuestTitle": "Active Quest",
+    "startQuest": "Start Quest Mission",
+    "rumorPanelTitle": "Rumors & Whispers",
+    "rumorCount": "You have gathered {count} rumors.",
+    "resolveRumorsButton": "Piece them together",
+    "noRumors": "No active rumors. Try exploring or finding patrons.",
+    "star_eater": {
+      "title": "The Star-Eater's Wake",
+      "description": "Whispers from across the sector speak of a colossal, world-devouring entity. The fragments of information you've gathered point to a derelict research station where the first contact was made. Investigating it could be the key to understanding, and perhaps stopping, the threat."
+    }
+  },
+  "patrons": {
+    "corporation": "Corporation",
+    "local_government": "Local Government",
+    "sector_government": "Sector Government",
+    "wealthy_individual": "Wealthy Individual",
+    "private_organization": "Private Organization",
+    "secretive_group": "Secretive Group",
+    "mysterious": "Mysterious"
+  },
+  "timeframes": {
+    "this_turn": "This turn",
+    "next_turn": "This or next turn",
+    "two_turns": "Within 3 turns",
+    "any_time": "Any time"
+  },
+  "benefits": {
+    "fringe_benefit": {
+      "name": "Fringe Benefit",
+      "effect": "Roll on the loot table."
+    },
+    "connections": {
+      "name": "Connections",
+      "effect": "Gain a new rumor."
+    },
+    "company_store": {
+      "name": "Company Store",
+      "effect": "Roll on the trade table."
+    },
+    "health_insurance": {
+      "name": "Health Insurance",
+      "effect": "Write off 2 turns of injury recovery."
+    },
+    "security_team": {
+      "name": "Security Team",
+      "effect": "Reduce enemy count by 1."
+    },
+    "persistent": {
+      "name": "Persistent",
+      "effect": "Patron will remain available if you travel."
+    },
+    "negotiable": {
+      "name": "Negotiable",
+      "effect": "May re-roll Danger Pay and take the better result."
+    }
+  },
+  "hazards": {
+    "dangerous_job": {
+      "name": "Dangerous Job",
+      "effect": "Increase enemy count by 1."
+    },
+    "hot_job": {
+      "name": "Hot Job",
+      "effect": "Gain a rival on a roll of 1-2 (instead of 1) after the mission."
+    },
+    "vip": {
+      "name": "VIP Opponent",
+      "effect": "A random enemy gets +1 Toughness and Combat +2."
+    },
+    "veteran_opposition": {
+      "name": "Veteran Opposition",
+      "effect": "Enemies get -1 to their Panic range."
+    },
+    "low_priority": {
+      "name": "Low Priority",
+      "effect": "Reduce enemy count by 1."
+    },
+    "private_transport": {
+      "name": "Private Transport",
+      "effect": "Rivals may not track you this turn."
+    }
+  },
+  "conditions": {
+    "vengeful": {
+      "name": "Vengeful",
+      "effect": "If the mission is a failure, the patron becomes a Rival."
+    },
+    "demanding": {
+      "name": "Demanding",
+      "effect": "Danger Pay is only awarded on a success."
+    },
+    "small_squad": {
+      "name": "Small Squad",
+      "effect": "You may not field more than 4 crew members."
+    },
+    "full_squad": {
+      "name": "Full Squad",
+      "effect": "You must have 6 available crew members."
+    },
+    "clean": {
+      "name": "Clean Record",
+      "effect": "You must have never had a law enforcement Rival."
+    },
+    "busy": {
+      "name": "Busy",
+      "effect": "On success, the patron will offer a new job next turn."
+    },
+    "one_time_contract": {
+      "name": "One-Time Contract",
+      "effect": "This patron may not be kept as a contact."
+    },
+    "reputation_required": {
+      "name": "Reputation Required",
+      "effect": "You must have completed a previous job for the patron on this world."
+    }
+  }
+}

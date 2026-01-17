@@ -1,0 +1,305 @@
+{
+    "worldtraits": {
+        "haze": {
+            "name": "Haze",
+            "desc": "During battle, visibility is reduced to 1D6+8 spaces."
+        },
+        "overgrown": {
+            "name": "Overgrown",
+            "desc": "When setting up the table, you must add 1D6+2 individual plant features or 1D3 areas of vegetation."
+        },
+        "warzone": {
+            "name": "Warzone",
+            "desc": "When setting up the table, you must add 1D3 ruined buildings or craters to the table."
+        },
+        "heavily_enforced": {
+            "name": "Heavily Enforced",
+            "desc": "When fighting opponents from the Criminal Elements Encounter Table, the number encountered is reduced by 1."
+        },
+        "rampant_crime": {
+            "name": "Rampant Crime",
+            "desc": "When fighting opponents from the Criminal Elements encounter list, add 1 to the number encountered."
+        },
+        "invasion_risk": {
+            "name": "Invasion Risk",
+            "desc": "Add +1 to all Invasion rolls."
+        },
+        "imminent_invasion": {
+            "name": "Imminent Invasion",
+            "desc": "Add +2 to all Invasion rolls and if the world is invaded, rolls for war progress are at -1."
+        },
+        "lacks_starship_facilities": {
+            "name": "Lacks Starship Facilities",
+            "desc": "You cannot spend more than 3 credits per campaign turn on starship Repairs."
+        },
+        "easy_recruiting": {
+            "name": "Easy Recruiting",
+            "desc": "Add +1 to the roll when Recruiting."
+        },
+        "medical_science": {
+            "name": "Medical Science",
+            "desc": "The cost for accelerated medical care is only 3 credits per character."
+        },
+        "technical_knowledge": {
+            "name": "Technical Knowledge",
+            "desc": "Add +1 to all Repair attempts."
+        },
+        "opportunities": {
+            "name": "Opportunities",
+            "desc": "Add +1 to the roll when searching for Patrons."
+        },
+        "booming_economy": {
+            "name": "Booming Economy",
+            "desc": "When rolling for post-battle credit rewards, any 1 on the dice is rerolled until it shows a score other than 1."
+        },
+        "busy_markets": {
+            "name": "Busy Markets",
+            "desc": "Each campaign turn, you may spend 2 credits once to roll on the Trade Table."
+        },
+        "bureaucratic_mess": {
+            "name": "Bureaucratic Mess",
+            "desc": "When attempting to leave, you must roll 2D6. On a 2-4, you are delayed and cannot leave this campaign turn without a bribe equal to the roll in credits."
+        },
+        "restricted_education": {
+            "name": "Restricted Education",
+            "desc": "You must roll 6+ to be approved for Advanced Training on this world."
+        },
+        "expensive_education": {
+            "name": "Expensive Education",
+            "desc": "The fee to enroll in Advanced Training is 3 credits."
+        },
+        "travel_restricted": {
+            "name": "Travel Restricted",
+            "desc": "No more than one crew member may take the Explore option each campaign turn."
+        },
+        "unity_safe_sector": {
+            "name": "Unity Safe Sector",
+            "desc": "The world cannot be Invaded."
+        },
+        "gloom": {
+            "name": "Gloom",
+            "desc": "In battle, maximum visibility is restricted to 9”. Characters that fire can be fired upon at any range, however."
+        },
+        "bot_manufacturing": {
+            "name": "Bot Manufacturing",
+            "desc": "All Bot upgrades are 1 credit cheaper."
+        },
+        "fuel_refinery": {
+            "name": "Fuel Refinery",
+            "desc": "Traveling from this world costs only 3 credits."
+        },
+        "alien_species_restricted": {
+            "name": "Alien Species Restricted",
+            "desc": "A random alien species cannot be hired here and cannot undertake any crew jobs."
+        },
+        "weapon_licensing": {
+            "name": "Weapon Licensing",
+            "desc": "Any weapon obtained through the Trade Table or purchased outright costs +1 credit."
+        },
+        "import_restrictions": {
+            "name": "Import Restrictions",
+            "desc": "Import restrictions are in effect."
+        },
+        "military_outpost": {
+            "name": "Military Outpost",
+            "desc": "Add +2 to Invasion rolls. Add +2 when checking for war progress."
+        },
+        "dangerous": {
+            "name": "Dangerous",
+            "desc": "When rolling on the Roving Threats Encounter Table, increase the number of opponents by +1."
+        },
+        "shipyards": {
+            "name": "Shipyards",
+            "desc": "The cost of all Ship Components is reduced by 2 credits."
+        },
+        "barren": {
+            "name": "Barren",
+            "desc": "No plant features can be used on the battlefield."
+        },
+        "vendetta_system": {
+            "name": "Vendetta System",
+            "desc": "Opponents become your Rivals on a roll of 1 or 2."
+        },
+        "free_trade_zone": {
+            "name": "Free Trade Zone",
+            "desc": "One crew member per campaign turn can roll twice when using the Trade Table, and choose either result."
+        },
+        "corporate_state": {
+            "name": "Corporate State",
+            "desc": "+2 when rolling to find a Patron. Patrons are always Corporations. Failing a mission means being blacklisted."
+        },
+        "adventurous_population": {
+            "name": "Adventurous Population",
+            "desc": "When successfully Recruiting, you may roll up one additional character and then choose who to hire."
+        },
+        "frozen": {
+            "name": "Frozen",
+            "desc": "Characters making a Dash may slide. They move 1D6\" in a straight line. Collisions cause Stun."
+        },
+        "flat": {
+            "name": "Flat",
+            "desc": "Do not place any hills or raised ground on the battlefield."
+        },
+        "fuel_shortage": {
+            "name": "Fuel Shortage",
+            "desc": "The cost to travel from this world is raised by 1D3 credits."
+        },
+        "reflective_dust": {
+            "name": "Reflective Dust",
+            "desc": "All Laser, Beam, or Blast weapons are -1 to Hit at ranges exceeding 9\"."
+        },
+        "high_cost": {
+            "name": "High Cost of Living",
+            "desc": "Your crew size counts as being 2 higher for the purpose of Upkeep costs."
+        },
+        "interdiction": {
+            "name": "Interdiction",
+            "desc": "You are only approved to stay for 1D3 campaign turns. To extend your stay, you must obtain a license (2D6, 8+)."
+        },
+        "null_zone": {
+            "name": "Null Zone",
+            "desc": "No teleportation device of any type works."
+        },
+        "crystals": {
+            "name": "Crystals",
+            "desc": "Place 2D6 crystals on the battlefield."
+        },
+        "fog": {
+            "name": "Fog",
+            "desc": "All shots beyond 8\" are -1 to Hit."
+        }
+    },
+    "travelEvents": {
+        "bureaucratic_mess": {
+            "title": "Departure Delayed",
+            "desc": "Your departure has been delayed by a bureaucratic mess. You can either pay a bribe of {bribe} credits to get your flight clearance now, or wait until the next turn.",
+            "pay_bribe": "Pay Bribe & Travel ({bribe}cr)",
+            "stay": "Stay This Turn"
+        },
+        "asteroids": {
+            "title": "Asteroids!",
+            "desc": "Rocky debris everywhere, maybe from a recent collision? You can try to chart a safe path around, or risk going through.",
+            "avoid": "Avoid (5+ on 1D6)",
+            "through": "Go Through (3x Savvy checks)",
+            "reroll": "Use Probe (Reroll)",
+            "avoid_fail_desc": "The attempt to go around the field failed (Roll: {roll}). You can use your Probe Launcher for another attempt, or you'll have to fly through.",
+            "reroll_fail_desc": "Even with the probe, no safe path could be found (Roll: {roll}). You must now fly through.",
+            "savvy_prompt": "Select a crew member to navigate the asteroid field for check {current}/{total} (4+ on 1D6+Savvy to succeed).",
+            "savvy_button": "Perform Check"
+        },
+        "navigation_trouble": {
+            "title": "Navigation Trouble",
+            "desc": "Is this place even on the star maps? You lose 1 story point as you drift through empty space. Your journey continues..."
+        },
+        "raided": {
+            "title": "Raided!",
+            "desc": "Your vessel has caught the eye of some local raiders. You can try to intimidate them with a show of force, or prepare for a fight.",
+            "intimidate": "Intimidate",
+            "fight": "Fight!",
+            "selectCrewPrompt": "Select a crew member to make an intimidation attempt (1D6 + Savvy vs 6+)."
+        },
+        "deep_space_wreckage": {
+            "title": "Deep Space Wreckage",
+            "desc": "You find an old wreck drifting through empty space. Scanning it, you get 2 rolls on the Gear Subtable. Both items are damaged and need to be Repaired."
+        },
+        "drive_trouble": {
+            "title": "Drive Trouble",
+            "desc": "It’s not supposed to make that sound. Three crew members must attempt to fix it (6+ on 1D6+Savvy). Each failure grounds you on the next world for one turn.",
+            "selectCrewPrompt": "Select exactly 3 crew members to attempt repairs."
+        },
+        "down_time": {
+            "title": "Down-time",
+            "desc": "It’s a long time to just sit here. A crew member of choice gains +1 XP, and you can repair 1 damaged item automatically.",
+            "selectCrewPrompt": "Select a crew member to gain +1 XP:",
+            "selectItemPrompt": "Select a damaged item to repair:",
+            "noDamagedItems": "No damaged items to repair.",
+            "confirmButton": "Confirm Choices"
+        },
+        "distress_call": {
+            "title": "Distress Call",
+            "desc": "'This is Licensed Trader Cyberwolf'. Do you come to their aid?",
+            "aid": "Come to their aid",
+            "ignore": "Ignore the call",
+            "selectCrewPrompt": "You arrive in time to help save the ship from a drive malfunction. Select a crew member to lead the repair efforts (3 attempts, 1D6+Savvy vs 7+).",
+            "confirmButton": "Attempt Repairs"
+        },
+        "patrol_ship": {
+            "title": "Patrol Ship",
+            "desc": "A Unity patrol vessel hails you and performs a contraband check. {count} item(s) are confiscated. The next world you visit cannot be Invaded.",
+            "select_items_prompt": "Select {count} item(s) to surrender to the patrol.",
+            "confirm_confiscation": "Surrender Items",
+            "location_stash": "Stash",
+            "item_from": "{item} (from {location})"
+        },
+        "cosmic_phenomenon": {
+            "title": "Cosmic Phenomenon",
+            "desc": "A crew member sees a strange manifestation in space. They add +1 Luck. If you have a Precursor, you also add +1 story point."
+        },
+        "escape_pod": {
+            "title": "Escape Pod",
+            "desc": "You find an escape pod drifting through space. Do you rescue the occupant?",
+            "rescue": "Rescue them",
+            "ignore": "Ignore it"
+        },
+        "escape_pod_criminal": {
+            "title": "Rescued Criminal",
+            "desc": "The person you rescued is a wanted criminal. They offer you a favor if you let them go. What do you do?",
+            "let_go": "Let them go",
+            "turn_in": "Turn them in"
+        },
+        "escape_pod_reward": {
+            "title": "Grateful Survivor",
+            "desc": "The survivor is incredibly grateful for the rescue and offers you a reward of {credits} credits and a useful item."
+        },
+        "escape_pod_info": {
+            "title": "In the Know",
+            "desc": "The survivor has nothing to offer but some interesting information. You gain a Quest Rumor and 1 Story Point."
+        },
+        "escape_pod_recruit": {
+            "title": "Potential Recruit",
+            "desc": "The survivor is a capable individual looking for work. Do you want to hire them?",
+            "hire": "Hire them",
+            "decline": "Decline"
+        },
+        "escape_pod_recruit_full": {
+            "title": "Crew Full",
+            "desc": "You found a potential recruit, but your crew is already full."
+        },
+        "escape_pod_empty": {
+            "title": "Empty Pod",
+            "desc": "You open the pod to find it empty, save for some drifting dust."
+        },
+        "accident": {
+            "title": "Accident",
+            "desc": "A crew member gets injured while doing routine maintenance. They must rest for one turn, and one item they carry is damaged."
+        },
+        "travel_time": {
+            "title": "Travel-time",
+            "desc": "Local conditions force you to take the scenic route. Any injured crew may rest for one campaign turn."
+        },
+        "uneventful_trip": {
+            "title": "Uneventful Trip",
+            "desc": "A lot of time playing cards and cleaning guns. You can repair one damaged item.",
+            "select_item_prompt": "Select a damaged item to repair:",
+            "no_damaged_items": "All gear is in working order. The journey continues.",
+            "repair_button": "Repair Item",
+            "select_placeholder": "Choose an item..."
+        },
+        "time_to_reflect": {
+            "title": "Time to Reflect",
+            "desc": "How is the story unfolding? What did it all mean? You gain +1 story point."
+        },
+        "time_to_read_a_book": {
+            "title": "Time to Read a Book",
+            "desc": "There’s time to sit, have a read, and maybe even indulge in a bit of education. Random crew members gain some XP."
+        },
+        "locked_in_library": {
+            "title": "Locked in the Library Data",
+            "desc": "Pouring over old records and fragments of data, the captain has unearthed some intriguing information about the sector of space you are heading into. You can choose your destination from three generated worlds."
+        },
+        "choose_destination": {
+            "title": "Choose Destination",
+            "desc": "Your ship's database has provided multiple potential destinations. Choose which system to travel to."
+        }
+    }
+}

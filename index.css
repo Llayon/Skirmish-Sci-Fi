@@ -1,0 +1,936 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  /* Dark Theme (Default) - Reverted to classic theme */
+  --color-primary: 187 93% 50%; /* cyan-400 */
+  --color-secondary: 215 28% 27%; /* slate-700 */
+  --color-danger: 0 84% 60%; /* red-500 */
+  --color-accent: 259 87% 66%; /* violet-500 */
+  --color-success: 142 76% 36%; /* green-600 */
+  --color-warning: 45 86% 51%; /* amber-400 */
+  --color-info: 217 91% 60%; /* blue-500 */
+  
+  --color-surface-base: 220 40% 10%;
+  --color-surface-raised: 220 35% 15%;
+  --color-surface-overlay: 220 30% 20%;
+
+  --color-text-base: 220 14% 86%;        /* slate-300 */
+  --color-text-muted: 215 20% 65%;       /* slate-400 */
+  --color-text-inverted: 210 40% 98%;    /* slate-50 */
+  
+  --color-border: 217 19% 35%;           /* slate-600 */
+
+  /* Typography */
+  --font-family-heading: 'Orbitron', sans-serif;
+  --font-family-body: 'JetBrains Mono', monospace;
+  
+  /* Radii */
+  --radius-sm: 0.25rem;
+  --radius-md: 0.5rem;
+  --radius-lg: 0.75rem;
+}
+
+[data-theme="light"] {
+  --color-primary: 196 90% 36%; /* cyan-600 */
+  --color-secondary: 220 13% 91%; /* slate-200 */
+  --color-danger: 0 84% 60%; /* red-500 */
+  --color-accent: 259 81% 59%; /* violet-600 */
+  --color-success: 142 67% 41%; /* green-500 */
+  --color-warning: 45 86% 51%; /* amber-400 */
+  --color-info: 217 89% 54%; /* blue-400 */
+
+  --color-surface-base: 210 40% 96%; /* slate-100 */
+  --color-surface-raised: 0 0% 100%; /* white */
+  --color-surface-overlay: 210 20% 98%; /* slate-50 */
+  
+  --color-text-base: 220 26% 18%; /* slate-850 */
+  --color-text-muted: 215 20% 65%; /* slate-400 */
+  --color-text-inverted: 0 0% 100%; /* white */
+
+  --color-border: 220 14% 86%; /* slate-300 */
+}
+
+
+body {
+  font-family: var(--font-family-body);
+  background-color: hsl(var(--color-surface-base));
+  color: hsl(var(--color-text-base));
+}
+
+body.main-menu {
+  background-color: hsl(var(--color-surface-base));
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+  overflow: hidden; /* Prevent scrollbars on main menu */
+}
+
+@keyframes fadeOut {
+  from { opacity: 1; }
+  to { opacity: 0; }
+}
+.animate-hud-fade-out {
+  animation: fadeOut 1s ease-in-out 0.5s forwards;
+}
+
+@keyframes shoot-laser {
+    from {
+        stroke-dashoffset: 1000;
+    }
+    to {
+        stroke-dashoffset: 0;
+    }
+}
+
+.laser {
+    stroke-dasharray: 1000;
+    animation: shoot-laser 0.4s ease-out forwards;
+}
+
+/* New HUD Grid Layout */
+.battle-hud-grid {
+    display: grid;
+    grid-template-columns: 320px 1fr 320px;
+    grid-template-rows: auto 1fr auto;
+    grid-template-areas:
+        "queue queue queue"
+        "mission . ."
+        "status actions log";
+    height: 100%;
+    width: 100%;
+    position: absolute;
+    top: 0;
+    left: 0;
+    pointer-events: none; /* Allow clicks to pass through to the grid */
+    padding: 1rem;
+    gap: 1rem;
+}
+
+/* Make sure grid children can receive clicks */
+.battle-hud-grid > * {
+    pointer-events: auto;
+}
+
+.hud-queue { grid-area: queue; }
+.hud-mission { grid-area: mission; }
+.hud-status { grid-area: status; }
+.hud-actions { grid-area: actions; }
+.hud-log { grid-area: log; }
+
+
+/* --- RESPONSIVE BATTLE HUD --- */
+@media (max-width: 1023px) {
+  .battle-hud-grid {
+    position: relative; /* Becomes part of the page flow */
+    height: auto;
+    width: 100%;
+    pointer-events: auto;
+    grid-template-columns: 280px 1fr 280px; /* Smaller side panels for tablets */
+    grid-template-areas:
+      "queue queue queue"
+      "mission . log"
+      "status actions actions";
+  }
+}
+
+@media (max-width: 767px) {
+  .battle-hud-grid {
+    grid-template-columns: 1fr;
+    grid-template-rows: auto;
+    grid-template-areas:
+      "queue"
+      "mission"
+      "status"
+      "actions"
+      "log";
+    gap: 1rem;
+    padding: 0.5rem;
+  }
+  .hud-log {
+    max-height: 12rem; /* Limit log height on mobile */
+  }
+  .hud-mission, .hud-status, .hud-actions, .hud-log {
+    align-self: initial;
+    justify-self: initial;
+  }
+}
+
+
+/* --- RESPONSIVE CAMPAIGN DASHBOARD --- */
+/* Mobile First in spirit, but using media queries for overrides */
+.campaign-dashboard-grid {
+    display: grid;
+    gap: 1rem;
+    grid-template-columns: 1fr;
+    grid-template-areas:
+        "header"
+        "main"
+        "side"
+        "roster";
+}
+.campaign-header { grid-area: header; }
+.campaign-main { grid-area: main; }
+.campaign-side { grid-area: side; }
+.campaign-roster { grid-area: roster; }
+
+
+/* Small screens (large phones, tablets portrait) */
+@media (min-width: 768px) {
+    .campaign-dashboard-grid {
+        grid-template-columns: 3fr 2fr;
+        grid-template-areas:
+            "header header"
+            "main   side"
+            "roster roster";
+        gap: 1.5rem;
+    }
+}
+
+/* Desktop */
+@media (min-width: 1024px) {
+    .campaign-dashboard-grid {
+        grid-template-columns: repeat(5, 1fr);
+        grid-template-rows: auto auto 1fr;
+        grid-template-areas:
+            "header header header header header"
+            "main   main   main   side   side"
+            "roster roster roster roster roster";
+        gap: 2rem;
+    }
+}
+
+/* Main Menu Container */
+.main-menu-container {
+  min-height: 100vh;
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+  overflow: hidden;
+  --mouse-x: 50%;
+  --mouse-y: 50%;
+}
+
+.spotlight {
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  top: 0;
+  left: 0;
+  background: radial-gradient(circle at var(--mouse-x) var(--mouse-y), transparent 10%, hsl(var(--color-surface-base) / 0.4) 35%);
+  z-index: 2;
+  pointer-events: none;
+}
+
+/* Video Background Styles */
+.video-background-container {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  z-index: 0;
+  overflow: hidden;
+}
+
+.video-background-container video {
+  width: 110%; /* Slightly larger for parallax */
+  height: 110%;
+  object-fit: cover;
+  position: absolute;
+  top: -5%;
+  left: -5%;
+}
+
+.video-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: hsl(var(--color-surface-base) / 0.5);
+  z-index: 1;
+}
+
+/* New Main Menu Styles */
+.scan-lines::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-image: repeating-linear-gradient(
+    0deg,
+    transparent,
+    transparent 2px,
+    hsla(var(--color-primary) / 0.1) 2px,
+    hsla(var(--color-primary) / 0.1) 4px
+  );
+  animation: scan 10s linear infinite;
+  pointer-events: none;
+  z-index: 2;
+}
+
+@keyframes scan {
+  0% { background-position: 0 0; }
+  100% { background-position: 0 100px; }
+}
+
+
+/* Energy Flow and Button Effects */
+.menu-button-wrapper {
+  position: relative;
+  overflow: hidden;
+  clip-path: polygon(0% 0%, 100% 0%, calc(100% - 20px) 100%, 0% 100%);
+}
+
+.menu-button-wrapper::before {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 0;
+  height: 0;
+  background: radial-gradient(circle, hsl(var(--color-primary) / 0.2) 0%, hsl(var(--color-primary) / 0) 70%);
+  border-radius: 50%;
+  transform: translate(-50%, -50%);
+  transition: width 0.5s ease-out, height 0.5s ease-out, opacity 0.5s ease-out;
+  opacity: 0;
+  z-index: 0;
+}
+
+.menu-button-wrapper:hover::before {
+  width: 400%;
+  height: 400%;
+  opacity: 1;
+}
+
+.menu-button {
+  position: relative;
+  z-index: 1;
+  transition: all 0.3s ease !important;
+  border-left: none !important;
+  border-bottom: 2px solid hsl(var(--color-border) / 0.5);
+}
+
+.menu-button-wrapper:hover .menu-button {
+  transform: translateX(10px);
+  color: hsl(var(--color-primary));
+  background-color: hsl(var(--color-primary) / 0.1) !important;
+  border-color: hsl(var(--color-primary)) !important;
+  text-shadow: 0 0 8px hsl(var(--color-primary));
+}
+
+.menu-button-wrapper .menu-icon {
+  transition: transform 0.3s ease;
+}
+
+.menu-button-wrapper:hover .menu-icon {
+  transform: scale(1.1) rotate(-5deg);
+}
+
+/* Ripple effect on click */
+.ripple {
+  position: absolute;
+  border-radius: 50%;
+  background-color: hsl(var(--color-primary));
+  transform: scale(0);
+  animation: ripple-effect 0.6s linear;
+  pointer-events: none;
+  opacity: 0.75;
+}
+
+@keyframes ripple-effect {
+  to {
+    transform: scale(4);
+    opacity: 0;
+  }
+}
+
+/* Initial assembly animation for title */
+@keyframes title-assemble {
+  0% {
+    text-shadow: 0 0 50px hsl(var(--color-primary) / 0), 0 0 100px hsl(var(--color-primary) / 0);
+    opacity: 0;
+    letter-spacing: -0.25em;
+    transform: translateY(-20px);
+  }
+  50% {
+    text-shadow: 0 0 50px hsl(var(--color-primary) / 0.8), 0 0 100px hsl(var(--color-primary) / 0.5);
+    opacity: 0.8;
+  }
+  100% {
+    text-shadow: 0 0 2px hsl(var(--color-primary) / 0.5);
+    opacity: 1;
+    letter-spacing: normal;
+    transform: translateY(0);
+  }
+}
+
+@keyframes fade-in-down {
+  from { opacity: 0; transform: translateY(-20px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes fade-in-right {
+  from { opacity: 0; transform: translateX(-20px); }
+  to { opacity: 1; transform: translateX(0); }
+}
+
+/* New Main Menu Panel Styles */
+.main-menu-panel-container {
+  position: relative;
+}
+
+.main-menu-panel-container::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: hsl(var(--color-primary) / 0.2);
+  clip-path: polygon(25px 0, 100% 0, 100% calc(100% - 25px), calc(100% - 25px) 100%, 0 100%, 0 25px);
+}
+
+.main-menu-panel {
+  position: relative;
+  padding: 2rem 1.5rem;
+  background-color: hsl(var(--color-surface-raised) / 0.8);
+  backdrop-filter: blur(4px);
+  clip-path: polygon(26px 1px, calc(100% - 1px) 1px, calc(100% - 1px) calc(100% - 26px), calc(100% - 26px) calc(100% - 1px), 1px calc(100% - 1px), 1px 26px);
+  border: 1px solid hsl(var(--color-primary) / 0.2);
+}
+
+.main-menu-panel-container::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background-image:
+    linear-gradient(hsl(var(--color-warning)), hsl(var(--color-warning))),
+    repeating-linear-gradient(transparent, transparent 4px, hsl(var(--color-border)) 4px, hsl(var(--color-border)) 6px),
+    repeating-linear-gradient(transparent, transparent 5px, hsl(var(--color-accent)) 5px, hsl(var(--color-accent)) 7px);
+  background-repeat: no-repeat;
+  background-size:
+    calc(100% - 200px) 3px,
+    4px 50px,
+    6px 40px;
+  background-position:
+    top 5px left 40px,
+    top 30px left 8px,
+    bottom 30px right 8px;
+}
+
+/* Decorative HUD corners for main menu panels */
+.main-menu-panel::before,
+.main-menu-panel::after {
+  content: '';
+  position: absolute;
+  width: 25px;
+  height: 25px;
+  border-color: hsl(var(--color-primary) / 0.4);
+  border-style: solid;
+  transition: all 0.3s ease;
+  pointer-events: none;
+}
+
+.main-menu-panel::before {
+  top: 8px;
+  right: 8px;
+  border-width: 2px 2px 0 0;
+}
+
+.main-menu-panel::after {
+  bottom: 8px;
+  left: 8px;
+  border-width: 0 0 2px 2px;
+}
+
+.main-menu-panel-container:hover .main-menu-panel::before,
+.main-menu-panel-container:hover .main-menu-panel::after {
+  border-color: hsl(var(--color-primary));
+  filter: drop-shadow(0 0 4px hsl(var(--color-primary)));
+}
+
+
+/* New Sci-Fi Button Style (PRIMARY) */
+.sci-fi-button {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0.8rem 2.2rem;
+  font-family: var(--font-family-heading);
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  color: hsl(var(--color-text-inverted) / 0.9);
+  background-color: transparent;
+  border: none;
+  cursor: pointer;
+  z-index: 1;
+  transition: color 0.4s ease, text-shadow 0.4s ease, filter 0.4s ease;
+  filter: drop-shadow(2px 4px 6px hsl(var(--color-surface-base)));
+}
+
+.sci-fi-button::before, .sci-fi-button::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  clip-path: polygon(4% 0, 48% 0, 50% 10%, 52% 0, 96% 0, 100% 25%, 96% 100%, 4% 100%, 0 75%);
+  transition: all 0.4s ease-out;
+}
+
+/* Background layers */
+.sci-fi-button::before {
+  background:
+    /* Dot pattern mask */
+    linear-gradient(to top, white 20%, transparent 40%),
+    /* Chevron mask */
+    linear-gradient(to bottom right, transparent 49.5%, white 50%, white 50.5%, transparent 51%, transparent 100%),
+    /* Base background */
+    linear-gradient(to bottom, #2a1a1f, #1e1418);
+
+  -webkit-mask-image: linear-gradient(to top, white 20%, transparent 40%);
+  mask-image: linear-gradient(to top, white 20%, transparent 40%);
+
+  -webkit-mask-composite: source-in;
+  mask-composite: intersect;
+
+  background-image:
+    /* Dot pattern */
+    repeating-radial-gradient(hsl(var(--color-primary)/0.25) 0, hsl(var(--color-primary)/0.25) 0.5px, transparent 1px, transparent 3px),
+    /* Chevron pattern */
+    repeating-linear-gradient(
+      -45deg,
+      transparent,
+      transparent 15px,
+      hsl(var(--color-surface-base)/0.1) 15px,
+      hsl(var(--color-surface-base)/0.1) 30px
+    ),
+    /* Main gradient */
+    linear-gradient(to bottom, #3a2a2f, #2e2428);
+  
+  background-size: 3px 3px, 40px 40px, 100% 100%;
+  inset: 2px;
+}
+
+/* Border layers */
+.sci-fi-button::after {
+  background: 
+    linear-gradient(to top, hsl(var(--color-primary)) 3px, transparent 3px),
+    linear-gradient(to bottom, hsl(var(--color-text-inverted)) 2px, transparent 2px),
+    hsl(var(--color-surface-overlay));
+  background-repeat: no-repeat;
+  background-size: 100% 100%;
+}
+
+.sci-fi-button:hover {
+  color: hsl(var(--color-text-inverted));
+  text-shadow: 0 0 10px hsl(var(--color-primary)), 0 0 20px hsl(var(--color-primary) / 0.5);
+  filter: drop-shadow(0 0 12px hsl(var(--color-primary) / 0.5));
+}
+
+.sci-fi-button:hover::before {
+  background-color: #4a3a3f;
+}
+
+/* NEW: Menu Decorator Element */
+.menu-decorator {
+  position: relative;
+  width: 2rem; /* 32px */
+  height: 290px; /* Approximate height of the menu */
+  border-right: 1px solid hsl(var(--color-border) / 0.5);
+  overflow: hidden;
+  background-color: hsl(var(--color-surface-base) / 0.3);
+}
+
+.menu-decorator::before,
+.menu-decorator::after {
+  content: '';
+  position: absolute;
+  left: 50%;
+  background-color: hsl(var(--color-primary) / 0.7);
+  animation: data-stream 8s linear infinite;
+}
+
+.menu-decorator::before {
+  width: 4px;
+  height: 100%;
+  left: 30%;
+  background: repeating-linear-gradient(
+    to bottom,
+    hsl(var(--color-primary) / 0.7) 0,
+    hsl(var(--color-primary) / 0.7) 10px,
+    transparent 10px,
+    transparent 25px
+  );
+}
+
+.menu-decorator::after {
+  width: 8px;
+  height: 100%;
+  left: 70%;
+  background: repeating-linear-gradient(
+    to bottom,
+    hsl(var(--color-primary) / 0.4) 0,
+    hsl(var(--color-primary) / 0.4) 5px,
+    transparent 5px,
+    transparent 15px
+  );
+  animation-delay: -2.5s;
+  animation-duration: 6s;
+}
+
+@keyframes data-stream {
+  0% {
+    transform: translateY(-100%);
+  }
+  100% {
+    transform: translateY(100%);
+  }
+}
+
+/* NEW: Sci-fi panel styles for campaign dashboard */
+.campaign-side .fp-card {
+  position: relative;
+  background-color: hsl(var(--color-surface-raised) / 0.85);
+  backdrop-filter: blur(3px);
+  border: 1px solid hsl(var(--color-primary) / 0.2);
+  border-radius: 0; /* Override default rounded-lg */
+  box-shadow: 0 0 15px hsl(var(--color-primary) / 0.1);
+  clip-path: polygon(
+    0% 20px, 
+    20px 0%, 
+    100% 0%, 
+    100% calc(100% - 20px), 
+    calc(100% - 20px) 100%, 
+    0% 100%
+  );
+}
+
+.campaign-side .fp-card::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(ellipse at top, hsl(var(--color-primary) / 0.1), transparent 70%);
+  pointer-events: none;
+  z-index: 0;
+  opacity: 0.8;
+}
+
+.campaign-side .fp-card::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background-image:
+    linear-gradient(hsl(var(--color-primary) / 0.05) 1px, transparent 1px),
+    linear-gradient(to right, hsl(var(--color-primary) / 0.05) 1px, transparent 1px);
+  background-size: 25px 25px;
+  pointer-events: none;
+  z-index: 0;
+  opacity: 0.6;
+}
+
+/* Ensure card content is above the pseudo-elements */
+.campaign-side .fp-card > * {
+  position: relative;
+  z-index: 1;
+}
+
+/* SCI-FI BACKGROUND EFFECTS */
+.stars-container {
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  top: 0;
+  left: 0;
+  transform-style: preserve-3d;
+  z-index: 1;
+  pointer-events: none;
+}
+
+.star-layer {
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  top: 0;
+  left: 0;
+  opacity: 0.8;
+  background-repeat: repeat;
+  background-position: 0 0;
+}
+
+.star-layer:nth-child(1) {
+  animation: star-drift 150s linear infinite;
+  background-image: radial-gradient(1px 1px at 10% 10%, white 100%, transparent),
+    radial-gradient(1px 1px at 20% 20%, white 100%, transparent),
+    radial-gradient(2px 2px at 30% 30%, white 100%, transparent),
+    radial-gradient(1px 1px at 40% 40%, white 100%, transparent),
+    radial-gradient(2px 2px at 50% 50%, white 100%, transparent),
+    radial-gradient(1px 1px at 60% 60%, white 100%, transparent),
+    radial-gradient(2px 2px at 70% 70%, white 100%, transparent),
+    radial-gradient(1px 1px at 80% 80%, white 100%, transparent),
+    radial-gradient(2px 2px at 90% 90%, white 100%, transparent),
+    radial-gradient(1px 1px at 15% 85%, white 100%, transparent);
+}
+
+.star-layer:nth-child(2) {
+  animation: star-drift 200s linear infinite reverse;
+  opacity: 0.6;
+  background-image: radial-gradient(1px 1px at 5% 55%, white 100%, transparent),
+    radial-gradient(1px 1px at 25% 5%, white 100%, transparent),
+    radial-gradient(2px 2px at 35% 70%, white 100%, transparent),
+    radial-gradient(1px 1px at 45% 25%, white 100%, transparent),
+    radial-gradient(2px 2px at 55% 80%, white 100%, transparent),
+    radial-gradient(1px 1px at 65% 15%, white 100%, transparent),
+    radial-gradient(2px 2px at 75% 90%, white 100%, transparent),
+    radial-gradient(1px 1px at 85% 35%, white 100%, transparent),
+    radial-gradient(2px 2px at 95% 65%, white 100%, transparent),
+    radial-gradient(1px 1px at 5% 95%, white 100%, transparent);
+}
+
+.star-layer:nth-child(3) {
+  animation: star-drift 250s linear infinite;
+  opacity: 0.4;
+    background-image: radial-gradient(1px 1px at 12% 40%, white 100%, transparent),
+    radial-gradient(1px 1px at 22% 80%, white 100%, transparent),
+    radial-gradient(2px 2px at 32% 10%, white 100%, transparent),
+    radial-gradient(1px 1px at 42% 60%, white 100%, transparent),
+    radial-gradient(2px 2px at 52% 20%, white 100%, transparent),
+    radial-gradient(1px 1px at 62% 95%, white 100%, transparent),
+    radial-gradient(2px 2px at 72% 30%, white 100%, transparent),
+    radial-gradient(1px 1px at 82% 70%, white 100%, transparent),
+    radial-gradient(2px 2px at 92% 5%, white 100%, transparent),
+    radial-gradient(1px 1px at 18% 75%, white 100%, transparent);
+}
+
+@keyframes star-drift {
+  0% {
+    transform: translateY(0);
+  }
+  100% {
+    transform: translateY(-100%);
+  }
+}
+
+.nebula {
+  position: absolute;
+  width: 120%;
+  height: 120%;
+  top: -10%;
+  left: -10%;
+  background: radial-gradient(
+      ellipse at 30% 30%,
+      hsl(var(--color-accent) / 0.15) 0%,
+      transparent 70%
+    ),
+    radial-gradient(
+      ellipse at 70% 60%,
+      hsl(var(--color-primary) / 0.15) 0%,
+      transparent 70%
+    ),
+    radial-gradient(
+      ellipse at 50% 50%,
+      hsl(var(--color-danger) / 0.1) 0%,
+      transparent 70%
+    );
+  filter: blur(40px);
+  opacity: 0.8;
+  animation: nebula-shift 45s infinite alternate ease-in-out;
+  z-index: 1;
+  pointer-events: none;
+}
+
+@keyframes nebula-shift {
+  0% {
+    transform: scale(1) rotate(0deg);
+    opacity: 0.6;
+  }
+  50% {
+    opacity: 0.9;
+  }
+  100% {
+    transform: scale(1.2) rotate(5deg);
+    opacity: 0.7;
+  }
+}
+
+.grid-plane {
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  top: 0;
+  left: 0;
+  background-image: linear-gradient(
+      hsl(var(--color-primary) / 0.1) 1px,
+      transparent 1px
+    ),
+    linear-gradient(90deg, hsl(var(--color-primary) / 0.1) 1px, transparent 1px);
+  background-size: 50px 50px;
+  transform: perspective(600px) rotateX(60deg) translateY(25%);
+  transform-origin: center;
+  animation: grid-move 30s linear infinite;
+  opacity: 0.3;
+  z-index: 1;
+  pointer-events: none;
+}
+
+@keyframes grid-move {
+  0% {
+    background-position: 0 0;
+  }
+  100% {
+    background-position: 0 50px;
+  }
+}
+
+/* NEW DECORATIVE HUD ELEMENTS */
+
+.main-menu-hexagons {
+    position: absolute;
+    width: 420px;
+    height: 380px;
+    top: 50%;
+    right: 12%;
+    transform: translate(0, -50%);
+}
+
+.hexagon {
+  position: absolute;
+  width: 30px;
+  height: 17.32px;
+  background: transparent;
+  border: 1.5px solid hsl(var(--color-primary) / 0.3);
+  transform: rotate(30deg);
+  opacity: 0;
+  animation: hexagon-pulse 4s infinite;
+}
+
+.hexagon::before,
+.hexagon::after {
+  content: "";
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  top: 0;
+  left: 0;
+  background: transparent;
+  border: 1.5px solid hsl(var(--color-primary) / 0.3);
+}
+
+.hexagon::before {
+  transform: rotate(60deg);
+}
+
+.hexagon::after {
+  transform: rotate(-60deg);
+}
+
+.hexagon:nth-child(1) { top: 20px; left: 20px; animation-delay: 0.1s; }
+.hexagon:nth-child(2) { top: 20px; right: 20px; animation-delay: 0.3s; }
+.hexagon:nth-child(3) { bottom: 20px; left: 20px; animation-delay: 0.5s; }
+.hexagon:nth-child(4) { bottom: 20px; right: 20px; animation-delay: 0.7s; }
+.hexagon:nth-child(5) { top: 50%; left: 0; transform: translate(0, -50%) rotate(30deg); animation-delay: 0.9s; }
+.hexagon:nth-child(6) { top: 50%; right: 0; transform: translate(0, -50%) rotate(30deg); animation-delay: 1.1s; }
+
+@keyframes hexagon-pulse {
+  0% { opacity: 0; transform: rotate(30deg) scale(0.8); }
+  20% { opacity: 0.5; transform: rotate(30deg) scale(1); }
+  80% { opacity: 0.5; transform: rotate(30deg) scale(1); }
+  100% { opacity: 0; transform: rotate(30deg) scale(1.2); }
+}
+
+.main-menu-glyphs {
+  position: absolute;
+  inset: 0;
+}
+
+.digital-glyph {
+  position: absolute;
+  color: hsl(var(--color-primary) / 0.5);
+  font-size: 10px;
+  font-family: var(--font-family-body);
+  white-space: nowrap;
+  opacity: 0;
+  animation: glyph-fade 5s infinite;
+  text-shadow: 0 0 5px hsl(var(--color-primary) / 0.3);
+}
+
+.digital-glyph:nth-child(1) { top: 20%; left: 60%; animation-delay: 0.2s; }
+.digital-glyph:nth-child(2) { top: 25%; right: 10%; animation-delay: 0.6s; }
+.digital-glyph:nth-child(3) { bottom: 20%; left: 55%; animation-delay: 1s; }
+.digital-glyph:nth-child(4) { bottom: 25%; right: 15%; animation-delay: 1.4s; }
+
+@keyframes glyph-fade {
+  0% { opacity: 0; transform: translateY(0); }
+  10% { opacity: 0.7; }
+  90% { opacity: 0.7; }
+  100% { opacity: 0; transform: translateY(-10px); }
+}
+
+.main-menu-sound-wave {
+  position: absolute;
+  bottom: -40px;
+  left: 0;
+  width: 100%;
+  height: 20px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.wave-bar {
+  width: 2px;
+  height: 5px;
+  background: hsl(var(--color-primary) / 0.5);
+  margin: 0 2px;
+  border-radius: 1px;
+  animation: wave-animation 1.5s infinite;
+}
+
+@keyframes wave-animation {
+  0%, 100% { height: 5px; }
+  50% { height: 15px; }
+}
+
+.wave-bar:nth-child(1) { animation-delay: 0.1s; }
+.wave-bar:nth-child(2) { animation-delay: 0.2s; }
+.wave-bar:nth-child(3) { animation-delay: 0.3s; }
+.wave-bar:nth-child(4) { animation-delay: 0.4s; }
+.wave-bar:nth-child(5) { animation-delay: 0.5s; }
+.wave-bar:nth-child(6) { animation-delay: 0.6s; }
+.wave-bar:nth-child(7) { animation-delay: 0.7s; }
+.wave-bar:nth-child(8) { animation-delay: 0.8s; }
+.wave-bar:nth-child(9) { animation-delay: 0.9s; }
+.wave-bar:nth-child(10) { animation-delay: 1s; }
+.wave-bar:nth-child(11) { animation-delay: 0.9s; }
+.wave-bar:nth-child(12) { animation-delay: 0.8s; }
+.wave-bar:nth-child(13) { animation-delay: 0.7s; }
+.wave-bar:nth-child(14) { animation-delay: 0.6s; }
+.wave-bar:nth-child(15) { animation-delay: 0.5s; }
+
+/* Main Menu Mobile Optimizations */
+@media (max-width: 767px) { /* sm breakpoint */
+    body.main-menu {
+        overflow-y: auto; /* Allow vertical scrolling on mobile */
+    }
+
+    .video-background-container,
+    .nebula,
+    .grid-plane,
+    .main-menu-hexagons,
+    .main-menu-glyphs,
+    .menu-decorator {
+        display: none;
+    }
+
+    .main-menu-container {
+        align-items: flex-start;
+        padding-top: 2rem;
+        padding-bottom: 2rem; /* Add spacing at the bottom for scrollability */
+    }
+}

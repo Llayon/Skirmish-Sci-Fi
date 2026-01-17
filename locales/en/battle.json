@@ -1,0 +1,230 @@
+
+{
+  "battle": {
+    "round": "Round",
+    "phase": {
+      "reaction_roll": "Initiative",
+      "quick_actions": "Quick Actions",
+      "enemy_actions": "Enemy Phase",
+      "enemy_turn": "Enemy Turn",
+      "opponent_turn": "Opponent's Turn",
+      "your_turn": "Your Turn",
+      "slow_actions": "Slow Actions",
+      "end_round": "Ending Round",
+      "battle_over": "Battle Over"
+    },
+    "battleLog": "Battle Log",
+    "log": {
+      "expand": "Expand Log",
+      "collapse": "Collapse Log"
+    },
+    "victory": "VICTORY",
+    "defeat": "DEFEAT",
+    "victoryMessage": "The mission is a success.",
+    "defeatMessage": "The crew lives to fight another day.",
+    "infoPanel": {
+      "statsTab": "Stats",
+      "loadoutTab": "Loadout",
+      "effectsTab": "Effects",
+      "waiting": "Waiting for next turn...",
+      "casualty": "Status: CASUALTY",
+      "close": "Close",
+      "status": {
+        "stunned": "(Stunned: {tokens})",
+        "dazed": "(Dazed)",
+        "panicked": "(Panicked)",
+        "engaged": "(Engaged)"
+      },
+      "noEffects": "No active effects.",
+      "actionsTitle": "Actions ({actionsLeft} left)",
+      "endTurn": "End Turn",
+      "panickedTitle": "Panicked!",
+      "panickedDesc": "You must flee from the source of your fear.",
+      "panickedInstruction": "Select a destination to flee to.",
+      "brawlWonTitle": "Brawl Won!",
+      "brawlWonDesc": "You may Follow Up with a 2-space move.",
+      "selectWeaponTitle": "Select Weapon ({shotType} Shot)",
+      "selectCharacterToActivate": "Select one of your characters to activate.",
+      "shotTypeAimed": "Aimed",
+      "shotTypeSnap": "Snap",
+      "shotTypePanic": "Panic Fire",
+      "selectTargetInstruction": "Select a target on the grid.",
+      "chooseBrawlWeaponTitle": "Choose Brawl Weapon",
+      "unarmedBonus": "Unarmed (+0 bonus)",
+      "meleeBonus": "(+{bonus} bonus)",
+      "brawlInstruction": "Select an adjacent enemy to brawl.",
+      "consumablesTitle": "Consumables ({costType})",
+      "costTypeFree": "Free Action",
+      "costTypeAction": "Costs Action",
+      "enemyTurnBanner": "ENEMY TURN",
+      "instructionMove": "Select a destination on the grid.",
+      "instructionDash": "Select a destination for your dash.",
+      "instructionShoot": "Select a target on the grid.",
+      "instructionBrawl": "Select an adjacent enemy to brawl.",
+      "instructionFollowUp": "Select a destination within 2 spaces.",
+      "waitingForHost": "Awaiting host confirmation...",
+      "permanent": "Permanent",
+      "roundsLeft": "{duration} rounds left",
+      "selectDistractionBotTarget": "Select an enemy within 12\" to distract.",
+      "selectTimeDistorterTargets": "Select up to 3 enemies to freeze in time.",
+      "selectConcealedBladeTarget": "Select an adjacent enemy to attack.",
+      "confirmTimeDistorter": "Confirm Targets ({count}/3)"
+    },
+    "reactionPhase": {
+      "title": "Reaction Phase",
+      "success": "Success",
+      "fail": "Fail",
+      "waitingFor": {
+        "firstPlayer": "Waiting for First Player to roll...",
+        "secondPlayer": "Waiting for Second Player to roll..."
+      }
+    },
+    "multiplayerLobby": {
+      "title": "Multiplayer Lobby",
+      "inviteMessage": "Share this link with your friend to invite them:",
+      "waitingForOpponent": "Waiting for opponent to connect...",
+      "connectingToHost": "Connecting to host...",
+      "connectionStatusConnected": "Connected",
+      "connectionStatusDisconnected": "Disconnected",
+      "connectionLost": "Connection lost.",
+      "connectionErrorTitle": "Connection Error",
+      "returnToMenu": "Return to Main Menu",
+      "yourCrew": "Your Crew",
+      "hostCrew": "Host's Crew",
+      "opponentCrew": "Opponent's Crew",
+      "waitingForInfo": "Waiting...",
+      "members": "{count} members",
+      "startBattle": "Start Battle",
+      "waitingForHost": "Waiting for host to start the battle...",
+      "peerUnavailable": "Could not find the opponent. Please check the invite link.",
+      "serverError": "Could not connect to the multiplayer server. Please check your internet connection and try again.",
+      "reconnecting": "Connection lost, attempting to reconnect...",
+      "connectionFailed": "Could not re-establish connection. Please ask the host for a new invite link."
+    },
+    "battleEvents": {
+      "renewed_efforts": "Renewed Efforts",
+      "enemy_reinforcements": "Enemy Reinforcements",
+      "change_of_plans": "Change of Plans",
+      "lost_heart": "Lost Heart",
+      "seized_the_moment": "Seized the Moment",
+      "critters": "Critters!",
+      "ammo_fault": "Ammo Fault",
+      "visibility_change": "Visibility Change",
+      "tougher_than_expected": "Tougher Than Expected",
+      "snap_shot": "Snap Shot",
+      "cunning_plan": "Cunning Plan",
+      "possible_reinforcements": "Possible Reinforcements",
+      "clock_is_running_out": "Clock Is Running Out",
+      "environmental_hazard": "Environmental Hazard",
+      "a_desperate_plan": "A Desperate Plan",
+      "a_moment_of_hesitation": "A Moment of Hesitation",
+      "fumbled_grenade": "Fumbled Grenade",
+      "back_up": "Back Up",
+      "enemy_vip": "Enemy VIP",
+      "fog_cloud": "Fog Cloud",
+      "lost": "Lost!",
+      "i_found_something": "I Found Something!",
+      "looks_valuable": "Looks Valuable",
+      "you_want_me_to_check_that_out": "You Want Me To Check THAT Out?"
+    }
+  },
+  "preBattleBriefing": {
+    "title": "Battle Briefing",
+    "deployment": "Deployment Conditions",
+    "objective": "Objective",
+    "enemyForces": "Enemy Forces",
+    "notableSights": "Notable Sights",
+    "threatCondition": "Threat Condition",
+    "rollPrompt": "If you are fighting an Invasion battle, you are simply here to survive. Otherwise roll D100 to determine if a Notable Sight is present.",
+    "rollButton": "Roll for Notable Sight",
+    "rollResult": "Roll: {roll}",
+    "proceedButton": "Proceed to Battle",
+    "rivalAttack": "Rival Attack",
+    "uniqueIndividual": "Unique Individual",
+    "lieutenant": "Lieutenant",
+    "specialist": "Specialist",
+    "sights": {
+        "nothing": "Nothing special.",
+        "documentation": "Documentation: Gain a Quest Rumor.",
+        "priority_target": "Priority target: A random enemy figure gets +1 Toughness. If they are slain, gain 1D3 credits.",
+        "loot_cache": "Loot cache: Roll once on the Loot Table.",
+        "shiny_bits": "Shiny bits: Gain 1 credit.",
+        "really_shiny_bits": "Really shiny bits: Gain 2 credits.",
+        "person_of_interest": "Person of interest: Gain +1 story point.",
+        "peculiar_item": "Peculiar item: Gain +2 XP.",
+        "curious_item": "Curious item: Can be sold for 1 credit or rolled on the Loot Table."
+    }
+  },
+  "deployment": {
+    "no_condition": {
+      "name": "No Condition",
+      "desc": "Standard deployment conditions."
+    },
+    "small_encounter": {
+      "name": "Small Encounter",
+      "desc": "A random crew member must sit out this fight. Reduce enemy numbers by -1 (-2 if they initially outnumber you)."
+    },
+    "poor_visibility": {
+      "name": "Poor Visibility",
+      "desc": "Maximum visibility is 1D6+8”. Reroll at the start of each round."
+    },
+    "brief_engagement": {
+      "name": "Brief Engagement",
+      "desc": "At the end of each round, roll 2D6. If the roll is equal or below the round number, the game ends inconclusively."
+    },
+    "toxic_environment": {
+      "name": "Toxic Environment",
+      "desc": "Whenever a combatant is Stunned, roll 1D6+Savvy skill (0 for enemies). Failure to roll a 4+ becomes a casualty."
+    },
+    "surprise_encounter": {
+      "name": "Surprise Encounter",
+      "desc": "The enemy can’t act in the first round."
+    },
+    "delayed": {
+      "name": "Delayed",
+      "desc": "2 random crew members won’t start on the table. At the end of each round, roll 1D6: if the roll is equal or below the round number, they may be placed at any point of your own battlefield edge."
+    },
+    "slippery_ground": {
+      "name": "Slippery Ground",
+      "desc": "All movement at ground level is -1 Speed."
+    },
+    "bitter_struggle": {
+      "name": "Bitter Struggle",
+      "desc": "Enemy Morale is +1."
+    },
+    "caught_off_guard": {
+      "name": "Caught Off Guard",
+      "desc": "Your squad all act in the Slow Actions phase in Round 1."
+    },
+    "gloomy": {
+      "name": "Gloomy",
+      "desc": "Maximum visibility is 9”. Characters that fire can be fired upon at any range, however."
+    }
+  },
+  "threats": {
+    "comms_interference": {
+      "name": "Comms Interference",
+      "desc": "Each Reaction Roll phase, roll one die less than you normally would."
+    },
+    "elite_opposition": {
+      "name": "Elite Opposition",
+      "desc": "All opponents with +0 Combat Skill are upgraded to +1."
+    },
+    "pitch_black": {
+      "name": "Pitch Black",
+      "desc": "Visibility is limited to 6 inches."
+    },
+    "heavy_opposition": {
+      "name": "Heavy Opposition",
+      "desc": "Increase the opposing force by +2 enemies."
+    },
+    "armored_opponents": {
+      "name": "Armored Opponents",
+      "desc": "All opponents with 3 Toughness are upgraded to 4."
+    },
+    "enemy_captain": {
+      "name": "Enemy Captain",
+      "desc": "Add an additional Lieutenant with Combat Skill +2 and Toughness 5."
+    }
+  }
+}

@@ -1,0 +1,36 @@
+
+{
+  "preBattleBriefing": {
+    "title": "Battle Briefing",
+    "deployment": "Deployment Conditions",
+    "objective": "Objective",
+    "enemyForces": "Enemy Forces",
+    "notableSights": "Notable Sights",
+    "threatCondition": "Threat Condition",
+    "rollPrompt": "Invasion battles are for survival only. For other missions, roll D100 to check for Notable Sights.",
+    "rollButton": "Roll for Notable Sight",
+    "rollResult": "Roll: {roll}",
+    "proceedButton": "Proceed to Battle",
+    "rivalAttack": "Rival Attack",
+    "uniqueIndividual": "Unique Individual",
+    "lieutenant": "Lieutenant",
+    "specialist": "Specialist",
+    "sights": {
+        "nothing": "Nothing special.",
+        "documentation": "Documentation: Gain a Quest Rumor.",
+        "priority_target": "Priority target: A random enemy gains +1 Toughness. If they are slain, gain 1D3 credits.",
+        "loot_cache": "Loot cache: Roll once on the Loot Table.",
+        "shiny_bits": "Shiny bits: Gain 1 credit.",
+        "really_shiny_bits": "Really shiny bits: Gain 2 credits.",
+        "person_of_interest": "Person of interest: Gain +1 story point.",
+        "peculiar_item": "Peculiar item: Gain +2 XP.",
+        "curious_item": "Curious item: Can be sold for 1 credit or you can roll on the Loot Table."
+    },
+    "dropLauncher": {
+        "title": "Drop Launcher",
+        "rollButton": "Roll for Drop Deployment (8+)",
+        "success": "Success ({roll})! Drop deployment is viable.",
+        "failure": "Failure ({roll}). Drop deployment is not available."
+    }
+  }
+}
