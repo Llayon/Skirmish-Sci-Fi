@@ -1,0 +1,85 @@
+
+{
+  "missions": {
+    "titles": {
+      "Access": "Access Console",
+      "Acquire": "Acquire Asset",
+      "Defend": "Defend Position",
+      "Deliver": "Deliver Package",
+      "Eliminate": "Eliminate Target",
+      "FightOff": "Fight Off Attack",
+      "MoveThrough": "Move Through",
+      "Patrol": "Patrol Area",
+      "Protect": "Protect VIP",
+      "Secure": "Secure Location",
+      "Search": "Search"
+    },
+    "descriptions": {
+      "Access": "Reach the console and slice into the system before enemy reinforcements arrive.",
+      "Acquire": "An important item has been dropped. Secure it and escape off any table edge.",
+      "Defend": "Hold off waves of enemies trying to overrun your position.",
+      "Deliver": "Pick up the package and deliver it to the designated drop-off point.",
+      "Eliminate": "A high-value target is on the field. Take them out.",
+      "FightOff": "Survive the enemy assault until extraction arrives.",
+      "MoveThrough": "At least two crew members must escape off the far table edge.",
+      "Patrol": "Visit and scan three designated patrol points on the map.",
+      "Protect": "A VIP must be escorted to the safe zone in the center of the map.",
+      "Secure": "Clear the central area of enemies and hold it for two consecutive turns.",
+      "Search": "Search the area around the objective marker to find the hidden intel."
+    },
+    "progress": {
+        "patrol": "Patrol points scanned: {visited}/{total}",
+        "secure": "Rounds secured: {current}/{total}",
+        "move_through": "Crew members escaped: {current}/{total}"
+    },
+    "results": {
+        "Access": {
+            "success": "System accessed. Data secured.",
+            "failure": "Access denied. The system remains locked."
+        },
+        "Acquire": {
+            "success": "Asset acquired and extracted successfully.",
+            "failure": "The asset was lost or destroyed."
+        },
+        "Defend": {
+            "success": "The position was held and the attackers repelled.",
+            "failure": "The position was overrun by the enemy."
+        },
+        "Deliver": {
+            "success": "Package delivered to the drop-off point.",
+            "failure": "The delivery could not be completed."
+        },
+        "Eliminate": {
+            "success": "The target has been eliminated.",
+            "failure": "The target escaped."
+        },
+        "FightOff": {
+            "success": "The enemy assault was fought off successfully.",
+            "failure": "The crew was overwhelmed by the enemy assault."
+        },
+        "MoveThrough": {
+            "success": "The crew successfully moved through the area.",
+            "failure": "The crew could not get enough members through the area."
+        },
+        "Patrol": {
+            "success": "The area has been fully patrolled.",
+            "failure": "The patrol could not be completed."
+        },
+        "Protect": {
+            "success": "The VIP was safely escorted to the extraction zone.",
+            "failure": "The VIP was incapacitated or the crew was eliminated."
+        },
+        "Secure": {
+            "success": "The location has been secured.",
+            "failure": "The crew was unable to secure the location."
+        },
+        "Search": {
+            "success": "Intel found! The search was a success.",
+            "failure": "The search area was thoroughly checked, but the intel was not found."
+        }
+    },
+    "tooltips": {
+        "itemCarrier": "Carrying the mission objective."
+    }
+  }
+}
