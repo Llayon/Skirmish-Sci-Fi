@@ -91,6 +91,12 @@ describe('MultiplayerLobby', () => {
   const mockCrew = { name: 'Test Crew', members: [{ id: 'char1' }] };
   const mockStartMultiplayerBattle = vi.fn();
   const mockAbortMultiplayerBattle = vi.fn();
+  const mockSetBattleFromLobby = vi.fn();
+  const mockSendFullBattleSync = vi.fn();
+
+  const mockZustandHook = <T extends Record<string, any>>(hook: any, state: T) => {
+    hook.mockImplementation((selector?: any) => (typeof selector === 'function' ? selector(state) : state));
+  };
 
   beforeEach(async () => {
     vi.clearAllMocks();
@@ -103,46 +109,50 @@ describe('MultiplayerLobby', () => {
     onSyncRequestCallbacks.length = 0;
     onReconnectingCallbacks.length = 0;
     
-    vi.mocked(useCrewStore).mockReturnValue({ crew: mockCrew });
-    vi.mocked(useCampaignProgressStore).mockReturnValue({
+    mockZustandHook(vi.mocked(useCrewStore), { crew: mockCrew } as any);
+    mockZustandHook(vi.mocked(useCampaignProgressStore), {
       actions: {
         startMultiplayerBattle: mockStartMultiplayerBattle,
-        setBattleFromLobby: vi.fn(),
-      }
+        setBattleFromLobby: mockSetBattleFromLobby,
+      },
     } as any);
-    vi.mocked(useBattleStore).mockReturnValue({ actions: { sendFullBattleSync: vi.fn() } } as any);
+    mockZustandHook(vi.mocked(useBattleStore), { actions: { sendFullBattleSync: mockSendFullBattleSync } } as any);
   });
 
   describe('Host View', () => {
     beforeEach(() => {
-      vi.mocked(useMultiplayerStore).mockReturnValue({ multiplayerRole: 'host', joinId: null, actions: { abortMultiplayer: mockAbortMultiplayerBattle } });
+      mockZustandHook(vi.mocked(useMultiplayerStore), { multiplayerRole: 'host', joinId: null, actions: { abortMultiplayer: mockAbortMultiplayerBattle } } as any);
       vi.mocked(mockMultiplayerService.host).mockResolvedValue('test-host-id');
     });
 
     it('displays loading, then the join URL', async () => {
       render(<MultiplayerLobby />);
-      expect(screen.getByRole('progressbar')).toBeInTheDocument(); // Lucide loader has role="progressbar"
+      expect(screen.getByText('Waiting for opponent...')).toBeInTheDocument();
 
       await waitFor(() => {
         expect(screen.getByDisplayValue(/join=test-host-id/)).toBeInTheDocument();
       });
-      expect(screen.getByText('battle.multiplayerLobby.waitingForOpponent')).toBeInTheDocument();
+      expect(screen.getByText('Waiting for opponent...')).toBeInTheDocument();
     });
 
     it('shows opponent crew and enables start button upon connection and crew share', async () => {
       render(<MultiplayerLobby />);
       
+      await waitFor(() => {
+        expect(mockMultiplayerService.onConnect).toHaveBeenCalled();
+      });
+
       // Simulate guest connecting
       act(() => {
         mockMultiplayerService._simulate.connect();
       });
 
       await waitFor(() => {
-        expect(screen.getByText('battle.multiplayerLobby.opponentCrew')).toBeInTheDocument();
+        expect(screen.getByText('Opponent Crew')).toBeInTheDocument();
       });
       
       // Start button is disabled initially
-      const startButton = screen.getByText('battle.multiplayerLobby.startBattle');
+      const startButton = screen.getByRole('button', { name: 'Start Battle' });
       expect(startButton).toBeDisabled();
       
       // Simulate guest sending their crew data
@@ -160,7 +170,7 @@ describe('MultiplayerLobby', () => {
 
   describe('Guest View', () => {
     beforeEach(() => {
-      vi.mocked(useMultiplayerStore).mockReturnValue({ multiplayerRole: 'guest', joinId: 'test-join-id', actions: { abortMultiplayer: mockAbortMultiplayerBattle } });
+      mockZustandHook(vi.mocked(useMultiplayerStore), { multiplayerRole: 'guest', joinId: 'test-join-id', actions: { abortMultiplayer: mockAbortMultiplayerBattle } } as any);
       mockMultiplayerService.join.mockResolvedValue(undefined);
     });
 
@@ -168,27 +178,31 @@ describe('MultiplayerLobby', () => {
       render(<MultiplayerLobby />);
       expect(screen.getByText('Connecting to host...')).toBeInTheDocument();
 
+      await waitFor(() => {
+        expect(mockMultiplayerService.onConnect).toHaveBeenCalled();
+      });
+
       // Simulate connection
       act(() => {
         (mockMultiplayerService as any)._simulate.connect();
       });
       
       await waitFor(() => {
-        expect(screen.getByText('battle.multiplayerLobby.waitingForHost')).toBeInTheDocument();
+        expect(screen.getByText('Waiting for host...')).toBeInTheDocument();
       });
-      expect(screen.queryByText('battle.multiplayerLobby.startBattle')).not.toBeInTheDocument();
+      expect(screen.queryByRole('button', { name: 'Start Battle' })).not.toBeInTheDocument();
     });
   });
 
   describe('Error View', () => {
     it('displays an error message on connection error', async () => {
-      vi.mocked(useMultiplayerStore).mockReturnValue({ multiplayerRole: 'guest', joinId: 'test-join-id', actions: { abortMultiplayer: mockAbortMultiplayerBattle } });
+      mockZustandHook(vi.mocked(useMultiplayerStore), { multiplayerRole: 'guest', joinId: 'test-join-id', actions: { abortMultiplayer: mockAbortMultiplayerBattle } } as any);
       vi.mocked(mockMultiplayerService.join).mockRejectedValue(new Error('peer-unavailable'));
 
       render(<MultiplayerLobby />);
 
       await waitFor(() => {
-          expect(screen.getByText('Connection Error')).toBeInTheDocument();
+          expect(screen.getAllByText('Connection Error').length).toBeGreaterThan(0);
           expect(screen.getByText('Could not find the opponent. Please check the invite link.')).toBeInTheDocument();
       });
     });

@@ -28,7 +28,7 @@ interface TooltipProps {
   children: React.ReactNode;
   content: string | React.ReactNode;
   className?: string;
-  as?: React.ElementType;
+  as?: 'span' | 'div';
 }
 
 /**
@@ -77,9 +77,8 @@ const Tooltip: React.FC<TooltipProps> = ({ children, content, className = '', as
     return <>{children}</>;
   }
 
-  // Use a div with `display: contents` if no className is provided to avoid breaking flex/grid layouts
-  const WrapperComponent = className ? Component : 'div';
-  const wrapperProps = className ? { className } : { style: { display: 'contents' } };
+  const wrapperProps = className ? { className } : { style: { display: 'contents' as const } };
+  const WrapperComponent = Component;
 
   return (
     <>

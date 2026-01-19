@@ -164,7 +164,7 @@ const ActionControls: React.FC<ActionControlsProps> = ({ participant, battleLogi
   const teleportTooltip = isNullZone ? t('tooltips.actions.nullZone') : t('tooltips.actions.teleport');
 
   return (
-    <div className='relative'>
+    <div className='relative' data-testid="action-controls">
         <div className="absolute bottom-full mb-2 w-full flex flex-col items-center gap-2">
             {/* WEAPON/CONSUMABLE SELECTION TRAY */}
             {(uiState.mode === 'selectingShootWeapon' || uiState.mode === 'selectingPanicFireWeapon' || uiState.mode === 'selectingBrawlWeapon' || uiState.mode === 'selectingConsumable') && (

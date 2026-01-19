@@ -4,10 +4,16 @@ import { describe, it, expect, vi } from 'vitest';
 import BattleLog from './BattleLog';
 
 vi.mock('@tanstack/react-virtual', () => ({
-  useVirtualizer: vi.fn(() => ({
-    getVirtualItems: () => [{ key: 0, index: 0, start: 0, measureElement: vi.fn() }, { key: 1, index: 1, start: 22, measureElement: vi.fn() }],
-    getTotalSize: () => 44,
+  useVirtualizer: vi.fn((opts: any) => ({
+    getVirtualItems: () =>
+      Array.from({ length: opts.count }, (_, index) => ({
+        key: index,
+        index,
+        start: index * 22,
+      })),
+    getTotalSize: () => opts.count * 22,
     scrollToIndex: vi.fn(),
+    measureElement: vi.fn(),
   })),
 }));
 
@@ -28,6 +34,6 @@ describe('BattleLog', () => {
   it('renders and translates LogEntry objects', () => {
     const log = [{ key: 'log.action.shoots', params: { attacker: 'Rook' } }];
     render(<BattleLog log={log as any} />);
-    expect(screen.getByText('log.action.shoots {"attacker":"Rook"}')).toBeInTheDocument();
+    expect(screen.getByText('log.action.shoots')).toBeInTheDocument();
   });
 });

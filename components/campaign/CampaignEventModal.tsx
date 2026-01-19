@@ -181,6 +181,7 @@ const CampaignEventModal: React.FC = () => {
                         </div>
                     );
             }
+            return null;
         }
         case 'patrol_ship': {
             const confiscateCount = eventData.confiscateCount || 0;

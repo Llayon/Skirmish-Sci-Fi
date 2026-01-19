@@ -33,7 +33,7 @@ export const afterActionTraits: TraitPlugin[] = [
 
                         if (finalRoll >= targetNumber) {
                             ctx.log.push({ key: 'log.info.bonusShotHit' });
-                            const hitLogs = applyHitAndSaves(ctx.battle, ctx.attacker, target, ctx.weapon, true);
+                            const hitLogs = applyHitAndSaves(ctx.battle, ctx.attacker, target, ctx.weapon, true) || [];
                             ctx.log.push(...hitLogs);
                         } else {
                             ctx.log.push({ key: 'log.info.bonusShotMiss' });

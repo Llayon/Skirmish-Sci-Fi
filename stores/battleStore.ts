@@ -9,6 +9,7 @@ import { battleUseCases } from '../services';
 import { handleError } from '../services/utils/errorHandler';
 import { logger } from '../services/utils/logger';
 import { useShipStore } from './shipStore';
+import { multiplayerService } from '@/services/multiplayerService';
 import { EnemyEncounterCategory } from '@/constants/enemyEncounters';
 
 interface BattleState {
@@ -46,6 +47,7 @@ interface BattleState {
     setShowEnemyTurnBanner: (show: boolean) => void;
     setAnimation: (animation: AnimationState) => void;
     setAnimatingParticipantId: (id: string | null) => void;
+    clearAnimation: () => void;
     sendFullBattleSync: () => void;
     resetBattle: () => void;
     processEnemyTurn: (enemyId: string) => Promise<{ animation: AnimationState; duration: number }>;
@@ -84,9 +86,7 @@ export const useBattleStore = create<BattleState>()(
               battleUpdateDebounceTimer = setTimeout(() => {
                 const latestBattle = get().battle;
                 if (latestBattle) {
-                  import('../services/multiplayerService').then(({ multiplayerService }) => {
-                    multiplayerService.send({ type: 'BATTLE_UPDATE', payload: latestBattle });
-                  });
+                  multiplayerService.send({ type: 'BATTLE_UPDATE', payload: latestBattle });
                 }
               }, 100); // 100ms debounce window
             }
@@ -183,9 +183,7 @@ export const useBattleStore = create<BattleState>()(
               state.pendingActionFor = characterId;
             });
           }
-          import('../services/multiplayerService').then(({ multiplayerService }) => {
-            multiplayerService.send({ type: 'PLAYER_ACTION', payload: action });
-          });
+          multiplayerService.send({ type: 'PLAYER_ACTION', payload: action });
         } else {
           get().actions.setBattle((battle) => {
             const { logs } = battleUseCases.processPlayerAction(battle, action, multiplayerRole);
@@ -225,14 +223,17 @@ export const useBattleStore = create<BattleState>()(
         set((state) => {
           state.animatingParticipantId = id;
         }),
+      clearAnimation: () =>
+        set((state) => {
+          state.animation = null;
+          state.animatingParticipantId = null;
+        }),
       sendFullBattleSync: () => {
         const { battle } = get();
         const { multiplayerRole } = useMultiplayerStore.getState();
         if (battle && multiplayerRole === 'host') {
           logger.info('Host received sync request. Sending full battle state.');
-          import('../services/multiplayerService').then(({ multiplayerService }) => {
-            multiplayerService.send({ type: 'BATTLE_UPDATE', payload: battle });
-          });
+          multiplayerService.send({ type: 'BATTLE_UPDATE', payload: battle });
         }
       },
       resetBattle: () => set(initialBattleState),

@@ -27,7 +27,7 @@ vi.mock('@/stores/battleStore', () => ({
   }
 }));
 
-vi.mock('../services/multiplayerService', () => ({
+vi.mock('@/services/multiplayerService', () => ({
   multiplayerService: {
     disconnect: vi.fn(),
   }
@@ -41,8 +41,7 @@ describe('multiplayerStore', () => {
     useMultiplayerStore.getState().actions.reset();
     // Clear mocks history. This will clear hoisted mocks like mockSetGameMode too.
     vi.clearAllMocks();
-    // Dynamically import the service to get the mocked instance
-    multiplayerService = (await import('../services/multiplayerService')).multiplayerService;
+    multiplayerService = (await import('@/services/multiplayerService')).multiplayerService;
   });
 
   it('should have correct initial state', () => {
@@ -74,9 +73,6 @@ describe('multiplayerStore', () => {
     useMultiplayerStore.getState().actions.startMultiplayer();
 
     useMultiplayerStore.getState().actions.abortMultiplayer();
-    
-    // wait for dynamic import to resolve
-    await new Promise(resolve => setTimeout(resolve, 0));
 
     const state = useMultiplayerStore.getState();
     expect(multiplayerService.disconnect).toHaveBeenCalled();

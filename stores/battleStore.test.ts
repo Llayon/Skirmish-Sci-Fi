@@ -24,16 +24,20 @@ vi.mock('../services', () => ({
   campaignUseCases: {},
 }));
 
-vi.mock('../services/multiplayerService', () => ({
+vi.mock('@/services/multiplayerService', () => ({
   multiplayerService: {
     send: vi.fn(),
   }
 }));
 
-const { multiplayerService } = await import('../services/multiplayerService');
+const { multiplayerService } = await import('@/services/multiplayerService');
 
 const mockBattle: Battle = { id: 'test-battle', participants: [], round: 1 } as any;
 
+const flushPromises = async () => {
+  await Promise.resolve();
+  await Promise.resolve();
+};
 
 describe('battleStore', () => {
   beforeEach(() => {
@@ -119,11 +123,12 @@ describe('battleStore', () => {
       } as any);
     });
 
-    it('dispatchAction should set pendingActionFor and send a message via multiplayerService', () => {
+    it('dispatchAction should set pendingActionFor and send a message via multiplayerService', async () => {
       useBattleStore.getState().actions.setNewBattle(mockBattle);
       const mockAction = { type: 'move', payload: { characterId: 'player1' } } as any;
 
       useBattleStore.getState().actions.dispatchAction(mockAction);
+      await flushPromises();
 
       expect(useBattleStore.getState().pendingActionFor).toBe('player1');
       expect(multiplayerService.send).toHaveBeenCalledWith({ type: 'PLAYER_ACTION', payload: mockAction });
@@ -170,7 +175,7 @@ describe('battleStore', () => {
       expect(multiplayerService.send).not.toHaveBeenCalled();
     });
 
-    it('setBattle should debounce sending BATTLE_UPDATE messages', () => {
+    it('setBattle should debounce sending BATTLE_UPDATE messages', async () => {
       useBattleStore.getState().actions.setNewBattle(mockBattle);
       
       // Call setBattle multiple times
@@ -182,6 +187,7 @@ describe('battleStore', () => {
 
       // Fast-forward time
       vi.advanceTimersByTime(150); // debounce is 100ms, so 150ms should be enough
+      await flushPromises();
 
       expect(multiplayerService.send).toHaveBeenCalledTimes(1);
       expect(multiplayerService.send).toHaveBeenCalledWith({

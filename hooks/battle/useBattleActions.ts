@@ -27,7 +27,7 @@ export const useBattleActions = (
   const { characterPerformingAction, reachableCells } = derivedData;
   
   const battle = useBattleStore(state => state.battle!);
-  const { dispatchAction, endTurn: endTurnAction, setAnimation, setAnimatingParticipantId, setBattle } = useBattleStore(state => state.actions);
+  const { dispatchAction, endTurn: endTurnAction, setAnimation, setAnimatingParticipantId, clearAnimation, setBattle } = useBattleStore(state => state.actions);
 
 
   const handleGridClick = useCallback(async (pos: Position) => {
@@ -86,20 +86,20 @@ export const useBattleActions = (
       cancelAction();
 
       if (animation) {
-        setAnimatingParticipantId(actorId);
-        setAnimation(animation);
-        await sleep(duration);
-
-        dispatchAction(action);
-
-        setAnimatingParticipantId(null);
-        setAnimation(null);
+        try {
+          setAnimatingParticipantId(actorId);
+          setAnimation(animation);
+          await sleep(duration);
+          dispatchAction(action);
+        } finally {
+          clearAnimation();
+        }
         await sleep(500);
       } else {
         dispatchAction(action);
       }
     }
-  }, [interactionState.uiState, characterPerformingAction, reachableCells, battle, cancelAction, setAnimatingParticipantId, setAnimation, dispatchAction]);
+  }, [interactionState.uiState, characterPerformingAction, reachableCells, battle, cancelAction, setAnimatingParticipantId, setAnimation, clearAnimation, dispatchAction]);
 
   const selectMoveAction = useCallback((characterId: string, isDash: boolean) => {
     setUiState({ mode: 'move', characterId, isDash });

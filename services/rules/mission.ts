@@ -112,33 +112,7 @@ export function checkMissionStatus(battle: Battle, context: 'after_action' | 'en
         }
 
         if (mission.status === 'in_progress') {
-            if (!gridSize) return { battle, logs };
-            const center = { x: Math.floor(gridSize.width / 2), y: Math.floor(gridSize.height / 2) };
             switch (mission.type) {
-                case 'Protect':
-                    const vip = battle.participants.find(p => p.id === mission.vipId);
-                    if (vip && mission.vipTurnStartInZone && distance(vip.position, center) <= 3) {
-                        mission.status = 'success';
-                        logs.push({ key: 'log.mission.protect.success' });
-                    }
-                    break;
-                case 'Secure':
-                    const crewInZone = battle.participants.some(p => p.type === 'character' && p.status !== 'casualty' && distance(p.position, center) <= 2);
-                    const enemiesNear = battle.participants.some(p => p.type === 'enemy' && p.status !== 'casualty' && battle.participants.some(c => c.type === 'character' && distance(c.position, p.position) <= 6));
-                    
-                    if (crewInZone && !enemiesNear) {
-                        mission.secureRoundsCompleted = (mission.secureRoundsCompleted || 0) + 1;
-                        logs.push({ key: 'log.mission.secure.progress', params: { current: mission.secureRoundsCompleted, total: 2 } });
-                        if (mission.secureRoundsCompleted >= 2) {
-                            mission.status = 'success';
-                        }
-                    } else {
-                        if (mission.secureRoundsCompleted > 0) {
-                            logs.push({ key: 'log.mission.secure.reset' });
-                        }
-                        mission.secureRoundsCompleted = 0;
-                    }
-                    break;
                 case 'Eliminate':
                     if(mission.eliminateTargetCanEscape) {
                         const target = battle.participants.find(p => p.id === mission.targetEnemyId);
@@ -148,6 +122,36 @@ export function checkMissionStatus(battle: Battle, context: 'after_action' | 'en
                         }
                     }
                     break;
+                case 'Protect':
+                case 'Secure': {
+                    if (!gridSize) return { battle, logs };
+                    const center = { x: Math.floor(gridSize.width / 2), y: Math.floor(gridSize.height / 2) };
+
+                    if (mission.type === 'Protect') {
+                        const vip = battle.participants.find(p => p.id === mission.vipId);
+                        if (vip && mission.vipTurnStartInZone && distance(vip.position, center) <= 3) {
+                            mission.status = 'success';
+                            logs.push({ key: 'log.mission.protect.success' });
+                        }
+                    } else {
+                        const crewInZone = battle.participants.some(p => p.type === 'character' && p.status !== 'casualty' && distance(p.position, center) <= 2);
+                        const enemiesNear = battle.participants.some(p => p.type === 'enemy' && p.status !== 'casualty' && battle.participants.some(c => c.type === 'character' && distance(c.position, p.position) <= 6));
+                        
+                        if (crewInZone && !enemiesNear) {
+                            mission.secureRoundsCompleted = (mission.secureRoundsCompleted || 0) + 1;
+                            logs.push({ key: 'log.mission.secure.progress', params: { current: mission.secureRoundsCompleted, total: 2 } });
+                            if (mission.secureRoundsCompleted >= 2) {
+                                mission.status = 'success';
+                            }
+                        } else {
+                            if (mission.secureRoundsCompleted > 0) {
+                                logs.push({ key: 'log.mission.secure.reset' });
+                            }
+                            mission.secureRoundsCompleted = 0;
+                        }
+                    }
+                    break;
+                }
             }
         }
     }

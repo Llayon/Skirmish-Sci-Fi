@@ -13,7 +13,8 @@ const ReactionRollPanel: React.FC<ReactionRollPanelProps> = () => {
 
   const { setBattle, dispatchAction, advancePhase } = useBattleStore(state => state.actions);
   const battle = useBattleStore(state => state.battle!);
-  const { reactionRolls, reactionRerollsUsed, participants, firstPlayerRole, difficulty, canSeizeInitiative, seizeInitiativePenalty } = battle;
+  const { reactionRolls: rawReactionRolls, reactionRerollsUsed, participants, firstPlayerRole, difficulty, canSeizeInitiative, seizeInitiativePenalty } = battle;
+  const reactionRolls = rawReactionRolls ?? {};
 
   const campaign = useCampaignProgressStore(state => state.campaign)!;
   const { updateCampaign } = useCampaignProgressStore(state => state.actions);

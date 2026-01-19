@@ -18,7 +18,7 @@ describe('ActiveMissionCard', () => {
   it('renders mission details', () => {
     render(<ActiveMissionCard mission={mockMission} />);
     expect(screen.getByText('title.access')).toBeInTheDocument();
-    expect(screen.getByText('patrons.corporation')).toBeInTheDocument();
+    expect(screen.getByText('dashboard.patrons.corporation')).toBeInTheDocument();
   });
 
   it('calculates and displays the deadline', () => {
