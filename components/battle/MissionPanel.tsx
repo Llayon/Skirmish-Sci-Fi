@@ -12,6 +12,7 @@ import { useBattleStore } from '../../stores';
  */
 interface MissionPanelProps {
   mission: Mission;
+  embedded?: boolean;
 }
 
 /**
@@ -19,7 +20,7 @@ interface MissionPanelProps {
  * @param {MissionPanelProps} props - The component props.
  * @returns {React.ReactElement} The rendered mission panel.
  */
-const MissionPanel: React.FC<MissionPanelProps> = ({ mission }) => {
+const MissionPanel: React.FC<MissionPanelProps> = ({ mission, embedded = false }) => {
   const { t } = useTranslation();
   const deploymentCondition = useBattleStore(state => state.battle?.deploymentCondition);
 
@@ -52,8 +53,8 @@ const MissionPanel: React.FC<MissionPanelProps> = ({ mission }) => {
     }
   }
 
-  return (
-    <Card className='bg-surface-base/40 border border-border/50 mb-4'>
+  const content = (
+    <>
       <div className='flex items-start gap-4'>
         <div className='flex-shrink-0 pt-1'>
           <Icon />
@@ -72,8 +73,12 @@ const MissionPanel: React.FC<MissionPanelProps> = ({ mission }) => {
           </div>
         </Tooltip>
       )}
-    </Card>
+    </>
   );
+
+  if (embedded) return <div className="space-y-3">{content}</div>;
+
+  return <Card className='bg-surface-base/40 border border-border/50 mb-4'>{content}</Card>;
 };
 
 export default MissionPanel;

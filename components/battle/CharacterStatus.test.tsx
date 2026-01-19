@@ -37,7 +37,7 @@ describe('CharacterStatus', () => {
 
   it('displays the correct number of action icons', () => {
     render(<CharacterStatus participant={mockParticipant} />);
-    const iconsContainer = screen.getByText('Actions:').nextElementSibling;
+    const iconsContainer = screen.getByText('battle.hud.actions').nextElementSibling;
     expect(iconsContainer!.querySelectorAll('svg')).toHaveLength(2);
     expect(iconsContainer!.querySelectorAll('.text-warning.fill-current')).toHaveLength(1);
   });

@@ -10,10 +10,10 @@ vi.mock('./ActionControls', () => ({ default: () => <div data-testid="action-con
 vi.mock('./ReactionRollPanel', () => ({ default: () => <div data-testid="reaction-roll-panel" /> }));
 vi.mock('./CharacterStatus', () => ({ default: () => <div data-testid="character-status" /> }));
 vi.mock('../../i18n', () => ({ useTranslation: () => ({ t: (key: string) => key }) }));
-vi.mock('../../stores', () => ({ useMultiplayerStore: vi.fn(), useBattleStore: vi.fn() }));
+vi.mock('../../stores', () => ({ useMultiplayerStore: vi.fn(), useBattleStore: vi.fn(), useHudStore: vi.fn() }));
 vi.mock('../../hooks/useGameState');
 
-const { useBattleStore, useMultiplayerStore } = await import('../../stores');
+const { useBattleStore, useMultiplayerStore, useHudStore } = await import('../../stores');
 const { useGameState } = await import('../../hooks/useGameState');
 
 const mockGameState = (battleOverride: any) => ({
@@ -35,6 +35,22 @@ describe('BattleHUD', () => {
   beforeEach(() => {
     vi.clearAllMocks();
     vi.mocked(useMultiplayerStore).mockImplementation((selector: any) => selector({ multiplayerRole: null }));
+    vi.mocked(useHudStore).mockImplementation((selector: any) =>
+      selector({
+        preset: 'full',
+        panels: { queue: true, mission: true, status: true, actions: true, log: true },
+        collapsed: { queue: false, mission: false, status: false, actions: false, log: false },
+        density: 'normal',
+        actions: {
+          applyPreset: vi.fn(),
+          setPanelVisible: vi.fn(),
+          togglePanel: vi.fn(),
+          toggleCollapsed: vi.fn(),
+          setDensity: vi.fn(),
+          reset: vi.fn(),
+        },
+      })
+    );
     vi.mocked(useBattleStore).mockImplementation((selector: any) =>
       selector({
         selectedParticipantId: 'char1',

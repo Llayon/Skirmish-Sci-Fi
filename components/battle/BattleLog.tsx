@@ -1,4 +1,4 @@
-import React, { useRef, useEffect, useState } from 'react';
+import React, { useRef, useEffect, useState, useCallback, useMemo } from 'react';
 import { useVirtualizer } from '@tanstack/react-virtual';
 import { LogEntry, Weapon } from '../../types';
 import { useTranslation } from '../../i18n';
@@ -41,6 +41,51 @@ const WeaponTooltipContent: React.FC<{ weapon: Weapon }> = ({ weapon }) => {
  */
 type BattleLogProps = {
   log: (string | LogEntry)[];
+  embedded?: boolean;
+  heightClassName?: string;
+};
+
+type BattleLogVirtualizedProps = {
+  log: (string | LogEntry)[];
+  isExpanded: boolean;
+  renderLogMessage: (logEntry: string | LogEntry, index: number) => React.ReactNode;
+  scrollElement: HTMLDivElement;
+};
+
+const BattleLogVirtualized: React.FC<BattleLogVirtualizedProps> = ({ log, isExpanded, renderLogMessage, scrollElement }) => {
+  const rowVirtualizer = useVirtualizer({
+    count: log.length,
+    getScrollElement: () => scrollElement,
+    estimateSize: () => 22,
+    overscan: 10,
+  });
+
+  useEffect(() => {
+    if (log.length > 0) {
+      rowVirtualizer.scrollToIndex(log.length - 1, { align: 'end', behavior: 'auto' });
+    }
+  }, [log.length, rowVirtualizer, isExpanded]);
+
+  return (
+    <div style={{ height: `${rowVirtualizer.getTotalSize()}px`, width: '100%', position: 'relative' }}>
+      {rowVirtualizer.getVirtualItems().map((virtualItem) => (
+        <div
+          key={virtualItem.key}
+          data-index={virtualItem.index}
+          ref={rowVirtualizer.measureElement}
+          style={{
+            position: 'absolute',
+            top: 0,
+            left: 0,
+            width: '100%',
+            transform: `translateY(${virtualItem.start}px)`,
+          }}
+        >
+          {renderLogMessage(log[virtualItem.index], virtualItem.index)}
+        </div>
+      ))}
+    </div>
+  );
 };
 
 /**
@@ -50,27 +95,36 @@ type BattleLogProps = {
  * @param {BattleLogProps} props - The component props.
  * @returns {React.ReactElement} The rendered battle log.
  */
-const BattleLog: React.FC<BattleLogProps> = ({ log }) => {
+const BattleLog: React.FC<BattleLogProps> = ({ log, embedded = false, heightClassName }) => {
   const { t } = useTranslation();
   const parentRef = useRef<HTMLDivElement>(null);
+  const scrollElementRef = useRef<HTMLDivElement | null>(null);
+  const [scrollElement, setScrollElement] = useState<HTMLDivElement | null>(null);
   const [isExpanded, setIsExpanded] = useState(false);
+  const [filter, setFilter] = useState<'all' | 'actions' | 'info'>('all');
 
   // Get required state from stores
   const participants = useBattleStore(state => state.battle?.participants) || [];
   const { setSelectedParticipantId } = useBattleStore(state => state.actions);
 
-  const rowVirtualizer = useVirtualizer({
-    count: log.length,
-    getScrollElement: () => parentRef.current,
-    estimateSize: () => 22, // Estimated height of a single-line log entry
-    overscan: 10,
-  });
-
-  useEffect(() => {
-    if (log.length > 0) {
-      rowVirtualizer.scrollToIndex(log.length - 1, { align: 'end', behavior: 'auto' });
+  const setParentRef = useCallback((element: HTMLDivElement | null) => {
+    parentRef.current = element;
+    if (scrollElementRef.current !== element) {
+      scrollElementRef.current = element;
+      setScrollElement(element);
     }
-  }, [log, rowVirtualizer, isExpanded]);
+  }, []);
+
+  const filteredLog = useMemo(() => {
+    if (filter === 'all') return log;
+    return log.filter((entry) => {
+      if (typeof entry === 'string') return filter === 'info';
+      const key = entry?.key || '';
+      const isAction = key.startsWith('log.action.');
+      if (filter === 'actions') return isAction;
+      return !isAction;
+    });
+  }, [filter, log]);
 
   // Create a memoized map of names to IDs for performance
   const nameToIdMap = React.useMemo(() => {
@@ -226,6 +280,48 @@ const BattleLog: React.FC<BattleLogProps> = ({ log }) => {
     );
   };
 
+  const body = (
+    <div
+      ref={setParentRef}
+      className={`flex-grow overflow-y-auto pr-2 text-sm transition-all duration-300 ${heightClassName || (isExpanded ? 'h-96' : 'h-32')}`}
+    >
+      {scrollElement ? (
+        <BattleLogVirtualized log={filteredLog} isExpanded={isExpanded} renderLogMessage={renderLogMessage} scrollElement={scrollElement} />
+      ) : null}
+    </div>
+  );
+
+  if (embedded) {
+    return (
+      <div className="flex flex-col gap-2">
+        <div className="flex gap-1">
+          <button
+            type="button"
+            className={`px-2 py-1 text-xs font-bold rounded-md transition-colors ${filter === 'all' ? 'bg-primary text-text-inverted' : 'bg-secondary hover:bg-secondary/80 text-text-base'}`}
+            onClick={() => setFilter('all')}
+          >
+            {t('log.filters.all')}
+          </button>
+          <button
+            type="button"
+            className={`px-2 py-1 text-xs font-bold rounded-md transition-colors ${filter === 'actions' ? 'bg-primary text-text-inverted' : 'bg-secondary hover:bg-secondary/80 text-text-base'}`}
+            onClick={() => setFilter('actions')}
+          >
+            {t('log.filters.actions')}
+          </button>
+          <button
+            type="button"
+            className={`px-2 py-1 text-xs font-bold rounded-md transition-colors ${filter === 'info' ? 'bg-primary text-text-inverted' : 'bg-secondary hover:bg-secondary/80 text-text-base'}`}
+            onClick={() => setFilter('info')}
+          >
+            {t('log.filters.info')}
+          </button>
+        </div>
+        {body}
+      </div>
+    );
+  }
+
   return (
     <div className={`flex flex-col bg-surface-base/50 rounded-md p-2 mt-auto transition-all duration-300 ${isExpanded ? 'max-h-[30rem]' : 'max-h-48'}`}>
       <div className='flex justify-between items-center p-2 border-b border-border mb-2'>
@@ -236,26 +332,30 @@ const BattleLog: React.FC<BattleLogProps> = ({ log }) => {
           </button>
         </Tooltip>
       </div>
-      <div ref={parentRef} className={`flex-grow overflow-y-auto pr-2 text-sm transition-all duration-300 ${isExpanded ? 'h-96' : 'h-32'}`}>
-        <div style={{ height: `${rowVirtualizer.getTotalSize()}px`, width: '100%', position: 'relative' }}>
-          {rowVirtualizer.getVirtualItems().map(virtualItem => (
-            <div
-              key={virtualItem.key}
-              data-index={virtualItem.index}
-              ref={rowVirtualizer.measureElement}
-              style={{
-                position: 'absolute',
-                top: 0,
-                left: 0,
-                width: '100%',
-                transform: `translateY(${virtualItem.start}px)`,
-              }}
-            >
-              {renderLogMessage(log[virtualItem.index], virtualItem.index)}
-            </div>
-          ))}
-        </div>
+      <div className="flex gap-1 px-2 pb-2">
+        <button
+          type="button"
+          className={`px-2 py-1 text-xs font-bold rounded-md transition-colors ${filter === 'all' ? 'bg-primary text-text-inverted' : 'bg-secondary hover:bg-secondary/80 text-text-base'}`}
+          onClick={() => setFilter('all')}
+        >
+          {t('log.filters.all')}
+        </button>
+        <button
+          type="button"
+          className={`px-2 py-1 text-xs font-bold rounded-md transition-colors ${filter === 'actions' ? 'bg-primary text-text-inverted' : 'bg-secondary hover:bg-secondary/80 text-text-base'}`}
+          onClick={() => setFilter('actions')}
+        >
+          {t('log.filters.actions')}
+        </button>
+        <button
+          type="button"
+          className={`px-2 py-1 text-xs font-bold rounded-md transition-colors ${filter === 'info' ? 'bg-primary text-text-inverted' : 'bg-secondary hover:bg-secondary/80 text-text-base'}`}
+          onClick={() => setFilter('info')}
+        >
+          {t('log.filters.info')}
+        </button>
       </div>
+      {body}
     </div>
   );
 };

@@ -1,6 +1,6 @@
 import { create } from 'zustand';
 import { immer } from 'zustand/middleware/immer';
-import { Battle, PlayerAction, AnimationState, MissionType, Crew, BattleParticipant, Campaign } from '../types';
+import { Battle, PlayerAction, AnimationState, MissionType, Crew, BattleParticipant, Campaign, Position } from '../types';
 import { useCampaignProgressStore } from './campaignProgressStore';
 import { useCrewStore } from './crewStore';
 import { useUiStore } from './uiStore';
@@ -16,6 +16,8 @@ interface BattleState {
   battle: Battle | null;
   selectedParticipantId: string | null;
   hoveredParticipantId: string | null;
+  camera3dCommand: { type: 'reset' } | { type: 'focus'; target: Position } | null;
+  followActive3D: boolean;
   isProcessingEnemies: boolean;
   showEnemyTurnBanner: boolean;
   animation: AnimationState;
@@ -48,6 +50,10 @@ interface BattleState {
     setAnimation: (animation: AnimationState) => void;
     setAnimatingParticipantId: (id: string | null) => void;
     clearAnimation: () => void;
+    requestCameraReset: () => void;
+    requestCameraFocusOn: (target: Position) => void;
+    clearCameraCommand: () => void;
+    setFollowActive3D: (enabled: boolean) => void;
     sendFullBattleSync: () => void;
     resetBattle: () => void;
     processEnemyTurn: (enemyId: string) => Promise<{ animation: AnimationState; duration: number }>;
@@ -59,6 +65,8 @@ const initialBattleState: Omit<BattleState, 'actions'> = {
   battle: null,
   selectedParticipantId: null,
   hoveredParticipantId: null,
+  camera3dCommand: null,
+  followActive3D: false,
   isProcessingEnemies: false,
   showEnemyTurnBanner: false,
   animation: null,
@@ -227,6 +235,22 @@ export const useBattleStore = create<BattleState>()(
         set((state) => {
           state.animation = null;
           state.animatingParticipantId = null;
+        }),
+      requestCameraReset: () =>
+        set((state) => {
+          state.camera3dCommand = { type: 'reset' };
+        }),
+      requestCameraFocusOn: (target) =>
+        set((state) => {
+          state.camera3dCommand = { type: 'focus', target };
+        }),
+      clearCameraCommand: () =>
+        set((state) => {
+          state.camera3dCommand = null;
+        }),
+      setFollowActive3D: (enabled) =>
+        set((state) => {
+          state.followActive3D = enabled;
         }),
       sendFullBattleSync: () => {
         const { battle } = get();

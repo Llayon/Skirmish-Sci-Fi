@@ -1,5 +1,10 @@
 {
   "log": {
+    "filters": {
+      "all": "Все",
+      "actions": "Действия",
+      "info": "Инфо"
+    },
     "action": {
       "shoots": "{attacker} стреляет в {defender} из {weapon}.",
       "shootsAimed": "{attacker} делает прицельный выстрел в {defender} из {weapon}.",
