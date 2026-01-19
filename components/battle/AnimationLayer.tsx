@@ -32,18 +32,10 @@ const AnimationLayer: React.FC<AnimationLayerProps> = ({ gridRef }) => {
     const gridContentElement = gridContainer.querySelector('[data-testid="battle-grid-content"]') as HTMLDivElement;
     if (!gridContentElement) return;
 
-    let animationFrameId: number;
-
-    // This function will be called to update the positions of both the container and the content
     const updateRects = () => {
-      // Debounce state updates with requestAnimationFrame to prevent ResizeObserver loop errors.
-      window.cancelAnimationFrame(animationFrameId);
-      animationFrameId = window.requestAnimationFrame(() => {
-        if (gridRef.current && gridContentElement) {
-          setContainerRect(gridRef.current.getBoundingClientRect());
-          setGridContentRect(gridContentElement.getBoundingClientRect());
-        }
-      });
+      if (!gridRef.current) return;
+      setContainerRect(gridRef.current.getBoundingClientRect());
+      setGridContentRect(gridContentElement.getBoundingClientRect());
     };
 
     // Use ResizeObserver to automatically update rects when the grid content's size changes.
@@ -62,7 +54,6 @@ const AnimationLayer: React.FC<AnimationLayerProps> = ({ gridRef }) => {
 
     return () => {
       // Cleanup all listeners
-      window.cancelAnimationFrame(animationFrameId);
       observer.disconnect();
       window.removeEventListener('resize', updateRects);
       scrollContainer?.removeEventListener('scroll', updateRects);

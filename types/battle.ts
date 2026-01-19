@@ -1,8 +1,11 @@
 
-import type { BattleParticipant, Position, ParticipantStatus, Character } from './character';
+import type { BattleParticipant, Position, ParticipantStatus } from './character';
 import type { CampaignLog, LogEntry, MissionType, Difficulty, TableEntry, ActiveMission, WorldTrait } from './campaign';
 import type { Weapon, ProtectiveDevice } from './items';
 import { EnemyEncounterCategory } from '@/constants/enemyEncounters';
+
+export type GridSize = { width: number; height: number };
+export type { Position, ParticipantStatus, BattleParticipant } from './character';
 
 export type MultiplayerRole = 'host' | 'guest';
 

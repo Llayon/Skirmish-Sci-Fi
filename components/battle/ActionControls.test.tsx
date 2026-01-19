@@ -18,7 +18,7 @@ vi.mock('@/stores', () => ({
     useBattleStore: vi.fn(),
 }));
 
-const mockUseGameState = vi.fn();
+const mockUseGameState = vi.hoisted(() => vi.fn());
 vi.mock('@/hooks/useGameState', () => ({
     useGameState: mockUseGameState,
 }));
@@ -75,8 +75,22 @@ const defaultGameState = {
 describe('ActionControls', () => {
     beforeEach(() => {
         vi.clearAllMocks();
-        useMultiplayerStore.mockReturnValue(null);
-        useBattleStore.mockReturnValue(null);
+        useMultiplayerStore.mockImplementation((selector?: any) =>
+          typeof selector === 'function' ? selector({ multiplayerRole: null } as any) : ({ multiplayerRole: null } as any)
+        );
+        useBattleStore.mockImplementation((selector?: any) =>
+          typeof selector === 'function'
+            ? selector({
+                actions: { setSelectedParticipantId: vi.fn() },
+                selectedParticipantId: null,
+                pendingActionFor: null,
+              } as any)
+            : ({
+                actions: { setSelectedParticipantId: vi.fn() },
+                selectedParticipantId: null,
+                pendingActionFor: null,
+              } as any)
+        );
         mockUseGameState.mockReturnValue(defaultGameState);
     });
 
@@ -105,7 +119,7 @@ describe('ActionControls', () => {
                 ...defaultGameState.battle,
                 participants: [
                     participant,
-                    { id: 'enemy1', type: 'enemy', position: { x: 2, y: 1 } }
+                    { id: 'enemy1', type: 'enemy', name: 'Raider #1', position: { x: 2, y: 1 } }
                 ]
             }
         } as any);

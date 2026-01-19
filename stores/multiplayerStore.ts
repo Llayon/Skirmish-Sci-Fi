@@ -1,6 +1,8 @@
 import { create } from 'zustand';
 import { immer } from 'zustand/middleware/immer';
 import { useUiStore } from './uiStore';
+import { multiplayerService } from '@/services/multiplayerService';
+import { useBattleStore } from '@/stores/battleStore';
 
 export type MultiplayerRole = 'host' | 'guest';
 
@@ -38,11 +40,9 @@ export const useMultiplayerStore = create<MultiplayerState>()(
         useUiStore.getState().actions.setGameMode('lobby');
       },
       abortMultiplayer: () => {
-        import('../services/multiplayerService').then(({ multiplayerService }) => {
-          multiplayerService.disconnect();
-        });
+        multiplayerService.disconnect();
         get().actions.reset();
-        import('./battleStore').then(m => m.useBattleStore.getState().actions.resetBattle());
+        useBattleStore.getState().actions.resetBattle();
         useUiStore.getState().actions.setGameMode('dashboard');
       },
       reset: () => set(initialState),

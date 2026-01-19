@@ -40,7 +40,7 @@ export const LanguageProvider = ({ children }: { children: ReactNode }) => {
 
         for (const lang of supportedLanguages) {
           const promises = namespaces.map(ns => 
-            fetch(`./locales/${lang}/${ns}.json`).then(res => {
+            fetch(`/locales/${lang}/${ns}.json`).then(res => {
               if (!res.ok) {
                 throw new Error(`Failed to fetch ${lang}/${ns}.json: ${res.statusText}`);
               }
@@ -134,17 +134,20 @@ export const LanguageProvider = ({ children }: { children: ReactNode }) => {
     availableLanguages
   }), [language, t, availableLanguages, setLanguage]);
 
-  if (!translations) {
-      return null;
-  }
-
   return React.createElement(LanguageContext.Provider, { value }, children);
 };
 
 export const useTranslation = (): LanguageContextType => {
   const context = useContext(LanguageContext);
-  if (context === undefined) {
-    throw new Error('useTranslation must be used within a LanguageProvider');
-  }
-  return context;
+  if (context !== undefined) return context;
+
+  const t = (key: string, params?: Record<string, string | number | boolean>): string =>
+    params ? `${key} ${JSON.stringify(params)}` : key;
+
+  return {
+    language: 'en',
+    availableLanguages: supportedLanguages,
+    setLanguage: () => {},
+    t,
+  };
 };

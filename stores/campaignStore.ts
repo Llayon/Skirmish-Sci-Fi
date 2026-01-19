@@ -13,11 +13,14 @@ import { uiService } from '../services/uiService';
 import { generateJobOffers as generateOffersService } from '@/services/application/jobOfferGenerator';
 import { CampaignDomain } from '../services/domain/campaignDomain';
 import { resolveTable } from '@/services/utils/tables';
-import { BATTLEFIELD_FINDS_TABLE } from '../../constants/battlefieldFinds';
+import { BATTLEFIELD_FINDS_TABLE } from '@/constants/battlefieldFinds';
 import { getLootFromTradeTable, rollOnLootTable } from '@/services/lootService';
 import { MILITARY_WEAPON_TABLE, GEAR_TABLE, GADGET_TABLE } from '@/constants/items';
 import { TRADE_TABLE } from '@/constants/tradeTable';
 import { applyRaceToCharacter, generateNewRecruit } from '@/services/characterService';
+import { useBattleStore } from '@/stores/battleStore';
+import { useMultiplayerStore } from '@/stores/multiplayerStore';
+import { multiplayerService } from '@/services/multiplayerService';
 
 type CampaignProgressData = Omit<Campaign, 'ship' | 'stash'>;
 
@@ -96,6 +99,7 @@ const getFullCampaign = (get: () => CampaignProgressState): Campaign | null => {
     const campaignProgress = get().campaign;
     if (!campaignProgress) return null;
     const { ship, stash } = useShipStore.getState();
+    if (!ship || !stash) return null;
     return { ...campaignProgress, ship, stash };
 };
 
@@ -124,8 +128,8 @@ export const useCampaignProgressStore = create<CampaignProgressState>()(
           if (!goToMainMenu) {
             set({ saveSlots: {} });
           }
-          import('./battleStore').then(store => store.useBattleStore.getState().actions.resetBattle());
-          import('./multiplayerStore').then(store => store.useMultiplayerStore.getState().actions.reset());
+          useBattleStore.getState().actions.resetBattle();
+          useMultiplayerStore.getState().actions.reset();
           useUiStore.getState().actions.setGameMode(goToMainMenu ? 'main_menu' : 'crew_creation');
         },
         loadGame: (slotId) => {
@@ -281,12 +285,11 @@ export const useCampaignProgressStore = create<CampaignProgressState>()(
           useUiStore.getState().actions.setGameMode('dashboard');
         },
         setBattleFromLobby: (newBattle, role) => {
-          import('./battleStore').then(store => store.useBattleStore.getState().actions.setNewBattle(newBattle));
+          useBattleStore.getState().actions.setNewBattle(newBattle);
           useUiStore.getState().actions.setGameMode('battle');
         },
         startMultiplayerBattle: async (hostCrew, guestCrew) => {
             const newBattle = await battleUseCases.startMultiplayerBattle(hostCrew, guestCrew);
-            const { multiplayerService } = await import('../services/multiplayerService');
             multiplayerService.send({ type: 'START_BATTLE', payload: newBattle });
             get().actions.setBattleFromLobby(newBattle, 'host');
         },
@@ -710,7 +713,7 @@ export const useCampaignProgressStore = create<CampaignProgressState>()(
             }
           });
           if (battleOptions) {
-            import('./battleStore').then(store => store.useBattleStore.getState().actions.startBattle(battleOptions));
+            useBattleStore.getState().actions.startBattle(battleOptions);
           }
           if (!newCampaignProgress.pendingGearChoiceAfterShipDestruction && !battleOptions) {
             get().actions.autosave();

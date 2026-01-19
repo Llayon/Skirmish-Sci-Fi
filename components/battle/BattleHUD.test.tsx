@@ -34,11 +34,14 @@ describe('BattleHUD', () => {
 
   beforeEach(() => {
     vi.clearAllMocks();
-    vi.mocked(useMultiplayerStore).mockReturnValue(null);
-    vi.mocked(useBattleStore).mockReturnValue({
-      selectedParticipantId: 'char1',
-      battle: { activeParticipantId: 'char1' },
-    });
+    vi.mocked(useMultiplayerStore).mockImplementation((selector: any) => selector({ multiplayerRole: null }));
+    vi.mocked(useBattleStore).mockImplementation((selector: any) =>
+      selector({
+        selectedParticipantId: 'char1',
+        hoveredParticipantId: null,
+        battle: { activeParticipantId: 'char1', activePlayerRole: null },
+      })
+    );
   });
 
   it('renders MissionPanel and BattleLog in all phases', () => {

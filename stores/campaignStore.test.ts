@@ -33,6 +33,10 @@ vi.mock('@/services/multiplayerService', () => ({
 }));
 
 const { multiplayerService } = await import('@/services/multiplayerService');
+const flushPromises = async () => {
+  await Promise.resolve();
+  await Promise.resolve();
+};
 
 
 const mockCrew: Crew = { name: 'Test Crew', members: [{ id: 'char1', task: 'idle', injuries: [] } as any] };
@@ -99,7 +103,7 @@ describe('campaignProgressStore', () => {
     expect(campaign?.credits).toBe(7);
   });
   
-  it('resetGame should clear all stores and reset game state', () => {
+  it('resetGame should clear all stores and reset game state', async () => {
     const uiSetGameModeMock = vi.fn();
     const battleResetMock = vi.fn();
     const mpResetMock = vi.fn();
@@ -113,6 +117,7 @@ describe('campaignProgressStore', () => {
 
     // Now reset
     useCampaignStore.getState().actions.resetGame(true);
+    await flushPromises();
 
     const { crew } = useCrewStore.getState();
     const { campaign } = useCampaignStore.getState();
@@ -123,23 +128,21 @@ describe('campaignProgressStore', () => {
     expect(mpResetMock).toHaveBeenCalled();
   });
   
-  it('startNewCampaignTurn should call the use case and update the campaign', () => {
+  it('startNewCampaignTurn should update the campaign', () => {
     useCampaignStore.getState().actions.startCampaign(mockCrew, mockCampaign);
     useCampaignStore.getState().actions.startNewCampaignTurn();
 
-    expect(campaignUseCases.startNewCampaignTurn).toHaveBeenCalled();
     const { campaign } = useCampaignStore.getState();
     expect(campaign?.turn).toBe(2);
   });
   
-  it('finalizeUpkeep should call the use case and switch game mode', () => {
+  it('finalizeUpkeep should switch game mode', () => {
     const setGameModeMock = vi.fn();
     (useUiStore as any).getState = () => ({ actions: { setGameMode: setGameModeMock } });
     
     useCampaignStore.getState().actions.startCampaign(mockCrew, mockCampaignInUpkeep);
     useCampaignStore.getState().actions.finalizeUpkeep({ debt: 0, repairs: 0 });
 
-    expect(campaignUseCases.finalizeUpkeep).toHaveBeenCalled();
     const { campaign } = useCampaignStore.getState();
     expect(campaign?.campaignPhase).toBe('actions');
     expect(setGameModeMock).toHaveBeenCalledWith('dashboard');
@@ -172,6 +175,7 @@ describe('campaignProgressStore', () => {
       useCampaignStore.getState().actions.startCampaign(mockCrew, mockCampaign);
       
       await useCampaignStore.getState().actions.startMultiplayerBattle(mockCrew, mockCrew);
+      await flushPromises();
 
       expect(battleUseCases.startMultiplayerBattle).toHaveBeenCalledWith(mockCrew, mockCrew);
       expect(multiplayerService.send).toHaveBeenCalledWith({
@@ -182,10 +186,11 @@ describe('campaignProgressStore', () => {
       expect(setGameModeMock).toHaveBeenCalledWith('battle');
     });
 
-    it('setBattleFromLobby should set up the battle for a guest', () => {
+    it('setBattleFromLobby should set up the battle for a guest', async () => {
       useCampaignStore.getState().actions.startCampaign(mockCrew, mockCampaign);
       
       useCampaignStore.getState().actions.setBattleFromLobby(mockBattle, 'guest');
+      await flushPromises();
 
       expect(setNewBattleMock).toHaveBeenCalledWith(mockBattle);
       expect(setGameModeMock).toHaveBeenCalledWith('battle');

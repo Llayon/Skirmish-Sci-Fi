@@ -442,27 +442,24 @@ class RobustMultiplayerService {
   }
 
   public send(data: MultiplayerMessage) {
-    // --- Rate Limiting ---
-    const now = Date.now();
-    this.sentMessagesTimestamps = this.sentMessagesTimestamps.filter(
-        timestamp => now - timestamp < this.rateLimitWindow
-    );
-
-    if (this.sentMessagesTimestamps.length >= this.rateLimit) {
-        logger.warn('Rate limit exceeded. Message dropped:', data.type);
-        return;
-    }
-    
-    // --- Message Size Warning ---
-    const messageSize = JSON.stringify(data).length;
-    const sizeLimit = 1024 * 512; // 512 KB warning threshold
-    if (messageSize > sizeLimit) {
-        logger.warn(`Sending a large message (${(messageSize / 1024).toFixed(2)} KB). Type: ${data.type}. Consider optimizing.`);
-    }
-
-    this.sentMessagesTimestamps.push(now);
-    
     if (this.conn && this.conn.open) {
+      const now = Date.now();
+      this.sentMessagesTimestamps = this.sentMessagesTimestamps.filter(
+          timestamp => now - timestamp < this.rateLimitWindow
+      );
+
+      if (this.sentMessagesTimestamps.length >= this.rateLimit) {
+          logger.warn('Rate limit exceeded. Message dropped:', data.type);
+          return;
+      }
+      
+      const messageSize = JSON.stringify(data).length;
+      const sizeLimit = 1024 * 512;
+      if (messageSize > sizeLimit) {
+          logger.warn(`Sending a large message (${(messageSize / 1024).toFixed(2)} KB). Type: ${data.type}. Consider optimizing.`);
+      }
+
+      this.sentMessagesTimestamps.push(now);
       this.conn.send(data);
     } else {
       logger.warn('No active connection. Buffering message:', data.type);

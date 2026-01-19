@@ -15,7 +15,7 @@ export const useBattleAutomations = (scrollContainerRef: React.RefObject<HTMLDiv
     const selectedParticipantId = useBattleStore(state => state.selectedParticipantId);
 
     const multiplayerRole = useMultiplayerStore(state => state.multiplayerRole);
-    const { endTurn, processEnemyTurn, advancePhase, setAnimation, setAnimatingParticipantId, setSelectedParticipantId, setIsProcessingEnemies, setShowEnemyTurnBanner } = useBattleStore(state => state.actions);
+    const { endTurn, processEnemyTurn, advancePhase, setAnimation, setAnimatingParticipantId, clearAnimation, setSelectedParticipantId, setIsProcessingEnemies, setShowEnemyTurnBanner } = useBattleStore(state => state.actions);
 
     // Automatically end turn when out of actions in solo mode
     useEffect(() => {
@@ -59,11 +59,13 @@ export const useBattleAutomations = (scrollContainerRef: React.RefObject<HTMLDiv
                     const { animation, duration } = await processEnemyTurn(enemyId);
 
                     if (animation) {
-                        setAnimatingParticipantId(enemyId);
-                        setAnimation(animation);
-                        await sleep(duration);
-                        setAnimatingParticipantId(null);
-                        setAnimation(null);
+                        try {
+                            setAnimatingParticipantId(enemyId);
+                            setAnimation(animation);
+                            await sleep(duration);
+                        } finally {
+                            clearAnimation();
+                        }
                     }
                     
                     await sleep(1000);
@@ -75,7 +77,7 @@ export const useBattleAutomations = (scrollContainerRef: React.RefObject<HTMLDiv
             };
             processTurns();
         }
-    }, [battle?.phase, multiplayerRole, isProcessingEnemies, battle?.enemyTurnOrder, advancePhase, processEnemyTurn, setAnimation, setAnimatingParticipantId, setSelectedParticipantId, setIsProcessingEnemies, setShowEnemyTurnBanner]);
+    }, [battle?.phase, multiplayerRole, isProcessingEnemies, battle?.enemyTurnOrder, advancePhase, processEnemyTurn, setAnimation, setAnimatingParticipantId, clearAnimation, setSelectedParticipantId, setIsProcessingEnemies, setShowEnemyTurnBanner]);
 
     // Center view on active character or enemy
     useEffect(() => {
