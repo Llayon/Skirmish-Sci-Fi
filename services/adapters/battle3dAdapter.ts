@@ -7,13 +7,14 @@ export function mapBattleTo3D(
   selectedParticipantId: string | null,
   activeParticipantId: string | null,
   availableMoves: Position[],
-  animatingParticipantId: string | null
+  animatingParticipantId: string | null,
+  hoveredParticipantId?: string | null
 ): BattleView3D {
   return {
     gridSize: battle.gridSize,
     terrain: battle.terrain.map(mapTerrainTo3D),
     units: battle.participants.map((p) =>
-      mapParticipantTo3D(p, selectedParticipantId, activeParticipantId, animatingParticipantId)
+      mapParticipantTo3D(p, selectedParticipantId, activeParticipantId, animatingParticipantId, hoveredParticipantId ?? null)
     ),
     availableMoves,
   };
@@ -23,7 +24,8 @@ function mapParticipantTo3D(
   p: BattleParticipant,
   selectedParticipantId: string | null,
   activeParticipantId: string | null,
-  animatingParticipantId: string | null
+  animatingParticipantId: string | null,
+  hoveredParticipantId: string | null
 ): Unit3D {
   const vitalityMax = 6;
   const vitalityCurrent = p.status === 'casualty' ? 0 : Math.max(0, vitalityMax - p.stunTokens);
@@ -36,6 +38,7 @@ function mapParticipantTo3D(
     stunTokens: p.stunTokens,
     isSelected: p.id === selectedParticipantId,
     isActive: p.id === activeParticipantId,
+    isHovered: p.id === hoveredParticipantId,
     isAnimating: p.id === animatingParticipantId,
     vitality: {
       current: vitalityCurrent,
@@ -83,4 +86,3 @@ function getTerrainHeight(type: Terrain3DType): number {
       return 0.05;
   }
 }
-

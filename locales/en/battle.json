@@ -18,6 +18,37 @@
       "expand": "Expand Log",
       "collapse": "Collapse Log"
     },
+    "hud": {
+      "title": "HUD",
+      "presets": "Presets",
+      "density": "Density",
+      "panels": "Panels",
+      "queue": "Queue",
+      "mission": "Mission",
+      "status": "Status",
+      "actions": "Actions",
+      "weapons": "Weapons",
+      "log": "Log",
+      "normal": "Normal",
+      "compact": "Compact",
+      "reset": "Reset",
+      "close": "Close",
+      "hotkeys": "Hotkeys",
+      "hotkeysHint": "H: HUD • L: Log • M: Mission • Q: Queue",
+      "camera": {
+        "title": "Camera (3D)",
+        "followActive": "Follow active",
+        "focus": "Focus",
+        "reset": "Reset",
+        "controlsHint": "Mouse: rotate • Wheel: zoom • Right mouse: pan • F: focus • R: reset"
+      },
+      "expand": "Expand panel",
+      "collapse": "Collapse panel",
+      "summary": {
+        "active": "Active: {name}",
+        "log": "{count} entries"
+      }
+    },
     "victory": "VICTORY",
     "defeat": "DEFEAT",
     "victoryMessage": "The mission is a success.",

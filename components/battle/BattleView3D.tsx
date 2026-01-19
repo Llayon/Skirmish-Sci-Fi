@@ -13,6 +13,7 @@ import { ThreeCanvas } from './three/ThreeCanvas';
 import { AnimationSystem3D } from './three/AnimationSystem3D';
 import { ParticipantMeshProvider } from './three/contexts/ParticipantMeshContext';
 import { TerrainMeshProvider } from './three/contexts/TerrainMeshContext';
+import { CameraCommands3D } from './three/CameraCommands3D';
 
 interface BattleView3DProps {
   battleLogic: BattleLogic;
@@ -23,6 +24,7 @@ const BattleView3D = ({ battleLogic }: BattleView3DProps) => {
   const selectedParticipantId = useBattleStore((s) => s.selectedParticipantId);
   const activeParticipantId = useBattleStore((s) => s.battle?.activeParticipantId ?? null);
   const animatingParticipantId = useBattleStore((s) => s.animatingParticipantId);
+  const hoveredParticipantId = useBattleStore((s) => s.hoveredParticipantId);
   const { setSelectedParticipantId, setHoveredParticipantId } = useBattleStore((s) => s.actions);
 
   const participantsByPosition = useMemo(() => {
@@ -88,8 +90,8 @@ const BattleView3D = ({ battleLogic }: BattleView3DProps) => {
 
   const battleView3D = useMemo(() => {
     if (!battle) return null;
-    return mapBattleTo3D(battle, selectedParticipantId, activeParticipantId, availableMoves, animatingParticipantId);
-  }, [activeParticipantId, animatingParticipantId, availableMoves, battle, selectedParticipantId]);
+    return mapBattleTo3D(battle, selectedParticipantId, activeParticipantId, availableMoves, animatingParticipantId, hoveredParticipantId);
+  }, [activeParticipantId, animatingParticipantId, availableMoves, battle, selectedParticipantId, hoveredParticipantId]);
 
   if (!battleView3D) return null;
 
@@ -97,13 +99,11 @@ const BattleView3D = ({ battleLogic }: BattleView3DProps) => {
 
   return (
     <div className="relative w-full h-full">
-      <div className="absolute top-2 left-2 z-10 pointer-events-none rounded bg-surface-base/60 px-2 py-1 text-xs text-text-muted">
-        ЛКМ: вращать • Колесо: зум • ПКМ: панорама
-      </div>
       <TerrainMeshProvider>
         <ParticipantMeshProvider>
           <ThreeCanvas gridSize={gridSize}>
             <GridFloor gridSize={gridSize} />
+            <CameraCommands3D gridSize={gridSize} />
 
             {terrain.map((t) => (
               <TerrainMesh key={t.id} terrain={t} gridSize={gridSize} />

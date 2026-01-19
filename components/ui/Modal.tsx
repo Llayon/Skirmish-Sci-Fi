@@ -13,6 +13,7 @@ interface ModalProps {
 const Modal: React.FC<ModalProps> = ({ onClose, children, disableClose = false, title }) => {
   const modalRoot = document.getElementById('root');
   const modalContentRef = useRef<HTMLDivElement>(null);
+  const previouslyFocusedRef = useRef<HTMLElement | null>(null);
 
   useEffect(() => {
     if (disableClose) return;
@@ -30,6 +31,8 @@ const Modal: React.FC<ModalProps> = ({ onClose, children, disableClose = false, 
   useEffect(() => {
     const modalElement = modalContentRef.current;
     if (!modalElement) return;
+
+    previouslyFocusedRef.current = document.activeElement instanceof HTMLElement ? document.activeElement : null;
 
     const focusableElements = modalElement.querySelectorAll<HTMLElement>(
       'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])'
@@ -62,6 +65,7 @@ const Modal: React.FC<ModalProps> = ({ onClose, children, disableClose = false, 
 
     return () => {
       modalElement.removeEventListener('keydown', handleTabKey);
+      previouslyFocusedRef.current?.focus?.();
     };
   }, []);
 

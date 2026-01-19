@@ -23,6 +23,7 @@ export const ThreeCanvas = ({ gridSize, children }: ThreeCanvasProps) => {
       <hemisphereLight intensity={0.6} groundColor="#0b0f1a" />
       <directionalLight position={[30, 60, 30]} intensity={1.4} castShadow />
       <OrbitControls
+        makeDefault
         enableRotate
         enablePan
         enableZoom

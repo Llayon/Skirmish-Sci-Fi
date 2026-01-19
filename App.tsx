@@ -2,7 +2,7 @@
 import React, { useEffect, lazy, Suspense, useState } from 'react';
 import { Dna, Star, Loader } from 'lucide-react';
 import { useTranslation } from '@/i18n';
-import { useUiStore, useCampaignProgressStore, useMultiplayerStore } from '@/stores';
+import { useUiStore, useCampaignProgressStore, useMultiplayerStore, useSettingsStore } from '@/stores';
 import ThemeSwitcher from '@/components/ThemeSwitcher';
 import ToastContainer from '@/components/ui/ToastContainer';
 import {
@@ -104,9 +104,6 @@ const GameContainer: React.FC = () => {
           {renderContent()}
         </main>
       </div>
-      <footer className="text-center mt-12 text-text-muted text-sm shrink-0">
-        <p>{t('app.inspiredBy')}</p>
-      </footer>
     </div>
   );
 };
@@ -115,6 +112,8 @@ const App: React.FC = () => {
   const gameMode = useUiStore((state) => state.gameMode);
   const isHydrated = useCampaignProgressStore((state) => state.isHydrated);
   const setJoinIdAndRole = useMultiplayerStore((state) => state.actions.setJoinIdAndRole);
+  const reducedMotion = useSettingsStore((state) => state.reducedMotion);
+  const reducedVfx = useSettingsStore((state) => state.reducedVfx);
 
   useEffect(() => {
     if (!isHydrated) return;
@@ -128,6 +127,11 @@ const App: React.FC = () => {
   useEffect(() => {
     document.body.classList.toggle('main-menu', gameMode === 'main_menu');
   }, [gameMode]);
+
+  useEffect(() => {
+    document.documentElement.setAttribute('data-reduced-motion', String(reducedMotion));
+    document.documentElement.setAttribute('data-reduced-vfx', String(reducedVfx));
+  }, [reducedMotion, reducedVfx]);
 
   if (!isHydrated) {
     return <LoadingFallback />;

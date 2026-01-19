@@ -1,5 +1,10 @@
 {
   "log": {
+    "filters": {
+      "all": "All",
+      "actions": "Actions",
+      "info": "Info"
+    },
     "action": {
       "shoots": "{attacker} shoots at {defender} with a {weapon}.",
       "shootsAimed": "{attacker} takes an aimed shot at {defender} with a {weapon}.",

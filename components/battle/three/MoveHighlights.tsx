@@ -31,7 +31,7 @@ export const MoveHighlights = ({ positions, gridSize }: MoveHighlightsProps) => 
   return (
     <instancedMesh ref={meshRef} args={[null!, null!, positions.length]} raycast={() => null}>
       <planeGeometry args={[TILE_SIZE * 0.9, TILE_SIZE * 0.9]} />
-      <meshBasicMaterial color="#00ff00" transparent opacity={0.3} side={THREE.DoubleSide} />
+      <meshBasicMaterial color="#22c55e" transparent opacity={0.18} side={THREE.DoubleSide} toneMapped={false} />
     </instancedMesh>
   );
 };

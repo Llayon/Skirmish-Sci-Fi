@@ -27,13 +27,13 @@ const Button: React.FC<ButtonProps> = ({
   className = '',
   ...props
 }) => {
-  const baseStyles = 'px-4 py-2 font-bold rounded-md transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-surface-base disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2';
+  const baseStyles = 'px-4 py-2 font-bold rounded-md transition-all duration-300 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-offset-surface-base disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2';
 
   const variantStyles = {
-    primary: 'bg-primary hover:bg-primary/80 text-text-inverted shadow-md hover:shadow-lg focus:ring-primary',
-    secondary: 'bg-secondary hover:bg-secondary/80 text-text-base focus:ring-secondary',
-    danger: 'bg-danger hover:bg-danger/80 text-text-inverted focus:ring-danger',
-    warning: 'bg-warning hover:bg-warning/80 text-text-base focus:ring-warning',
+    primary: 'bg-primary hover:bg-primary/80 text-text-inverted shadow-md hover:shadow-lg focus-visible:ring-primary',
+    secondary: 'bg-secondary hover:bg-secondary/80 text-text-base focus-visible:ring-secondary',
+    danger: 'bg-danger hover:bg-danger/80 text-text-inverted focus-visible:ring-danger',
+    warning: 'bg-warning hover:bg-warning/80 text-text-base focus-visible:ring-warning',
   };
 
   const selectedStyles = 'ring-2 ring-offset-0 ring-primary bg-primary/20 text-primary';

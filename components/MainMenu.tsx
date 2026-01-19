@@ -6,6 +6,7 @@ import { Play, FilePlus, FolderOpen, Settings, Loader, Users, Calendar, Coins, U
 import Modal from '@/components/ui/Modal';
 import Card from '@/components/ui/Card';
 import ThemeSwitcher from '@/components/ThemeSwitcher';
+import { useSettingsStore } from '@/stores';
 import type { SaveSlot } from '@/types';
 import {
   preloadCampaignDashboard,
@@ -19,6 +20,9 @@ const LoadGameModal = lazy(preloadLoadGameModal);
 
 const SettingsModal: React.FC<{ onClose: () => void }> = ({ onClose }) => {
   const { t, language, setLanguage, availableLanguages } = useTranslation();
+  const reducedMotion = useSettingsStore((state) => state.reducedMotion);
+  const reducedVfx = useSettingsStore((state) => state.reducedVfx);
+  const { toggleReducedMotion, toggleReducedVfx } = useSettingsStore((state) => state.actions);
   return (
     <Modal onClose={onClose} title={t('app.settings')}>
       <Card className="w-full sm:max-w-md bg-surface-overlay !p-0">
@@ -40,6 +44,18 @@ const SettingsModal: React.FC<{ onClose: () => void }> = ({ onClose }) => {
           <div className="flex items-center justify-between">
             <span className="text-text-base">Theme:</span>
             <ThemeSwitcher />
+          </div>
+          <div className="flex items-center justify-between">
+            <span className="text-text-base">Reduced motion:</span>
+            <Button className="px-3 py-1 text-sm" selected={reducedMotion} onClick={toggleReducedMotion}>
+              {reducedMotion ? 'On' : 'Off'}
+            </Button>
+          </div>
+          <div className="flex items-center justify-between">
+            <span className="text-text-base">Reduced VFX:</span>
+            <Button className="px-3 py-1 text-sm" selected={reducedVfx} onClick={toggleReducedVfx}>
+              {reducedVfx ? 'On' : 'Off'}
+            </Button>
           </div>
         </div>
         <div className="mt-6 text-right border-t border-border pt-4 px-6">
@@ -283,20 +299,18 @@ const MainMenu: React.FC = () => {
               </div>
               <nav className="space-y-3 w-full max-w-2xl mx-auto lg:mx-0 relative">
                 {menuItems.filter(item => item.condition).map((item, index) => (
-                   <div
+                  <button
                     key={item.id}
-                    className="menu-button-wrapper rounded-md opacity-0 animate-[fade-in-right_0.5s_ease-out_forwards] cursor-pointer"
+                    type="button"
+                    className="menu-button-wrapper rounded-md opacity-0 animate-[fade-in-right_0.5s_ease-out_forwards] cursor-pointer border-0 bg-transparent p-0 text-left"
                     style={{ animationDelay: `${0.6 + index * 0.1}s` }}
                     onMouseEnter={() => { item.onMouseEnter(); }}
                     onClick={(e) => handleMenuClick(e, item.action)}
                   >
-                      <button
-                        className="menu-button w-full flex items-center p-4 text-xl justify-start font-bold border-l-4 bg-surface-base/50 text-text-base rounded-md"
-                        tabIndex={-1} // Make the div the focusable element
-                      >
-                        <item.icon className="mr-4 menu-icon" /> {item.label}
-                      </button>
-                   </div>
+                    <div className="menu-button w-full flex items-center p-4 text-xl justify-start font-bold border-l-4 bg-surface-base/50 text-text-base rounded-md">
+                      <item.icon className="mr-4 menu-icon" /> {item.label}
+                    </div>
+                  </button>
                 ))}
                 <div className="main-menu-sound-wave">
                     <div className="wave-bar" /><div className="wave-bar" /><div className="wave-bar" /><div className="wave-bar" /><div className="wave-bar" />

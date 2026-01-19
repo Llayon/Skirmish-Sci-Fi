@@ -6,7 +6,12 @@ import { BattleParticipant } from '@/types';
 import { Heart, Shield, Zap } from 'lucide-react';
 import Tooltip from '../ui/Tooltip';
 
-const ActionQueue: React.FC = () => {
+type ActionQueueProps = {
+  embedded?: boolean;
+  compact?: boolean;
+};
+
+const ActionQueue: React.FC<ActionQueueProps> = ({ embedded = false, compact = false }) => {
   const { t } = useTranslation();
   const battle = useBattleStore(state => state.battle);
   if (!battle) return null;
@@ -17,10 +22,10 @@ const ActionQueue: React.FC = () => {
   const isSlowPhase = phase === 'slow_actions';
   const isEnemyPhase = phase === 'enemy_actions';
 
-  const containerHeight = 'h-[120px]';
+  const containerHeight = compact ? 'h-[96px]' : 'h-[120px]';
 
   if (!isQuickPhase && !isSlowPhase && !isEnemyPhase) {
-    return <div className={containerHeight} />; // Keep layout consistent
+    return embedded ? null : <div className={containerHeight} />;
   }
 
   let order: string[] = [];
@@ -40,12 +45,8 @@ const ActionQueue: React.FC = () => {
     return `${t(`enemies.${nameParts[0]}`)} #${nameParts[1]}`;
   };
 
-  return (
-    <div className={`bg-surface-base/40 border-b border-border/50 p-2 ${containerHeight} flex flex-col`}>
-      <h3 className='text-center text-sm font-bold uppercase text-primary tracking-wider mb-2'>
-        {t(`battle.phase.${phase}`)}
-      </h3>
-      <div className='flex items-start justify-center gap-3 flex-grow'>
+  const list = (
+    <div className='flex items-start justify-center gap-3 flex-grow'>
         {orderedParticipants.map(p => {
           const isActive = p.id === activeParticipantId;
           const hasActed = p.actionsRemaining <= 0;
@@ -89,6 +90,18 @@ const ActionQueue: React.FC = () => {
           );
         })}
       </div>
+  );
+
+  if (embedded) {
+    return <div className={`${containerHeight} flex flex-col`}>{list}</div>;
+  }
+
+  return (
+    <div className={`bg-surface-base/40 border-b border-border/50 p-2 ${containerHeight} flex flex-col`}>
+      <h3 className='text-center text-sm font-bold uppercase text-primary tracking-wider mb-2'>
+        {t(`battle.phase.${phase}`)}
+      </h3>
+      {list}
     </div>
   );
 };

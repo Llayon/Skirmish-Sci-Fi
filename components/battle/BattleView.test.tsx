@@ -1,5 +1,5 @@
 import React from 'react';
-import { render, screen } from '@testing-library/react';
+import { render, screen, fireEvent } from '@testing-library/react';
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import BattleView from './BattleView';
 import { GameMode } from '@/stores';
@@ -7,15 +7,17 @@ import { GameMode } from '@/stores';
 vi.mock('./BattleGrid', () => ({ default: () => <div data-testid="battle-grid" /> }));
 vi.mock('./AnimationLayer', () => ({ default: () => <div data-testid="animation-layer" /> }));
 vi.mock('./BattleHUD', () => ({ default: () => <div data-testid="battle-hud" /> }));
+vi.mock('./BattleHudSettingsModal', () => ({ default: () => <div data-testid="hud-modal" /> }));
 vi.mock('../../i18n', () => ({ useTranslation: () => ({ t: (key: string) => key }) }));
-vi.mock('../../stores', () => ({ useMultiplayerStore: vi.fn(), useBattleStore: vi.fn() }));
+vi.mock('@/stores', () => ({ useMultiplayerStore: vi.fn(), useBattleStore: vi.fn(), useHudStore: vi.fn() }));
 vi.mock('../../hooks/useGameState');
 vi.mock('../../hooks/useMultiplayer');
-vi.mock('../../hooks/useBattleLogic', () => ({ useBattleLogic: vi.fn(() => ({})) }));
+vi.mock('../../hooks/useBattleLogic', () => ({ useBattleLogic: vi.fn(() => ({ uiState: { mode: 'idle' }, handlers: { cancelAction: vi.fn() } })) }));
 
-const { useBattleStore } = await import('../../stores');
+const { useBattleStore, useHudStore, useMultiplayerStore } = await import('@/stores');
 const { useGameState } = await import('../../hooks/useGameState');
 const { useMultiplayer } = await import('../../hooks/useMultiplayer');
+const { useBattleLogic } = await import('../../hooks/useBattleLogic');
 
 const mockGameState = (battleOverride: any) => ({
     battle: battleOverride ? { participants: [], ...battleOverride } : null,
@@ -35,7 +37,34 @@ describe('BattleView', () => {
     vi.clearAllMocks();
     vi.mocked(useMultiplayer).mockReturnValue({ isReconnecting: false, connectionStatus: 'connected', isHost: false, isGuest: false, multiplayerRole: null });
     vi.mocked(useGameState).mockReturnValue(mockGameState({ id: 'test-battle', phase: 'quick_actions' }));
-    vi.mocked(useBattleStore).mockReturnValue({ showEnemyTurnBanner: false, actions: { endBattle: vi.fn(), endTurn: vi.fn() } });
+    const battleStoreState: any = {
+      showEnemyTurnBanner: false,
+      animatingParticipantId: null,
+      selectedParticipantId: null,
+      hoveredParticipantId: null,
+      battle: {
+        id: 'test-battle',
+        phase: 'quick_actions',
+        activeParticipantId: 'char1',
+        activePlayerRole: null,
+        participants: [
+          { id: 'char1', type: 'character', name: 'Rook', position: { x: 0, y: 0 }, status: 'active' },
+          { id: 'char2', type: 'character', name: 'Vale', position: { x: 1, y: 0 }, status: 'active' },
+        ],
+        mission: { status: 'in_progress', type: 'FightOff' },
+        log: [],
+      },
+      actions: {
+        endBattle: vi.fn(),
+        setSelectedParticipantId: vi.fn(),
+        requestCameraFocusOn: vi.fn(),
+        requestCameraReset: vi.fn(),
+      },
+    };
+
+    vi.mocked(useBattleStore).mockImplementation((selector: any) => selector(battleStoreState));
+    vi.mocked(useMultiplayerStore).mockImplementation((selector: any) => selector({ multiplayerRole: null }));
+    vi.mocked(useHudStore).mockImplementation((selector: any) => selector({ actions: { togglePanel: vi.fn(), toggleCollapsed: vi.fn(), setDensity: vi.fn(), applyPreset: vi.fn(), reset: vi.fn() } }));
   });
 
   it('renders loading text if battle is not available', () => {
@@ -55,5 +84,110 @@ describe('BattleView', () => {
     vi.mocked(useGameState).mockReturnValue(mockGameState({ id: 'test-battle', phase: 'battle_over', mission: { status: 'success', type: 'FightOff' } }));
     render(<BattleView />);
     expect(screen.getByText('battle.victory')).toBeInTheDocument();
+  });
+
+  it('opens HUD modal on H hotkey', () => {
+    render(<BattleView />);
+    fireEvent.keyDown(window, { key: 'h' });
+    expect(screen.getByTestId('hud-modal')).toBeInTheDocument();
+  });
+
+  it('calls cancelAction on Escape', () => {
+    const cancelAction = vi.fn();
+    vi.mocked(useBattleLogic).mockReturnValue({ uiState: { mode: 'move' }, handlers: { cancelAction } } as any);
+    render(<BattleView />);
+    fireEvent.keyDown(window, { key: 'Escape' });
+    expect(cancelAction).toHaveBeenCalled();
+  });
+
+  it('cycles selected participant on Tab', () => {
+    const setSelectedParticipantId = vi.fn();
+    vi.mocked(useBattleStore).mockImplementation((selector: any) =>
+      selector({
+        showEnemyTurnBanner: false,
+        animatingParticipantId: null,
+        selectedParticipantId: null,
+        hoveredParticipantId: null,
+        battle: {
+          id: 'test-battle',
+          phase: 'quick_actions',
+          activeParticipantId: 'char1',
+          activePlayerRole: null,
+          participants: [
+            { id: 'char1', type: 'character', name: 'Rook', position: { x: 0, y: 0 }, status: 'active' },
+            { id: 'char2', type: 'character', name: 'Vale', position: { x: 1, y: 0 }, status: 'active' },
+          ],
+          mission: { status: 'in_progress', type: 'FightOff' },
+          log: [],
+        },
+        actions: {
+          endBattle: vi.fn(),
+          setSelectedParticipantId,
+          requestCameraFocusOn: vi.fn(),
+          requestCameraReset: vi.fn(),
+        },
+      })
+    );
+
+    render(<BattleView />);
+    fireEvent.keyDown(window, { key: 'Tab' });
+    expect(setSelectedParticipantId).toHaveBeenCalledWith('char2');
+  });
+
+  it('cycles selected participant backwards on Shift+Tab', () => {
+    const setSelectedParticipantId = vi.fn();
+    vi.mocked(useBattleStore).mockImplementation((selector: any) =>
+      selector({
+        showEnemyTurnBanner: false,
+        animatingParticipantId: null,
+        selectedParticipantId: null,
+        hoveredParticipantId: null,
+        battle: {
+          id: 'test-battle',
+          phase: 'quick_actions',
+          activeParticipantId: 'char1',
+          activePlayerRole: null,
+          participants: [
+            { id: 'char1', type: 'character', name: 'Rook', position: { x: 0, y: 0 }, status: 'active' },
+            { id: 'char2', type: 'character', name: 'Vale', position: { x: 1, y: 0 }, status: 'active' },
+          ],
+          mission: { status: 'in_progress', type: 'FightOff' },
+          log: [],
+        },
+        actions: {
+          endBattle: vi.fn(),
+          setSelectedParticipantId,
+          requestCameraFocusOn: vi.fn(),
+          requestCameraReset: vi.fn(),
+        },
+      })
+    );
+
+    render(<BattleView />);
+    fireEvent.keyDown(window, { key: 'Tab', shiftKey: true });
+    expect(setSelectedParticipantId).toHaveBeenCalledWith('char2');
+  });
+
+  it('does not trigger panel hotkeys while a modal is open', () => {
+    const togglePanel = vi.fn();
+    vi.mocked(useHudStore).mockImplementation((selector: any) => selector({ actions: { togglePanel } }));
+    const dialog = document.createElement('div');
+    dialog.setAttribute('role', 'dialog');
+    dialog.setAttribute('aria-modal', 'true');
+    document.body.appendChild(dialog);
+
+    render(<BattleView />);
+    fireEvent.keyDown(window, { key: 'l' });
+    expect(togglePanel).not.toHaveBeenCalled();
+
+    document.body.removeChild(dialog);
+  });
+
+  it('cancels action on right click while not idle', () => {
+    const cancelAction = vi.fn();
+    vi.mocked(useBattleLogic).mockReturnValue({ uiState: { mode: 'move' }, handlers: { cancelAction } } as any);
+    render(<BattleView />);
+    fireEvent.contextMenu(screen.getByTestId('battlefield'));
+    expect(cancelAction).toHaveBeenCalled();
   });
 });

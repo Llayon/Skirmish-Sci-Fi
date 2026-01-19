@@ -23,6 +23,7 @@ export interface Unit3D {
   stunTokens: number;
   isSelected: boolean;
   isActive: boolean;
+  isHovered: boolean;
   isAnimating: boolean;
   vitality: UnitVitality3D;
 }
@@ -33,4 +34,3 @@ export interface BattleView3D {
   units: Unit3D[];
   availableMoves: Position[];
 }
-

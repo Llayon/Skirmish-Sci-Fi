@@ -30,6 +30,10 @@
   --radius-sm: 0.25rem;
   --radius-md: 0.5rem;
   --radius-lg: 0.75rem;
+
+  --hud-panel-bg-alpha: 0.5;
+  --hud-panel-border-alpha: 0.5;
+  --hud-panel-blur: 8px;
 }
 
 [data-theme="light"] {
@@ -50,6 +54,10 @@
   --color-text-inverted: 0 0% 100%; /* white */
 
   --color-border: 220 14% 86%; /* slate-300 */
+
+  --hud-panel-bg-alpha: 0.72;
+  --hud-panel-border-alpha: 0.7;
+  --hud-panel-blur: 10px;
 }
 
 
@@ -57,6 +65,29 @@ body {
   font-family: var(--font-family-body);
   background-color: hsl(var(--color-surface-base));
   color: hsl(var(--color-text-base));
+}
+
+html[data-reduced-motion="true"] *,
+html[data-reduced-motion="true"] *::before,
+html[data-reduced-motion="true"] *::after {
+  animation-duration: 0.001ms !important;
+  animation-iteration-count: 1 !important;
+  transition-duration: 0.001ms !important;
+  scroll-behavior: auto !important;
+}
+
+html[data-reduced-vfx="true"] .scan-lines::before,
+html[data-reduced-vfx="true"] .spotlight,
+html[data-reduced-vfx="true"] .nebula,
+html[data-reduced-vfx="true"] .grid-plane,
+html[data-reduced-vfx="true"] .stars-container,
+html[data-reduced-vfx="true"] .main-menu-hexagons,
+html[data-reduced-vfx="true"] .main-menu-glyphs {
+  display: none !important;
+}
+
+html[data-reduced-vfx="true"] .video-background-container video {
+  transform: none !important;
 }
 
 body.main-menu {
@@ -118,6 +149,12 @@ body.main-menu {
 .hud-status { grid-area: status; }
 .hud-actions { grid-area: actions; }
 .hud-log { grid-area: log; }
+
+.hud-panel {
+  background-color: hsl(var(--color-surface-base) / var(--hud-panel-bg-alpha));
+  border-color: hsl(var(--color-border) / var(--hud-panel-border-alpha));
+  backdrop-filter: blur(var(--hud-panel-blur));
+}
 
 
 /* --- RESPONSIVE BATTLE HUD --- */
