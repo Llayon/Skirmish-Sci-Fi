@@ -8,7 +8,7 @@
     "build": "vite build",
     "preview": "vite preview",
     "test": "vitest",
-    "prepare": "husky"
+    "prepare": "node -e \"const { execSync } = require('child_process'); if (process.env.CI || process.env.VERCEL) process.exit(0); execSync('husky', { stdio: 'inherit' });\""
   },
   "dependencies": {
     "@floating-ui/react": "^0.26.16",
