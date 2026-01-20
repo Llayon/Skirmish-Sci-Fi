@@ -8,13 +8,16 @@ vi.mock('./BattleGrid', () => ({ default: () => <div data-testid="battle-grid" /
 vi.mock('./AnimationLayer', () => ({ default: () => <div data-testid="animation-layer" /> }));
 vi.mock('./BattleHUD', () => ({ default: () => <div data-testid="battle-hud" /> }));
 vi.mock('./BattleHudSettingsModal', () => ({ default: () => <div data-testid="hud-modal" /> }));
+vi.mock('./BattleHelpOverlay', () => ({ default: () => <div data-testid="help-overlay" /> }));
 vi.mock('../../i18n', () => ({ useTranslation: () => ({ t: (key: string) => key }) }));
 vi.mock('@/stores', () => ({ useMultiplayerStore: vi.fn(), useBattleStore: vi.fn(), useHudStore: vi.fn() }));
+vi.mock('@/stores/settingsStore', () => ({ useSettingsStore: vi.fn() }));
 vi.mock('../../hooks/useGameState');
 vi.mock('../../hooks/useMultiplayer');
 vi.mock('../../hooks/useBattleLogic', () => ({ useBattleLogic: vi.fn(() => ({ uiState: { mode: 'idle' }, handlers: { cancelAction: vi.fn() } })) }));
 
 const { useBattleStore, useHudStore, useMultiplayerStore } = await import('@/stores');
+const { useSettingsStore } = await import('@/stores/settingsStore');
 const { useGameState } = await import('../../hooks/useGameState');
 const { useMultiplayer } = await import('../../hooks/useMultiplayer');
 const { useBattleLogic } = await import('../../hooks/useBattleLogic');
@@ -64,7 +67,13 @@ describe('BattleView', () => {
 
     vi.mocked(useBattleStore).mockImplementation((selector: any) => selector(battleStoreState));
     vi.mocked(useMultiplayerStore).mockImplementation((selector: any) => selector({ multiplayerRole: null }));
-    vi.mocked(useHudStore).mockImplementation((selector: any) => selector({ actions: { togglePanel: vi.fn(), toggleCollapsed: vi.fn(), setDensity: vi.fn(), applyPreset: vi.fn(), reset: vi.fn() } }));
+    vi.mocked(useHudStore).mockImplementation((selector: any) =>
+      selector({
+        preset: 'full',
+        actions: { togglePanel: vi.fn(), toggleCollapsed: vi.fn(), setDensity: vi.fn(), applyPreset: vi.fn(), reset: vi.fn() },
+      })
+    );
+    vi.mocked(useSettingsStore).mockImplementation((selector: any) => selector({ reducedVfx: false }));
   });
 
   it('renders loading text if battle is not available', () => {
@@ -90,6 +99,12 @@ describe('BattleView', () => {
     render(<BattleView />);
     fireEvent.keyDown(window, { key: 'h' });
     expect(screen.getByTestId('hud-modal')).toBeInTheDocument();
+  });
+
+  it('opens help overlay on ? hotkey', () => {
+    render(<BattleView />);
+    fireEvent.keyDown(window, { key: '?' });
+    expect(screen.getByTestId('help-overlay')).toBeInTheDocument();
   });
 
   it('calls cancelAction on Escape', () => {
@@ -170,7 +185,9 @@ describe('BattleView', () => {
 
   it('does not trigger panel hotkeys while a modal is open', () => {
     const togglePanel = vi.fn();
-    vi.mocked(useHudStore).mockImplementation((selector: any) => selector({ actions: { togglePanel } }));
+    vi.mocked(useHudStore).mockImplementation((selector: any) =>
+      selector({ preset: 'full', actions: { togglePanel, applyPreset: vi.fn() } })
+    );
     const dialog = document.createElement('div');
     dialog.setAttribute('role', 'dialog');
     dialog.setAttribute('aria-modal', 'true');

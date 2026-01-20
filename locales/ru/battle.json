@@ -21,8 +21,25 @@
     "hud": {
       "title": "HUD",
       "presets": "Пресеты",
+      "presetFull": "Полный",
+      "presetTactical": "Тактический",
+      "presetMinimal": "Минимальный",
+      "presetSpectator": "Наблюдатель",
+      "presetCustom": "Свой",
       "density": "Плотность",
       "panels": "Панели",
+      "behavior": "Поведение",
+      "autoHideSecondary": "Автоскрытие панелей во время действий",
+      "inspectPinned": "PIN",
+      "tile": "Клетка",
+      "terrain": "Местность",
+      "occupied": "Занято",
+      "reachable": "Доступно",
+      "cover": "Укрытие",
+      "blocksLos": "Блокирует обзор",
+      "impassable": "Непроходимо",
+      "yes": "Да",
+      "no": "Нет",
       "queue": "Очередь",
       "mission": "Миссия",
       "status": "Статус",
@@ -35,11 +52,27 @@
       "close": "Закрыть",
       "hotkeys": "Хоткеи",
       "hotkeysHint": "H: HUD • L: Журнал • M: Миссия • Q: Очередь",
+      "performance": {
+        "title": "Производительность",
+        "reducedMotion": "Меньше анимаций",
+        "reducedVfx": "Меньше эффектов"
+      },
       "camera": {
         "title": "Камера (3D)",
         "followActive": "Следовать за активным",
         "focus": "Фокус",
         "reset": "Сброс",
+        "quality": "Качество",
+        "qualityLow": "Низкое",
+        "qualityMedium": "Среднее",
+        "qualityHigh": "Высокое",
+        "presetTactical": "Тактическая",
+        "presetCinematic": "Кинематографичная",
+        "invertWheel": "Инвертировать колесо",
+        "resetSettings": "Сброс настроек камеры",
+        "zoomSpeed": "Зум",
+        "panSpeed": "Панорама",
+        "rotateSpeed": "Вращение",
         "controlsHint": "Мышь: вращать • Колесо: зум • ПКМ: панорама • F: фокус • R: сброс"
       },
       "expand": "Развернуть панель",
@@ -47,6 +80,24 @@
       "summary": {
         "active": "Активный: {name}",
         "log": "{count} записей"
+      }
+    },
+    "help": {
+      "open": "Справка (?)",
+      "close": "Закрыть",
+      "miniHint": "?: справка • F: фокус • R: сброс • Колесо: зум • ПКМ: панорама",
+      "title": "Справка по бою",
+      "camera": {
+        "title": "Камера (3D)",
+        "body": "Перетаскивание мышью: вращение\nКолесо: зум\nПКМ: панорама\nF: фокус на выбранном/активном\nR: сброс камеры"
+      },
+      "hotkeys": {
+        "title": "Хоткеи",
+        "body": "H: настройки HUD\nL: журнал\nM: миссия\nQ: очередь\nTab / Shift+Tab: цикл по юнитам\nEsc: отмена действия\n?: справка"
+      },
+      "selection": {
+        "title": "Выбор",
+        "body": "Клик по юниту: выбрать\nНаведение на юнит: быстрый просмотр\nПКМ / Esc: отменить текущее действие"
       }
     },
     "victory": "ПОБЕДА",

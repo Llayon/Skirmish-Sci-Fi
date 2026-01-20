@@ -16,27 +16,45 @@ import { useShallow } from 'zustand/react/shallow';
 import HudPanel from '../ui/HudPanel';
 import { sanitizeToText } from '@/services/utils/sanitization';
 import FloatingTargetInspector from './FloatingTargetInspector';
+import FloatingTileInspector from './FloatingTileInspector';
 
 interface BattleHUDProps {
   battleLogic: BattleLogic;
-  uiMode?: 'full' | 'minimal';
 }
 
-const BattleHUD: React.FC<BattleHUDProps> = ({ battleLogic, uiMode = 'full' }) => {
+const BattleHUD: React.FC<BattleHUDProps> = ({ battleLogic }) => {
   const { t } = useTranslation();
   const { battle } = useGameState();
-  const { selectedParticipantId, activeParticipantId, hoveredParticipantId } = useBattleStore(
+  const {
+    selectedParticipantId,
+    activeParticipantId,
+    hoveredParticipantId,
+    inspectLockedParticipantId,
+    inspectLockedPointer,
+    inspectLockedTile,
+    inspectLockedTilePointer,
+    animatingParticipantId,
+    isProcessingEnemies,
+  } = useBattleStore(
     useShallow((state) => ({
       selectedParticipantId: state.selectedParticipantId,
       activeParticipantId: state.battle?.activeParticipantId,
       hoveredParticipantId: state.hoveredParticipantId,
+      inspectLockedParticipantId: state.inspectLockedParticipantId,
+      inspectLockedPointer: state.inspectLockedPointer,
+      inspectLockedTile: state.inspectLockedTile,
+      inspectLockedTilePointer: state.inspectLockedTilePointer,
+      animatingParticipantId: state.animatingParticipantId,
+      isProcessingEnemies: state.isProcessingEnemies,
     }))
   );
-  const { panels, collapsed, density, toggleCollapsed } = useHudStore(
+  const { preset, panels, collapsed, density, autoHideSecondaryPanels, toggleCollapsed } = useHudStore(
     useShallow((state) => ({
+      preset: state.preset,
       panels: state.panels,
       collapsed: state.collapsed,
       density: state.density,
+      autoHideSecondaryPanels: state.autoHideSecondaryPanels,
       toggleCollapsed: state.actions.toggleCollapsed,
     }))
   );
@@ -59,7 +77,28 @@ const BattleHUD: React.FC<BattleHUDProps> = ({ battleLogic, uiMode = 'full' }) =
     return activeParticipant && participantToDisplay.id === activeParticipant.id;
   }, [participantToDisplay, activeParticipant, battle?.activePlayerRole, multiplayerRole]);
 
+  const isMinimalLayout = preset === 'minimal';
+  const isBusy =
+    battleLogic.uiState.mode !== 'idle' || animatingParticipantId !== null || isProcessingEnemies || battle?.phase === 'enemy_actions';
+  const effectivePanels =
+    autoHideSecondaryPanels && isBusy ? { ...panels, queue: false, mission: false, status: false, log: false } : panels;
+
   if (!battle) return null;
+
+  const inspectedTile = inspectLockedTile
+    ? {
+        pos: inspectLockedTile,
+        occupiedBy: battle.participants.find((p) => p.position.x === inspectLockedTile.x && p.position.y === inspectLockedTile.y) ?? null,
+        terrain:
+          battle.terrain.find((t) => {
+            const withinX = inspectLockedTile.x >= t.position.x && inspectLockedTile.x < t.position.x + t.size.width;
+            const withinY = inspectLockedTile.y >= t.position.y && inspectLockedTile.y < t.position.y + t.size.height;
+            return withinX && withinY;
+          }) ?? null,
+        isReachable: battleLogic.derivedData.reachableCells?.has(`${inspectLockedTile.x},${inspectLockedTile.y}`) ?? false,
+        isCoverSpot: battleLogic.derivedData.coverStatus?.get(`${inspectLockedTile.x},${inspectLockedTile.y}`) ?? false,
+      }
+    : null;
 
   const isOpponentTurn = multiplayerRole
     ? battle.activePlayerRole !== multiplayerRole && battle.activePlayerRole !== null
@@ -76,11 +115,11 @@ const BattleHUD: React.FC<BattleHUDProps> = ({ battleLogic, uiMode = 'full' }) =
     <ActionControls participant={participantToDisplay} battleLogic={battleLogic} />
   ) : null;
 
-  if (uiMode === 'minimal') {
+  if (isMinimalLayout) {
     return (
       <div className='p-4'>
         <div className="space-y-3">
-          {panels.mission && battle?.mission && (
+          {effectivePanels.mission && battle?.mission && (
             <HudPanel
               title={t('battle.hud.mission')}
               collapsed={collapsed.mission}
@@ -92,7 +131,7 @@ const BattleHUD: React.FC<BattleHUDProps> = ({ battleLogic, uiMode = 'full' }) =
               <MissionPanel mission={battle.mission} embedded />
             </HudPanel>
           )}
-          {panels.actions && (
+          {effectivePanels.actions && (
             <div className='hud-actions self-end flex justify-center animate-slide-up'>
               {actionBlock}
             </div>
@@ -137,7 +176,7 @@ const BattleHUD: React.FC<BattleHUDProps> = ({ battleLogic, uiMode = 'full' }) =
 
   return (
     <div className='battle-hud-grid p-4'>
-      {panels.queue && (
+      {effectivePanels.queue && (
         <div className='hud-queue animate-fade-in'>
           <HudPanel
             title={`${t('battle.hud.queue')} • ${t(`battle.phase.${battle.phase}`)}`}
@@ -153,7 +192,7 @@ const BattleHUD: React.FC<BattleHUDProps> = ({ battleLogic, uiMode = 'full' }) =
         </div>
       )}
 
-      {panels.mission && (
+      {effectivePanels.mission && (
         <div className='hud-mission self-start animate-fade-in' style={{ animationDelay: '100ms' }}>
           <HudPanel
             title={t('battle.hud.mission')}
@@ -169,7 +208,7 @@ const BattleHUD: React.FC<BattleHUDProps> = ({ battleLogic, uiMode = 'full' }) =
         </div>
       )}
 
-      {panels.status && (
+      {effectivePanels.status && (
         <div className='hud-status self-end animate-fade-in' style={{ animationDelay: '200ms' }}>
           {participantToDisplay && (
             <HudPanel
@@ -186,7 +225,7 @@ const BattleHUD: React.FC<BattleHUDProps> = ({ battleLogic, uiMode = 'full' }) =
         </div>
       )}
 
-      {panels.actions && (
+      {effectivePanels.actions && (
         <div className='hud-actions self-end flex justify-center animate-slide-up' style={{ animationDelay: '400ms' }}>
           <HudPanel
             title={t('battle.hud.actions')}
@@ -201,7 +240,7 @@ const BattleHUD: React.FC<BattleHUDProps> = ({ battleLogic, uiMode = 'full' }) =
         </div>
       )}
 
-      {panels.log && (
+      {effectivePanels.log && (
         <div className='hud-log self-end animate-fade-in' style={{ animationDelay: '300ms' }}>
           <HudPanel
             title={t('battle.battleLog')}
@@ -218,7 +257,22 @@ const BattleHUD: React.FC<BattleHUDProps> = ({ battleLogic, uiMode = 'full' }) =
       )}
       
       {hoveredParticipant && hoveredParticipant.id !== selectedParticipantId && (
-        <FloatingTargetInspector participant={hoveredParticipant} />
+        <FloatingTargetInspector
+          participant={hoveredParticipant}
+          pinned={inspectLockedParticipantId === hoveredParticipant.id}
+          pinnedPosition={inspectLockedPointer}
+        />
+      )}
+
+      {inspectedTile && (
+        <FloatingTileInspector
+          pos={inspectedTile.pos}
+          terrain={inspectedTile.terrain}
+          occupiedBy={inspectedTile.occupiedBy}
+          isReachable={inspectedTile.isReachable}
+          isCoverSpot={inspectedTile.isCoverSpot}
+          pinnedPosition={inspectLockedTilePointer}
+        />
       )}
     </div>
   );

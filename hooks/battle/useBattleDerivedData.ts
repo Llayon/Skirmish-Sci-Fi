@@ -137,6 +137,30 @@ export const useBattleDerivedData = (uiState: PlayerActionUIState, hoveredPos: P
         return newCoverStatus;
     }, [characterPerformingAction, uiState, reachableCells, gridSize, terrain, participants, multiplayerRole]);
 
+    const coverDirections = useMemo(() => {
+        const map = new Map<string, { dx: -1 | 0 | 1; dy: -1 | 0 | 1 }>();
+        if (!gridSize || !terrain || !participants) return map;
+        if (uiState.mode !== 'move' || !characterPerformingAction || !reachableCells) return map;
+
+        const battleForCover = { gridSize, terrain, participants };
+        const opponents = participants.filter(p => isParticipantOpponent(characterPerformingAction, p, multiplayerRole) && p.status !== 'casualty');
+        const visibleOpponents = opponents.filter(e => hasLineOfSight(characterPerformingAction, e, battleForCover as any));
+        if (visibleOpponents.length === 0) return map;
+
+        const closestOpponent = visibleOpponents.reduce((closest, opp) => distance(characterPerformingAction.position, opp.position) < distance(characterPerformingAction.position, closest.position) ? opp : closest);
+
+        for (const [posKey, providesCover] of coverStatus.entries()) {
+            if (!providesCover) continue;
+            const [xStr, yStr] = posKey.split(',');
+            const pos = { x: parseInt(xStr, 10), y: parseInt(yStr, 10) };
+            const dx = Math.sign(closestOpponent.position.x - pos.x) as -1 | 0 | 1;
+            const dy = Math.sign(closestOpponent.position.y - pos.y) as -1 | 0 | 1;
+            map.set(posKey, { dx, dy });
+        }
+
+        return map;
+    }, [characterPerformingAction, coverStatus, gridSize, multiplayerRole, participants, reachableCells, terrain, uiState.mode]);
+
     const hoveredPath = useMemo(() => {
         if ((!gridSize || !terrain || !participants) || !characterPerformingAction || !hoveredPos) return null;
         if (uiState.mode === 'move' || uiState.mode === 'follow_up_move') {
@@ -175,6 +199,7 @@ export const useBattleDerivedData = (uiState: PlayerActionUIState, hoveredPos: P
         characterPerformingAction,
         reachableCells,
         coverStatus,
+        coverDirections,
         hoveredPath,
         interactionHighlightPositions,
         validShootTargetIds,

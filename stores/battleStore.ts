@@ -16,6 +16,10 @@ interface BattleState {
   battle: Battle | null;
   selectedParticipantId: string | null;
   hoveredParticipantId: string | null;
+  inspectLockedParticipantId: string | null;
+  inspectLockedPointer: { x: number; y: number } | null;
+  inspectLockedTile: Position | null;
+  inspectLockedTilePointer: { x: number; y: number } | null;
   camera3dCommand: { type: 'reset' } | { type: 'focus'; target: Position } | null;
   followActive3D: boolean;
   isProcessingEnemies: boolean;
@@ -45,6 +49,10 @@ interface BattleState {
     advancePhase: () => void;
     setSelectedParticipantId: (id: string | null) => void;
     setHoveredParticipantId: (id: string | null) => void;
+    setInspectLockedParticipantId: (id: string | null) => void;
+    setInspectLockedPointer: (pos: { x: number; y: number } | null) => void;
+    setInspectLockedTile: (pos: Position | null) => void;
+    setInspectLockedTilePointer: (pos: { x: number; y: number } | null) => void;
     setIsProcessingEnemies: (isProcessing: boolean) => void;
     setShowEnemyTurnBanner: (show: boolean) => void;
     setAnimation: (animation: AnimationState) => void;
@@ -65,6 +73,10 @@ const initialBattleState: Omit<BattleState, 'actions'> = {
   battle: null,
   selectedParticipantId: null,
   hoveredParticipantId: null,
+  inspectLockedParticipantId: null,
+  inspectLockedPointer: null,
+  inspectLockedTile: null,
+  inspectLockedTilePointer: null,
   camera3dCommand: null,
   followActive3D: false,
   isProcessingEnemies: false,
@@ -214,6 +226,22 @@ export const useBattleStore = create<BattleState>()(
       setHoveredParticipantId: (id) =>
         set((state) => {
           state.hoveredParticipantId = id;
+        }),
+      setInspectLockedParticipantId: (id) =>
+        set((state) => {
+          state.inspectLockedParticipantId = id;
+        }),
+      setInspectLockedPointer: (pos) =>
+        set((state) => {
+          state.inspectLockedPointer = pos;
+        }),
+      setInspectLockedTile: (pos) =>
+        set((state) => {
+          state.inspectLockedTile = pos;
+        }),
+      setInspectLockedTilePointer: (pos) =>
+        set((state) => {
+          state.inspectLockedTilePointer = pos;
         }),
       setIsProcessingEnemies: (isProcessing) =>
         set((state) => {

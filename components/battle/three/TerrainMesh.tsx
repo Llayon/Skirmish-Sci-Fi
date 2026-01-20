@@ -25,17 +25,18 @@ export const TerrainMesh = ({ terrain, gridSize }: TerrainMeshProps) => {
   const position = gridToWorld(terrain.position, gridSize, terrain.height / 2);
 
   return (
-    <mesh
-      ref={meshRef}
-      raycast={() => null}
-      position={[position.x, position.y, position.z]}
-      castShadow
-      receiveShadow
-      userData={{ terrainId: terrain.id, terrainType: terrain.type }}
-    >
-      {getTerrainGeometry(terrain)}
-      {getTerrainMaterial(terrain)}
-    </mesh>
+    <group position={[position.x, position.y, position.z]} userData={{ terrainId: terrain.id, terrainType: terrain.type }}>
+      <mesh ref={meshRef} raycast={() => null} castShadow receiveShadow>
+        {getTerrainGeometry(terrain)}
+        {getTerrainMaterial(terrain)}
+      </mesh>
+      {terrain.providesCover && (
+        <mesh raycast={() => null} scale={[1.03, 1.03, 1.03]}>
+          {getTerrainGeometry(terrain)}
+          <meshBasicMaterial color="#38bdf8" transparent opacity={0.22} wireframe toneMapped={false} />
+        </mesh>
+      )}
+    </group>
   );
 };
 
@@ -57,12 +58,39 @@ function getTerrainGeometry(terrain: Terrain3D) {
 
 function getTerrainMaterial(terrain: Terrain3D) {
   const colors: Record<string, string> = {
-    Wall: '#666666',
-    Barrel: '#8B4513',
-    Container: '#2E5090',
-    Obstacle: '#555555',
-    Floor: '#1a1a2e',
+    Wall: '#64748b',
+    Barrel: '#a16207',
+    Container: '#2563eb',
+    Obstacle: '#475569',
+    Floor: '#111827',
   };
 
-  return <meshStandardMaterial color={colors[terrain.type] || colors.Obstacle} />;
+  const roughness: Record<string, number> = {
+    Wall: 0.85,
+    Barrel: 0.7,
+    Container: 0.55,
+    Obstacle: 0.9,
+    Floor: 0.95,
+  };
+
+  const metalness: Record<string, number> = {
+    Wall: 0.15,
+    Barrel: 0.25,
+    Container: 0.5,
+    Obstacle: 0.1,
+    Floor: 0.05,
+  };
+
+  const emissive = terrain.type === 'Container' ? '#1d4ed8' : '#000000';
+  const emissiveIntensity = terrain.type === 'Container' ? 0.12 : 0;
+
+  return (
+    <meshStandardMaterial
+      color={colors[terrain.type] || colors.Obstacle}
+      roughness={roughness[terrain.type] ?? 0.9}
+      metalness={metalness[terrain.type] ?? 0.1}
+      emissive={emissive}
+      emissiveIntensity={emissiveIntensity}
+    />
+  );
 }

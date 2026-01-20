@@ -15,17 +15,40 @@ export const GridFloor = ({ gridSize }: GridFloorProps) => {
     const ctx = canvas.getContext('2d');
     if (!ctx) return null;
 
-    ctx.fillStyle = '#182237';
+    const grad = ctx.createLinearGradient(0, 0, size, size);
+    grad.addColorStop(0, '#0f172a');
+    grad.addColorStop(1, '#0b1220');
+    ctx.fillStyle = grad;
     ctx.fillRect(0, 0, size, size);
 
-    ctx.strokeStyle = '#2f3f66';
+    const noise = ctx.getImageData(0, 0, size, size);
+    for (let i = 0; i < noise.data.length; i += 4) {
+      const v = (Math.random() - 0.5) * 10;
+      noise.data[i] = Math.min(255, Math.max(0, noise.data[i] + v));
+      noise.data[i + 1] = Math.min(255, Math.max(0, noise.data[i + 1] + v));
+      noise.data[i + 2] = Math.min(255, Math.max(0, noise.data[i + 2] + v));
+    }
+    ctx.putImageData(noise, 0, 0);
+
+    ctx.strokeStyle = 'rgba(56, 189, 248, 0.28)';
     ctx.lineWidth = 2;
     ctx.strokeRect(0, 0, size, size);
+
+    ctx.strokeStyle = 'rgba(148, 163, 184, 0.14)';
+    ctx.lineWidth = 1;
+    ctx.beginPath();
+    ctx.moveTo(size / 2, 0);
+    ctx.lineTo(size / 2, size);
+    ctx.moveTo(0, size / 2);
+    ctx.lineTo(size, size / 2);
+    ctx.stroke();
 
     const texture = new THREE.CanvasTexture(canvas);
     texture.wrapS = THREE.RepeatWrapping;
     texture.wrapT = THREE.RepeatWrapping;
     texture.repeat.set(gridSize.width, gridSize.height);
+    texture.anisotropy = 4;
+    texture.colorSpace = THREE.SRGBColorSpace;
 
     return texture;
   }, [gridSize.width, gridSize.height]);
@@ -41,7 +64,7 @@ export const GridFloor = ({ gridSize }: GridFloorProps) => {
   return (
     <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, 0, 0]} receiveShadow raycast={() => null}>
       <planeGeometry args={[gridSize.width * TILE_SIZE, gridSize.height * TILE_SIZE]} />
-      <meshStandardMaterial map={gridTexture} />
+      <meshStandardMaterial map={gridTexture} roughness={0.95} metalness={0.05} />
     </mesh>
   );
 };
