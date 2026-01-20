@@ -7,9 +7,10 @@ type UseBattleHotkeysOptions = {
   battleLogic: BattleLogic;
   is3D: boolean;
   toggleHudModal: () => void;
+  toggleHelp: () => void;
 };
 
-export const useBattleHotkeys = ({ battleLogic, is3D, toggleHudModal }: UseBattleHotkeysOptions) => {
+export const useBattleHotkeys = ({ battleLogic, is3D, toggleHudModal, toggleHelp }: UseBattleHotkeysOptions) => {
   const multiplayerRole = useMultiplayerStore((s) => s.multiplayerRole);
   const togglePanel = useHudStore((s) => s.actions.togglePanel);
 
@@ -37,12 +38,17 @@ export const useBattleHotkeys = ({ battleLogic, is3D, toggleHudModal }: UseBattl
       if (event.ctrlKey || event.metaKey || event.altKey) return;
 
       const key = event.key.toLowerCase();
-      if (document.querySelector('[role="dialog"][aria-modal="true"]') && key !== 'h') return;
+      const isHelpKey = key === '?' || key === '/';
+      if (document.querySelector('[role="dialog"][aria-modal="true"]') && key !== 'h' && !isHelpKey) return;
 
       const target = event.target as HTMLElement | null;
       const tagName = target?.tagName?.toLowerCase();
       if (tagName === 'input' || tagName === 'textarea' || target?.isContentEditable) return;
 
+      if (isHelpKey) {
+        toggleHelp();
+        return;
+      }
       if (key === 'h') {
         toggleHudModal();
         return;
@@ -116,6 +122,7 @@ export const useBattleHotkeys = ({ battleLogic, is3D, toggleHudModal }: UseBattl
     selectedParticipantId,
     setSelectedParticipantId,
     toggleHudModal,
+    toggleHelp,
     togglePanel,
   ]);
 };

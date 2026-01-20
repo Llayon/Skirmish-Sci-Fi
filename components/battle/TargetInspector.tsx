@@ -9,9 +9,10 @@ import { getProtectiveDeviceById } from '@/services/data/items';
 
 interface TargetInspectorProps {
   participant: BattleParticipant;
+  pinned?: boolean;
 }
 
-const TargetInspector: React.FC<TargetInspectorProps> = ({ participant }) => {
+const TargetInspector: React.FC<TargetInspectorProps> = ({ participant, pinned }) => {
   const { t } = useTranslation();
   const isOpponent = participant.type === 'enemy';
 
@@ -32,7 +33,14 @@ const TargetInspector: React.FC<TargetInspectorProps> = ({ participant }) => {
 
   return (
     <Card className="w-48 p-2 bg-surface-overlay/90 backdrop-blur-md border-border/70 shadow-2xl animate-fade-in text-xs">
-      <h5 className={`font-bold font-orbitron truncate ${isOpponent ? 'text-danger' : 'text-primary'}`}>{name}</h5>
+      <div className="flex items-center justify-between gap-2">
+        <h5 className={`font-bold font-orbitron truncate ${isOpponent ? 'text-danger' : 'text-primary'}`}>{name}</h5>
+        {pinned && (
+          <span className="px-1.5 py-0.5 rounded border border-border/70 bg-surface-raised/70 text-[10px] font-bold text-text-muted">
+            {t('battle.hud.inspectPinned')}
+          </span>
+        )}
+      </div>
       <div className="flex items-center justify-between gap-2 mt-2">
         <Tooltip content={t('characterCard.tough')}>
           <div className="flex items-center gap-1.5" aria-label={t('characterCard.tough')}>

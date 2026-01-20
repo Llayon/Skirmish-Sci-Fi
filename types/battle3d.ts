@@ -7,6 +7,8 @@ export interface Terrain3D {
   type: Terrain3DType;
   position: Position;
   height: number;
+  providesCover: boolean;
+  blocksLineOfSight: boolean;
 }
 
 export interface UnitVitality3D {
