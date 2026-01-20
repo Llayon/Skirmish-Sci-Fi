@@ -34,8 +34,8 @@ const PatrolShipConfiscation: React.FC<{
     const items: SelectableItem[] = [];
     const addItem = (charId: string, item: { instanceId: string, weaponId?: string, type: string, id: string }) => {
       let nameKey: string;
-      let itemType: string = item.type;
-      let itemId: string = item.weaponId || item.id;
+      const itemType: string = item.type;
+      const itemId: string = item.weaponId || item.id;
       switch (itemType) {
         case 'weapon': nameKey = `weapons.${itemId}`; break;
         case 'armor': case 'screen': nameKey = `protective_devices.${itemId}`; break;
@@ -141,7 +141,7 @@ const CampaignEventModal: React.FC = () => {
 
     const eventData = event.data || {};
     const titleKey = `travelEvents.${event.eventId}.title`;
-    let descKey = `travelEvents.${event.eventId}.desc`;
+    const descKey = `travelEvents.${event.eventId}.desc`;
 
     switch (event.eventId) {
         case 'asteroids': {

@@ -51,7 +51,7 @@ const CharacterUpgradePanel: React.FC<CharacterUpgradePanelProps> = React.memo((
     const canUpgrade = (upgrade: typeof upgrades[0]): boolean => {
         if (character.xp < upgrade.cost) return false;
         
-        let currentStat = character.stats[upgrade.stat];
+        const currentStat = character.stats[upgrade.stat];
         
         if (character.raceId === 'engineer' && upgrade.stat === 'toughness' && currentStat >= 4) {
             return false;

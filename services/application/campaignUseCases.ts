@@ -419,7 +419,7 @@ export class CampaignUseCases {
         }
 
         const logs: CampaignLogEntry[] = [];
-        let battleOptions = null;
+        const battleOptions = null;
         let rerolledEvent = false;
 
         switch (updatedCampaign.activeTravelEvent.eventId) {

@@ -132,7 +132,7 @@ export const generateCharacter = async (
         background = resolveTable(CHARACTER_BACKGROUNDS, rollD100());
     }
     
-    let classRoll = rollD100();
+    const classRoll = rollD100();
     if (strangeData?.creationOverrides?.classRestrictions) {
         const initialClass = resolveTable(CLASS_TABLE, classRoll).value.id;
         if (strangeData.creationOverrides.classRestrictions[initialClass]) {
@@ -220,7 +220,7 @@ export const assembleCharacterFromComponents = (
 
     const campaignBonuses: CampaignBonuses = { credits: 0, storyPoints: 0, patrons: [], questRumors: 0, rivals: 0 };
     let savvyIncreased = false;
-    let startingRolls: string[] = [];
+    const startingRolls: string[] = [];
 
     if (background && classInfo && motivationInfo) {
         const combinedEffects = `${background.effect}, ${classInfo.effect}, ${motivationInfo.effect}`.toLowerCase();
@@ -345,7 +345,7 @@ export const applyRaceToCharacter = (character: Character, newRaceId: RaceId): C
     const motivationInfo = MOTIVATION_TABLE.find(m => m.value.id === newChar.motivationId)?.value || MOTIVATION_TABLE[0].value;
 
 
-    let finalStats: CharacterStats = { reactions: 0, speed: 0, combat: 0, toughness: 0, savvy: 0, luck: 1 };
+    const finalStats: CharacterStats = { reactions: 0, speed: 0, combat: 0, toughness: 0, savvy: 0, luck: 1 };
     
     if (newRaceId === 'bot' || !background || !classInfo || !motivationInfo) {
         // Bot has fixed stats
