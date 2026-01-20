@@ -1,6 +1,6 @@
 
 
-import { Battle, BattleParticipant, Weapon, LogEntry, HitContext, DamageContext, SavingThrowContext, ActiveEffect } from '../../types';
+import { Battle, BattleParticipant, Weapon, LogEntry, HitContext, DamageContext, SavingThrowContext, ActiveEffect, isEliminateMission, isAcquireMission, isDeliverMission } from '../../types';
 import { rollD6 } from '../utils/rolls';
 import { getProtectiveDeviceById } from '../data/items';
 import { findPushbackPosition, findDodgePosition } from '../gridUtils';
@@ -45,7 +45,7 @@ export const applyStunAndPushback = (
     }
     
     // Eliminate mission: Target is locked down
-    if (battleState.mission.type === 'Eliminate' && battleState.mission.targetEnemyId === target.id) {
+    if (isEliminateMission(battleState.mission) && battleState.mission.targetEnemyId === target.id) {
         if (target.status === 'stunned' || target.status === 'dazed') {
             battleState.mission.eliminateTargetCanEscape = true;
             target.activeEffects.push({
@@ -230,7 +230,7 @@ export const applyHitAndSaves = (
 
                 // --- ITEM DROP LOGIC ---
                 const mission = battle.mission;
-                if ((mission.type === 'Acquire' || mission.type === 'Deliver') && mission.itemCarrierId === target.id) {
+                if ((isAcquireMission(mission) || isDeliverMission(mission)) && mission.itemCarrierId === target.id) {
                     const dropRoll = rollD6();
                     const missionTypeKey = mission.type.toLowerCase();
                     if (dropRoll === 1) {

@@ -1,11 +1,13 @@
 
 import type { BattleParticipant, Position, ParticipantStatus } from './character';
-import type { CampaignLog, LogEntry, MissionType, Difficulty, TableEntry, ActiveMission, WorldTrait } from './campaign';
+import type { CampaignLog, LogEntry, Difficulty, TableEntry, ActiveMission, WorldTrait } from './campaign';
+import type { Mission, MissionType } from './mission';
 import type { Weapon, ProtectiveDevice } from './items';
 import { EnemyEncounterCategory } from '@/constants/enemyEncounters';
 
 export type GridSize = { width: number; height: number };
 export type { Position, ParticipantStatus, BattleParticipant } from './character';
+export type { Mission, MissionType, PatrolPoint } from './mission';
 
 export type MultiplayerRole = 'host' | 'guest';
 
@@ -57,11 +59,6 @@ export type AnimationState =
   | ({ type: 'shoot'; from: Position; to: Position } & { id: string })
   | null;
 
-export interface PatrolPoint {
-    id: string;
-    visited: boolean;
-}
-
 export type DeploymentConditionId =
   | 'no_condition'
   | 'small_encounter'
@@ -79,31 +76,6 @@ export interface DeploymentCondition {
   id: DeploymentConditionId;
   nameKey: string;
   descriptionKey: string;
-}
-
-export interface Mission {
-  type: MissionType;
-  titleKey: string;
-  descriptionKey: string;
-  status: 'in_progress' | 'success' | 'failure';
-  objectivePosition?: Position;
-  customData?: Record<string, any>;
-  // State properties
-  targetEnemyId?: string;
-  itemCarrierId?: string | null;
-  itemPosition?: Position | null;
-  itemDestroyed?: boolean;
-  packageDelivered?: boolean;
-  accessFirstNat1?: boolean;
-  patrolPoints?: PatrolPoint[];
-  crewMembersExited?: number;
-  vipId?: string;
-  vipTurnStartInZone?: boolean;
-  secureRoundsCompleted?: number;
-  searchedPositions?: Position[];
-  searchRadius?: number;
-  eliminateTargetCanEscape?: boolean;
-  [key: string]: any; // for easier updates
 }
 
 export interface MissionModifiers {
