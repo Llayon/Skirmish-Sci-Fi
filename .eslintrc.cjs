@@ -42,12 +42,15 @@ module.exports = {
             property: 'random',
             message: 'Use seeded RNG from services/engine/rng instead of Math.random in engine.',
           },
-        ],
-        'no-restricted-syntax': [
-          'error',
           {
-            selector: 'CallExpression[callee.object.name="Date"][callee.property.name="now"]',
+            object: 'Date',
+            property: 'now',
             message: 'Do not use Date.now in engine; pass time via state if needed.',
+          },
+          {
+            object: 'performance',
+            property: 'now',
+            message: 'Do not use performance.now in engine; pass time via state if needed.',
           },
         ],
       },
