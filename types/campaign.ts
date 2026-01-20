@@ -47,7 +47,8 @@ export type Benefit = { id: string; nameKey: string; effectKey: string; };
 export type Hazard = { id: string; nameKey: string; effectKey: string; };
 export type Condition = { id: string; nameKey: string; effectKey: string; };
 
-export type MissionType = 'Access' | 'Acquire' | 'Defend' | 'Deliver' | 'Eliminate' | 'FightOff' | 'MoveThrough' | 'Patrol' | 'Protect' | 'Secure' | 'Search';
+import type { MissionType } from './mission';
+export type { MissionType } from './mission';
 
 export interface MissionOffer {
     id: string;

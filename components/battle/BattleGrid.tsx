@@ -1,6 +1,6 @@
 
 import React, { useCallback, useMemo } from 'react';
-import { BattleParticipant, Position, Terrain, BattleCellParticipantViewModel } from '../../types';
+import { BattleParticipant, Position, Terrain, BattleCellParticipantViewModel, isAcquireMission, isDeliverMission, isSearchMission, isEliminateMission } from '../../types';
 import Card from '../ui/Card';
 import BattleCell from './BattleCell';
 import { isOpponent as isParticipantOpponent } from '../../services/participantUtils';
@@ -184,8 +184,8 @@ const BattleGrid: React.FC<BattleGridProps> = ({ battleLogic }) => {
 
         const isReachableMoveCell = (uiState.mode === 'move' || uiState.mode === 'follow_up_move') && derivedData.reachableCells?.has(posKey);
 
-        const isItemOnGround = mission.itemPosition?.x === x && mission.itemPosition.y === y;
-        const isSearched = mission.type === 'Search' && mission.searchedPositions?.some(p => p.x === x && p.y === y);
+        const isItemOnGround = (isAcquireMission(mission) || isDeliverMission(mission) || isSearchMission(mission)) && mission.itemPosition?.x === x && mission.itemPosition.y === y;
+        const isSearched = isSearchMission(mission) && mission.searchedPositions?.some(p => p.x === x && p.y === y);
         const isNotableSight = notableSight?.present && !notableSight.acquiredBy && notableSight.position?.x === x && notableSight.position.y === y;
 
         const isHighlightedForInteraction = derivedData.interactionHighlightPositions.has(posKey) && uiState.mode === 'idle' && !isSearched;
@@ -266,13 +266,13 @@ const BattleGrid: React.FC<BattleGridProps> = ({ battleLogic }) => {
             status: participant.status,
             stunTokens: participant.stunTokens,
             isOpponent,
-            isItemCarrier: mission.itemCarrierId === participant.id,
+            isItemCarrier: (isAcquireMission(mission) || isDeliverMission(mission)) && mission.itemCarrierId === participant.id,
             isSelected: selectedParticipantId === participant.id,
             isActive: activeParticipantId === participant.id,
             isAnimating: animatingParticipantId === participant.id,
             isPending: pendingActionFor === participant.id,
             hasCoverFromAttacker: !!(characterPerformingAction && validShootTargetIds.has(participant.id) && calculateCover(characterPerformingAction, participant, battle)),
-            isMissionTarget: mission.type === 'Eliminate' && mission.targetEnemyId === participant.id,
+            isMissionTarget: isEliminateMission(mission) && mission.targetEnemyId === participant.id,
             isUnique: (participant as any).isUnique,
           };
         }

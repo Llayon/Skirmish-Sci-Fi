@@ -1,4 +1,4 @@
-import { Battle, LogEntry, PlayerAction, MultiplayerRole, Weapon, AIActionPlan } from '../../../types';
+import { Battle, LogEntry, PlayerAction, MultiplayerRole, Weapon, AIActionPlan, isAccessMission, isAcquireMission, isDeliverMission, isPatrolMission, isSearchMission } from '../../../types';
 import { getWeaponById, getConsumableById } from '../../data/items';
 import { resolveBrawling } from '../../rules/brawling';
 import { resolveShooting } from '../../rules/shooting';
@@ -211,94 +211,90 @@ const resolveInteractAction = (battle: Battle, action: Extract<PlayerAction, { t
     if (!interactor || interactor.type !== 'character') return [];
     
     const mission = battle.mission;
-    const objectivePos = mission.objectivePosition;
 
-    switch(mission.type) {
-        case 'Access':
-            if (objectivePos) {
-                logs.push({ key: 'log.mission.access.attempt', params: { name: interactor.name } });
-                const roll = rollD6();
-                const isEngineer = interactor.classId === 'engineer';
-                const bonus = BattleDomain.calculateEffectiveStats(interactor).savvy + (isEngineer ? 1 : 0);
-                const total = roll + bonus;
-                logs.push({ key: 'log.mission.access.roll', params: { roll, bonus, total } });
-                if (total >= 6) {
-                    logs.push({ key: 'log.mission.access.success' });
+    if (isAccessMission(mission)) {
+        const objectivePos = mission.objectivePosition;
+        if (objectivePos) {
+            logs.push({ key: 'log.mission.access.attempt', params: { name: interactor.name } });
+            const roll = rollD6();
+            const isEngineer = interactor.classId === 'engineer';
+            const bonus = BattleDomain.calculateEffectiveStats(interactor).savvy + (isEngineer ? 1 : 0);
+            const total = roll + bonus;
+            logs.push({ key: 'log.mission.access.roll', params: { roll, bonus, total } });
+            if (total >= 6) {
+                logs.push({ key: 'log.mission.access.success' });
+                mission.status = 'success';
+            } else {
+                logs.push({ key: 'log.mission.access.failure' });
+                if (roll === 1 && !isEngineer) {
+                    if (mission.accessFirstNat1) {
+                        logs.push({ key: 'log.mission.access.lockout' });
+                        mission.status = 'failure';
+                    } else {
+                        logs.push({ key: 'log.mission.access.hardened' });
+                        mission.accessFirstNat1 = true;
+                    }
+                }
+            }
+        }
+    } else if (isAcquireMission(mission)) {
+        if (mission.itemPosition && distance(interactor.position, mission.itemPosition) <= 1) {
+            mission.itemCarrierId = interactor.id;
+            mission.itemPosition = null;
+            logs.push({ key: 'log.mission.acquire.pickup', params: { name: interactor.name } });
+        }
+    } else if (isDeliverMission(mission)) {
+        const objectivePos = mission.objectivePosition;
+        if (mission.itemPosition && distance(interactor.position, mission.itemPosition) <= 1) {
+            mission.itemCarrierId = interactor.id;
+            mission.itemPosition = null;
+            logs.push({ key: 'log.mission.acquire.pickup', params: { name: interactor.name } });
+        } else if (mission.itemCarrierId === interactor.id && objectivePos && distance(interactor.position, objectivePos) === 0) {
+            mission.packageDelivered = true;
+            mission.itemCarrierId = null;
+            logs.push({ key: 'log.mission.deliver.placed', params: { name: interactor.name } });
+        }
+    } else if (isPatrolMission(mission)) {
+        const pointToVisit = mission.patrolPoints?.find(p => !p.visited && battle.terrain.some(t => t.id === p.id && distance(interactor.position, t.position) <= 2));
+        if (pointToVisit) {
+            pointToVisit.visited = true;
+            const visitedCount = mission.patrolPoints?.filter(p => p.visited).length || 0;
+            logs.push({ key: 'log.mission.patrol.scanned', params: { name: interactor.name, current: visitedCount, total: mission.patrolPoints!.length } });
+        }
+    } else if (isSearchMission(mission)) {
+        const objectivePos = mission.objectivePosition;
+        if (objectivePos && mission.searchRadius && mission.searchedPositions) {
+            const searchPosition = interactor.position;
+            if (distance(searchPosition, objectivePos) <= mission.searchRadius && !mission.searchedPositions.some(p => p.x === searchPosition.x && p.y === searchPosition.y)) {
+                mission.searchedPositions.push(searchPosition);
+                logs.push({ key: 'log.mission.search.attemptPosition', params: { name: interactor.name } });
+
+                const savvyRoll = rollD6();
+                const savvyStat = BattleDomain.calculateEffectiveStats(interactor).savvy;
+
+                if (savvyRoll + savvyStat >= 5) {
+                    logs.push({ key: 'log.mission.search.success' });
                     mission.status = 'success';
                 } else {
-                    logs.push({ key: 'log.mission.access.failure' });
-                    if (roll === 1 && !isEngineer) {
-                        if (mission.accessFirstNat1) {
-                            logs.push({ key: 'log.mission.access.lockout' });
-                            mission.status = 'failure';
-                        } else {
-                            logs.push({ key: 'log.mission.access.hardened' });
-                            mission.accessFirstNat1 = true;
-                        }
-                    }
-                }
-            }
-            break;
-        case 'Acquire':
-            if (mission.itemPosition && distance(interactor.position, mission.itemPosition) <= 1) {
-                mission.itemCarrierId = interactor.id;
-                mission.itemPosition = null;
-                logs.push({ key: 'log.mission.acquire.pickup', params: { name: interactor.name } });
-            }
-            break;
-        case 'Deliver':
-            if (mission.itemPosition && distance(interactor.position, mission.itemPosition) <= 1) {
-                mission.itemCarrierId = interactor.id;
-                mission.itemPosition = null;
-                logs.push({ key: 'log.mission.acquire.pickup', params: { name: interactor.name } });
-            } else if (mission.itemCarrierId === interactor.id && objectivePos && distance(interactor.position, objectivePos) === 0) {
-                mission.packageDelivered = true;
-                mission.itemCarrierId = null;
-                logs.push({ key: 'log.mission.deliver.placed', params: { name: interactor.name } });
-            }
-            break;
-        case 'Patrol':
-            const pointToVisit = mission.patrolPoints?.find(p => !p.visited && battle.terrain.some(t => t.id === p.id && distance(interactor.position, t.position) <= 2));
-            if (pointToVisit) {
-                pointToVisit.visited = true;
-                const visitedCount = mission.patrolPoints?.filter(p => p.visited).length || 0;
-                logs.push({ key: 'log.mission.patrol.scanned', params: { name: interactor.name, current: visitedCount, total: mission.patrolPoints!.length } });
-            }
-            break;
-        case 'Search':
-            if (objectivePos && mission.searchRadius && mission.searchedPositions) {
-                const searchPosition = interactor.position;
-                if (distance(searchPosition, objectivePos) <= mission.searchRadius && !mission.searchedPositions.some(p => p.x === searchPosition.x && p.y === searchPosition.y)) {
-                    mission.searchedPositions.push(searchPosition);
-                    logs.push({ key: 'log.mission.search.attemptPosition', params: { name: interactor.name } });
+                    logs.push({ key: 'log.mission.search.failurePosition' });
                     
-                    const savvyRoll = rollD6();
-                    const savvyStat = BattleDomain.calculateEffectiveStats(interactor).savvy;
-                    
-                    if (savvyRoll + savvyStat >= 5) {
-                        logs.push({ key: 'log.mission.search.success' });
-                        mission.status = 'success';
-                    } else {
-                        logs.push({ key: 'log.mission.search.failurePosition' });
-                        
-                        // Check for mission failure if all cells are searched
-                        let totalCellsInZone = 0;
-                        for (let y = objectivePos.y - mission.searchRadius; y <= objectivePos.y + mission.searchRadius; y++) {
-                            for (let x = objectivePos.x - mission.searchRadius; x <= objectivePos.x + mission.searchRadius; x++) {
-                                if (distance({x,y}, objectivePos) <= mission.searchRadius) {
-                                    totalCellsInZone++;
-                                }
+                    // Check for mission failure if all cells are searched
+                    let totalCellsInZone = 0;
+                    for (let y = objectivePos.y - mission.searchRadius; y <= objectivePos.y + mission.searchRadius; y++) {
+                        for (let x = objectivePos.x - mission.searchRadius; x <= objectivePos.x + mission.searchRadius; x++) {
+                            if (distance({x,y}, objectivePos) <= mission.searchRadius) {
+                                totalCellsInZone++;
                             }
                         }
-                        
-                        if (mission.searchedPositions.length >= totalCellsInZone) {
-                            logs.push({ key: 'log.mission.search.all_searched' });
-                            mission.status = 'failure';
-                        }
+                    }
+
+                    if (mission.searchedPositions.length >= totalCellsInZone) {
+                        logs.push({ key: 'log.mission.search.all_searched' });
+                        mission.status = 'failure';
                     }
                 }
             }
-            break;
+        }
     }
     
     interactor.actionsRemaining--;
