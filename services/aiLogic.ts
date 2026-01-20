@@ -22,7 +22,7 @@ const hasHeavyWeapon = (enemy: BattleParticipant): boolean => {
 }
 
 const findNearestOpponent = (enemy: BattleParticipant, battle: Battle): BattleParticipant | null => {
-    let opponents = battle.participants.filter(p => p.type === 'character' && p.status !== 'casualty');
+    const opponents = battle.participants.filter(p => p.type === 'character' && p.status !== 'casualty');
 
     // For "Protect" mission, the VIP is the highest priority target.
     if (battle.mission.type === 'Protect' && battle.mission.vipId) {

@@ -147,7 +147,7 @@ export const getLinePath = (from: Position, to: Position): Position[] => {
         path.push({ x, y });
         if (x === x2 && y === y2) break;
         if (path.length > 50) break; // Safety break
-        let e2 = 2 * err;
+        const e2 = 2 * err;
         if (e2 >= dy) { err += dy; x += sx; }
         if (e2 <= dx) { err += dx; y += sy; }
     }

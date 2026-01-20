@@ -64,7 +64,7 @@ const assembleCharacter = (
 
     const campaignBonuses = { credits: 0, storyPoints: 0, patrons: [], questRumors: 0, rivals: 0 };
     let savvyIncreased = false;
-    let startingRolls: string[] = [];
+    const startingRolls: string[] = [];
     let xp = 0;
 
     if (background && classInfo && motivationInfo) {
@@ -343,7 +343,7 @@ const CrewCreator: React.FC = () => {
 
     if (!race) return;
 
-    let baseStats: CharacterStats = {
+    const baseStats: CharacterStats = {
         reactions: 1, speed: 4, combat: 0, toughness: 3, savvy: 0, luck: 1,
         ...race.baseStats
     };

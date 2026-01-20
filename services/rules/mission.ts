@@ -4,7 +4,7 @@ import { rollD6 } from '../utils/rolls';
 
 export function checkMissionStatus(battle: Battle, context: 'after_action' | 'end_of_round'): { battle: Battle, logs: LogEntry[] } {
     const { mission, gridSize } = battle;
-    let logs: LogEntry[] = [];
+    const logs: LogEntry[] = [];
     
     if (mission.status !== 'in_progress') {
         return { battle, logs };

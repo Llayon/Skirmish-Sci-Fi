@@ -168,7 +168,7 @@ const BattleGrid: React.FC<BattleGridProps> = ({ battleLogic }) => {
 
         const tileIndex = (x * 19 + y * 73) % TILE_FLOOR_PATHS.length;
         let cellStyle: React.CSSProperties = { backgroundImage: `url(${TILE_FLOOR_PATHS[tileIndex]})` };
-        let highlightClasses: string[] = [];
+        const highlightClasses: string[] = [];
         let pathOverlayClass: string | undefined = undefined;
 
         let cellBorder = 'border-border/50';

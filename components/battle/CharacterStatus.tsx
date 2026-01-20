@@ -19,7 +19,7 @@ const CharacterStatus: React.FC<CharacterStatusProps> = ({ participant, embedded
 
   const isOpponent = participant.type === 'enemy';
 
-  let name = participant.type === 'character' ? sanitizeToText(participant.name) : t(`enemies.${participant.name.split(' #')[0]}`) + ` #${participant.name.split(' #')[1]}`;
+  const name = participant.type === 'character' ? sanitizeToText(participant.name) : t(`enemies.${participant.name.split(' #')[0]}`) + ` #${participant.name.split(' #')[1]}`;
 
   const content = (
     <div className={`${embedded ? '' : 'bg-surface-raised/80 backdrop-blur-sm p-3 rounded-lg border border-border/50 w-full animate-slide-up shadow-lg'}`}>

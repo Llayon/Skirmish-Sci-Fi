@@ -88,7 +88,7 @@ export class CampaignDomain {
 
     static calculateFuelCost(ship: Ship | null, campaign: Campaign | null): { cost: number, logs: Omit<CampaignLogEntry, 'turn'>[] } {
         const logs: Omit<CampaignLogEntry, 'turn'>[] = [];
-        let baseCost = 5;
+        const baseCost = 5;
         let finalCost = baseCost;
 
         if (campaign?.currentWorld?.traits.some(t => t.id === 'fuel_refinery')) {

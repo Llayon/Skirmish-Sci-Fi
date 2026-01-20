@@ -17,7 +17,7 @@ export const useMultiplayer = () => {
             setConnectionStatus('disconnected');
             setIsReconnecting(false);
             return;
-        };
+        }
 
         setConnectionStatus('connecting'); // Assume connecting when role is set
 
