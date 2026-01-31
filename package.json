@@ -8,6 +8,7 @@
     "build": "vite build",
     "preview": "vite preview",
     "test": "vitest",
+    "typecheck": "tsc --noEmit",
     "prepare": "node -e \"const { execSync } = require('child_process'); if (process.env.CI || process.env.VERCEL) process.exit(0); execSync('husky', { stdio: 'inherit' });\""
   },
   "dependencies": {
