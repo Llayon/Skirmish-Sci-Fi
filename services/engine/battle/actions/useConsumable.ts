@@ -36,7 +36,7 @@ export const useConsumable = (
             case 'booster_pills':
                 user.status = 'active';
                 user.stunTokens = 0;
-                user.activeEffects.push({ sourceId: 'booster_pills', sourceName: 'Booster Pills', duration: 1, statModifiers: { speed: user.stats.speed } });
+                user.activeEffects.push({ sourceId: 'booster_pills', sourceName: 'Booster Pills', duration: 1, statModifiers: { speed: 1 } });
                 log.push({ key: 'log.playerPhase.boosterPillsEffect' });
                 break;
             case 'combat_serum':
@@ -67,8 +67,8 @@ export const useConsumable = (
                     targets.forEach(t => {
                         t.status = 'dazed';
                         log.push({ key: 'log.playerPhase.kiraninCrystalsDazed', params: { target: t.name } });
-                        events.push({ type: 'CONSUMABLE_USED', participantId: user.id, consumableId: consumable.id, targetId: t.id });
                     });
+                    // Single aggregate event for UI if needed, or rely on state update
                 } else {
                     log.push({ key: 'log.playerPhase.kiraninCrystalsNoEffect' });
                 }
