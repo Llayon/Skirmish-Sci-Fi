@@ -1,4 +1,4 @@
-import { Battle, BattleParticipant, Position, AIActionPlan, Weapon, Enemy } from '../types';
+import { Battle, BattleParticipant, Position, AIActionPlan, Weapon, Enemy, isProtectMission } from '../types';
 import { distance, findReachableCells, findPath, isPointInTerrain, findFleePath } from './gridUtils';
 import { hasLineOfSight, calculateCover } from './rules/visibility';
 import { getWeaponById } from './data/items';
@@ -25,8 +25,9 @@ const findNearestOpponent = (enemy: BattleParticipant, battle: Battle): BattlePa
     let opponents = battle.participants.filter(p => p.type === 'character' && p.status !== 'casualty');
 
     // For "Protect" mission, the VIP is the highest priority target.
-    if (battle.mission.type === 'Protect' && battle.mission.vipId) {
-        const vip = opponents.find(p => p.id === battle.mission.vipId);
+    const mission = battle.mission;
+    if (isProtectMission(mission) && mission.vipId) {
+        const vip = opponents.find(p => p.id === mission.vipId);
         if (vip) return vip;
     }
     

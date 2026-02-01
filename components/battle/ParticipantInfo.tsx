@@ -1,5 +1,5 @@
 import React, { useState, useMemo } from 'react';
-import { BattleParticipant, MultiplayerRole, Mission } from '../../types';
+import { BattleParticipant, MultiplayerRole, Mission, isAcquireMission, isDeliverMission } from '../../types';
 import { useTranslation } from '../../i18n';
 import { StatDisplay } from '../CharacterCard';
 import { Zap, Footprints, Target, Heart, Brain, Dices, Package, Shield, Sparkles, Hourglass, BarChart3 } from 'lucide-react';
@@ -45,8 +45,8 @@ const ParticipantInfo: React.FC<ParticipantInfoProps> = ({ participant, mission,
   }
 
   const isItemCarrier = useMemo(() => {
-    return mission.itemCarrierId === participant.id;
-  }, [mission.itemCarrierId, participant.id]);
+    return (isAcquireMission(mission) || isDeliverMission(mission)) && mission.itemCarrierId === participant.id;
+  }, [mission, participant.id]);
 
   const isEngaged = useMemo(() => BattleDomain.isEngaged(p, participants, multiplayerRole), [p, participants, multiplayerRole]);
 

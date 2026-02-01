@@ -182,7 +182,7 @@ const MainMenu: React.FC = () => {
     return () => window.removeEventListener('mousemove', handleMouseMove);
   }, []);
 
-  const handleMenuClick = (event: React.MouseEvent<HTMLDivElement>, action: () => void) => {
+  const handleMenuClick = (event: React.MouseEvent<HTMLButtonElement>, action: () => void) => {
     const button = event.currentTarget;
     const circle = document.createElement("span");
     const diameter = Math.max(button.clientWidth, button.clientHeight);

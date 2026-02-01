@@ -55,8 +55,13 @@ describe('Mission Rules: checkMissionStatus', () => {
     // --- Mission Specific ---
     describe('Access Mission', () => {
         beforeEach(() => {
-            battle.mission.type = 'Access';
-            battle.mission.objectivePosition = { x: 10, y: 10 };
+            battle.mission = {
+                type: 'Access',
+                titleKey: 'test.title',
+                descriptionKey: 'test.desc',
+                status: 'in_progress',
+                objectivePosition: { x: 10, y: 10 }
+            } as any;
             battle.participants = [createMockParticipant('char1', 'character', 'active')];
         });
 
@@ -71,20 +76,25 @@ describe('Mission Rules: checkMissionStatus', () => {
     
     describe('Acquire Mission', () => {
         beforeEach(() => {
-            battle.mission.type = 'Acquire';
+            battle.mission = {
+                type: 'Acquire',
+                titleKey: 'test.title',
+                descriptionKey: 'test.desc',
+                status: 'in_progress'
+            } as any;
             battle.gridSize = { width: 30, height: 30 };
         });
 
         it('succeeds if carrier escapes from an edge', () => {
             const carrier = createMockParticipant('carrier', 'character', 'active', { x: 29, y: 15 });
             battle.participants = [carrier];
-            battle.mission.itemCarrierId = 'carrier';
+            (battle.mission as any).itemCarrierId = 'carrier';
             checkMissionStatus(battle, 'after_action');
             expect(battle.mission.status).toBe('success');
         });
 
         it('fails if the item is destroyed', () => {
-            battle.mission.itemDestroyed = true;
+            (battle.mission as any).itemDestroyed = true;
             checkMissionStatus(battle, 'after_action');
             expect(battle.mission.status).toBe('failure');
         });
@@ -92,8 +102,13 @@ describe('Mission Rules: checkMissionStatus', () => {
 
     describe('Secure Mission', () => {
         beforeEach(() => {
-            battle.mission.type = 'Secure';
-            battle.mission.secureRoundsCompleted = 0;
+            battle.mission = {
+                type: 'Secure',
+                titleKey: 'test.title',
+                descriptionKey: 'test.desc',
+                status: 'in_progress',
+                secureRoundsCompleted: 0
+            } as any;
             battle.gridSize = { width: 30, height: 30 }; // Center is 15,15
         });
 
@@ -103,34 +118,39 @@ describe('Mission Rules: checkMissionStatus', () => {
                 createMockParticipant('enemy1', 'enemy', 'active', { x: 25, y: 25 }), // Far away
             ];
             checkMissionStatus(battle, 'end_of_round');
-            expect(battle.mission.secureRoundsCompleted).toBe(1);
+            expect((battle.mission as any).secureRoundsCompleted).toBe(1);
         });
 
         it('should succeed after 2 consecutive rounds of progress', () => {
-            battle.mission.secureRoundsCompleted = 1;
+            (battle.mission as any).secureRoundsCompleted = 1;
             battle.participants = [
                 createMockParticipant('char1', 'character', 'active', { x: 15, y: 15 }),
             ];
             checkMissionStatus(battle, 'end_of_round');
-            expect(battle.mission.secureRoundsCompleted).toBe(2);
+            expect((battle.mission as any).secureRoundsCompleted).toBe(2);
             expect(battle.mission.status).toBe('success');
         });
 
         it('should reset progress if an enemy is too close', () => {
-            battle.mission.secureRoundsCompleted = 1;
+            (battle.mission as any).secureRoundsCompleted = 1;
             battle.participants = [
                 createMockParticipant('char1', 'character', 'active', { x: 15, y: 15 }),
                 createMockParticipant('enemy1', 'enemy', 'active', { x: 18, y: 18 }), // Close
             ];
             checkMissionStatus(battle, 'end_of_round');
-            expect(battle.mission.secureRoundsCompleted).toBe(0);
+            expect((battle.mission as any).secureRoundsCompleted).toBe(0);
         });
     });
     
     describe('Eliminate Mission', () => {
          beforeEach(() => {
-            battle.mission.type = 'Eliminate';
-            battle.mission.targetEnemyId = 'target_enemy';
+            battle.mission = {
+                type: 'Eliminate',
+                titleKey: 'test.title',
+                descriptionKey: 'test.desc',
+                status: 'in_progress',
+                targetEnemyId: 'target_enemy'
+            } as any;
         });
         
         it('succeeds if the target is a casualty', () => {
@@ -143,7 +163,7 @@ describe('Mission Rules: checkMissionStatus', () => {
         });
         
         it('fails if the target can escape and the round ends', () => {
-            battle.mission.eliminateTargetCanEscape = true;
+            (battle.mission as any).eliminateTargetCanEscape = true;
             battle.round = 6; // Set round to 6 to trigger escape condition
              battle.participants = [
                  createMockParticipant('char1', 'character', 'active'),

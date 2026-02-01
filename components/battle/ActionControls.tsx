@@ -1,6 +1,6 @@
 
 import React, { useMemo } from 'react';
-import { BattleParticipant, Weapon } from '../../types';
+import { BattleParticipant, Weapon, isAcquireMission, isDeliverMission, isAccessMission, isPatrolMission, isSearchMission } from '../../types';
 import { useTranslation } from '../../i18n';
 import Button from '../ui/Button';
 import { distance } from '../../services/gridUtils';
@@ -88,35 +88,37 @@ const ActionControls: React.FC<ActionControlsProps> = ({ participant, battleLogi
 
   const interaction = useMemo(() => {
     if (participant.actionsTaken.combat || participant.actionsTaken.dash) return null;
-    const objectivePos = mission.objectivePosition;
 
-    if ((mission.type === 'Acquire' || mission.type === 'Deliver') && mission.itemPosition && distance(participant.position, mission.itemPosition) <= 1) {
-      return { textKey: 'buttons.pickupItem', icon: Hand };
+    if (isAcquireMission(mission)) {
+      if (mission.itemPosition && distance(participant.position, mission.itemPosition) <= 1) {
+        return { textKey: 'buttons.pickupItem', icon: Hand };
+      }
     }
-
-    switch (mission.type) {
-      case 'Access':
-        if (objectivePos && (distance(participant.position, objectivePos) === 0 || (participant.type === 'character' && participant.classId === 'engineer' && distance(participant.position, objectivePos) <= 6))) {
-          return { textKey: 'buttons.accessConsole', icon: Hand };
+    if (isDeliverMission(mission)) {
+        if (mission.itemPosition && distance(participant.position, mission.itemPosition) <= 1) {
+            return { textKey: 'buttons.pickupItem', icon: Hand };
         }
-        break;
-      case 'Deliver':
-        if (objectivePos && mission.itemCarrierId === participant.id && distance(participant.position, objectivePos) === 0) {
-          return { textKey: 'buttons.placePackage', icon: Hand };
+        if (mission.objectivePosition && mission.itemCarrierId === participant.id && distance(participant.position, mission.objectivePosition) === 0) {
+            return { textKey: 'buttons.placePackage', icon: Hand };
         }
-        break;
-      case 'Patrol':
+    }
+    if (isAccessMission(mission)) {
+      const objectivePos = mission.objectivePosition;
+      if (objectivePos && (distance(participant.position, objectivePos) === 0 || (participant.type === 'character' && participant.classId === 'engineer' && distance(participant.position, objectivePos) <= 6))) {
+        return { textKey: 'buttons.accessConsole', icon: Hand };
+      }
+    }
+    if (isPatrolMission(mission)) {
         if (terrain.find(t => mission.patrolPoints?.some(p => !p.visited && p.id === t.id) && distance(participant.position, { x: t.position.x + Math.floor(t.size.width / 2), y: t.position.y + Math.floor(t.size.height / 2) }) <= 2)) {
-          return { textKey: 'buttons.scanArea', icon: Hand };
+            return { textKey: 'buttons.scanArea', icon: Hand };
         }
-        break;
-      case 'Search':
-        if (objectivePos && mission.searchRadius && distance(participant.position, objectivePos) <= mission.searchRadius && !mission.searchedPositions?.some(p => p.x === participant.position.x && p.y === participant.position.y)) {
-          return { textKey: 'buttons.search', icon: Search };
-        }
-        break;
-      default: return null;
     }
+    if (isSearchMission(mission)) {
+        if (mission.objectivePosition && mission.searchRadius && distance(participant.position, mission.objectivePosition) <= mission.searchRadius && !mission.searchedPositions?.some(p => p.x === participant.position.x && p.y === participant.position.y)) {
+            return { textKey: 'buttons.search', icon: Search };
+        }
+    }
+
     return null;
   }, [participant, mission, terrain]);
 
