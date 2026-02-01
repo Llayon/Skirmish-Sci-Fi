@@ -2,7 +2,7 @@ import { Campaign, Crew, CampaignLogEntry, Character, TaskType, Rival, Battle, M
 import { CampaignDomain } from '../domain/campaignDomain';
 import { rollD6, rollD100, rollD10 } from '../utils/rolls';
 import { generateNewRecruit, applyRaceToCharacter, generateCharacter, generateFullRandomCrew } from '../characterService';
-import { GeminiApiService } from '../api/geminiApiService';
+import { generateNarrativeDetails, generateMultipleNarrativeDetails } from '../utils/narrativeGenerator';
 import { generateJobOffers as generateOffersService } from './jobOfferGenerator';
 import { resolveTable } from '../utils/tables';
 import { BATTLEFIELD_FINDS_TABLE } from '../../constants/battlefieldFinds';
@@ -18,14 +18,14 @@ import { useShipStore } from '../../stores/shipStore';
 import { cloneDeep } from '../utils/cloneDeep';
 
 export class CampaignUseCases {
-    constructor(private campaignDomain: CampaignDomain, private geminiApiService: GeminiApiService) {}
+    constructor(private campaignDomain: CampaignDomain) {}
 
     async addSingleCharacter() {
-        return generateCharacter(this.geminiApiService.generateCharacterDetails.bind(this.geminiApiService));
+        return generateCharacter(generateNarrativeDetails);
     }
     
     async generateFullCrew() {
-        return generateFullRandomCrew(this.geminiApiService.generateMultipleCharacterDetails.bind(this.geminiApiService));
+        return generateFullRandomCrew(generateMultipleNarrativeDetails);
     }
     
     resolveSingleTask(campaign: Campaign, crew: Crew, characterId: string): { updatedCampaign: Campaign; updatedCrew: Crew; log: CampaignLogEntry; } {

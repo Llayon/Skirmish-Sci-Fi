@@ -188,7 +188,7 @@ export const applyHitAndSaves = (
             baseRoll: rollD6(),
             weaponBonus: weapon.damage,
             finalDamage: 0,
-            targetToughness: target.stats.toughness,
+            targetToughness: BattleDomain.calculateEffectiveStats(target).toughness,
             isLethal: false,
         }
     };

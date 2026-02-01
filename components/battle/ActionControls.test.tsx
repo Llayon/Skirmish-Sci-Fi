@@ -172,4 +172,24 @@ describe('ActionControls', () => {
         fireEvent.click(screen.getByRole('button', { name: 'tooltips.actions.dash' }));
         expect(mockHandlers.selectMoveAction).toHaveBeenCalledWith('char1', true);
     });
+
+    it('shows Loader and hides controls when action is pending (V2)', () => {
+        const state = {
+            actions: { setSelectedParticipantId: vi.fn() },
+            selectedParticipantId: null,
+            pendingActionFor: null,
+            engineNetPendingClientActionId: 'pending-123'
+        };
+
+        type Selector = (s: typeof state) => unknown;
+        useBattleStore.mockImplementation(<T,>(selector?: Selector) => {
+            return selector ? selector(state) : state as unknown as T;
+        });
+
+        const participant = createMockParticipant();
+        render(<ActionControls participant={participant} battleLogic={createMockBattleLogic()} />);
+
+        expect(screen.getByRole('progressbar')).toBeInTheDocument();
+        expect(screen.queryByRole('button', { name: 'tooltips.actions.move' })).not.toBeInTheDocument();
+    });
 });

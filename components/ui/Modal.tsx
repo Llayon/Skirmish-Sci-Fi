@@ -2,8 +2,6 @@ import React, { useEffect, useRef } from 'react';
 import { createPortal } from 'react-dom';
 import { X } from 'lucide-react';
 import Button from './Button';
-import { useSettingsStore } from '@/stores/settingsStore';
-import { useShallow } from 'zustand/react/shallow';
 
 interface ModalProps {
   onClose: () => void;
@@ -15,10 +13,6 @@ interface ModalProps {
 const Modal: React.FC<ModalProps> = ({ onClose, children, disableClose = false, title }) => {
   const modalRoot = document.getElementById('root');
   const modalContentRef = useRef<HTMLDivElement>(null);
-  const previouslyFocusedRef = useRef<HTMLElement | null>(null);
-  const { reducedMotion, reducedVfx } = useSettingsStore(
-    useShallow((s) => ({ reducedMotion: s.reducedMotion, reducedVfx: s.reducedVfx }))
-  );
 
   useEffect(() => {
     if (disableClose) return;
@@ -36,8 +30,6 @@ const Modal: React.FC<ModalProps> = ({ onClose, children, disableClose = false, 
   useEffect(() => {
     const modalElement = modalContentRef.current;
     if (!modalElement) return;
-
-    previouslyFocusedRef.current = document.activeElement instanceof HTMLElement ? document.activeElement : null;
 
     const focusableElements = modalElement.querySelectorAll<HTMLElement>(
       'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])'
@@ -70,7 +62,6 @@ const Modal: React.FC<ModalProps> = ({ onClose, children, disableClose = false, 
 
     return () => {
       modalElement.removeEventListener('keydown', handleTabKey);
-      previouslyFocusedRef.current?.focus?.();
     };
   }, []);
 
@@ -112,7 +103,7 @@ const Modal: React.FC<ModalProps> = ({ onClose, children, disableClose = false, 
 
   return createPortal(
     <div
-      className={`fixed inset-0 bg-surface-base/80 ${reducedVfx ? '' : 'backdrop-blur-sm'} flex items-center justify-center z-50 p-4 ${reducedMotion ? '' : 'animate-fade-in'}`}
+      className='fixed inset-0 bg-surface-base/80 backdrop-blur-sm flex items-center justify-center z-50 p-4 animate-fade-in'
       onClick={handleBackdropClick}
       aria-modal='true'
       role='dialog'

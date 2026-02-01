@@ -179,8 +179,21 @@ export const useBattleActions = (
   }, [setBattle, cancelAction]);
 
   const handleUseConsumable = useCallback((characterId: string, consumableId: string) => {
-    const action: PlayerAction = { type: 'use_consumable', payload: { characterId, consumableId } };
-    dispatchAction(action);
+    const engineV2Enabled = useBattleStore.getState().engineV2Enabled;
+    const dispatchEngineAction = useBattleStore.getState().actions.dispatchEngineAction;
+
+    if (engineV2Enabled) {
+      dispatchEngineAction({
+        type: 'USE_CONSUMABLE',
+        participantId: characterId,
+        consumableId: consumableId
+      });
+      cancelAction();
+      return;
+    }
+
+    // V1 Logic
+    dispatchAction({ type: 'use_consumable', payload: { characterId, consumableId } });
     cancelAction();
   }, [dispatchAction, cancelAction]);
   

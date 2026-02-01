@@ -13,9 +13,6 @@ interface CameraCommands3DProps {
 export const CameraCommands3D = ({ gridSize }: CameraCommands3DProps) => {
   const command = useBattleStore((s) => s.camera3dCommand);
   const { clearCameraCommand } = useBattleStore((s) => s.actions);
-  const followActive3D = useBattleStore((s) => s.followActive3D);
-  const activeParticipantId = useBattleStore((s) => s.battle?.activeParticipantId ?? null);
-  const participants = useBattleStore((s) => s.battle?.participants ?? []);
 
   const controls = useThree((s) => s.controls) as unknown as OrbitControlsImpl | undefined;
   const camera = useThree((s) => s.camera);
@@ -51,19 +48,6 @@ export const CameraCommands3D = ({ gridSize }: CameraCommands3DProps) => {
     }
   }, [camera, clearCameraCommand, command, controls, defaultOffset.x, defaultOffset.y, defaultOffset.z, gridSize]);
 
-  useEffect(() => {
-    if (!followActive3D) return;
-    if (!activeParticipantId) return;
-    const active = participants.find((p) => p.id === activeParticipantId);
-    if (!active) return;
-
-    const target = gridToWorld(active.position, gridSize, 0);
-    if (controls) {
-      controls.target.set(target.x, target.y, target.z);
-      controls.update();
-    }
-    camera.position.set(target.x + defaultOffset.x, target.y + defaultOffset.y, target.z + defaultOffset.z);
-  }, [activeParticipantId, camera, controls, defaultOffset.x, defaultOffset.y, defaultOffset.z, followActive3D, gridSize, participants]);
-
   return null;
 };
+

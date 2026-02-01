@@ -1,11 +1,11 @@
-import { lazy, Suspense, useRef, useState } from 'react';
+import { lazy, Suspense, useRef } from 'react';
 import Card from '../ui/Card';
 import { useTranslation } from '../../i18n';
 import BattleGrid from './BattleGrid';
 import AnimationLayer from './AnimationLayer';
 import BattleHUD from './BattleHUD';
-import { useBattleStore } from '@/stores';
-import { Loader, SlidersHorizontal } from 'lucide-react';
+import { useBattleStore } from '../../stores';
+import { Loader } from 'lucide-react';
 import { useGameState } from '../../hooks/useGameState';
 import { useMultiplayer } from '../../hooks/useMultiplayer';
 import { useBattleLogic } from '../../hooks/useBattleLogic';
@@ -14,12 +14,8 @@ import { useLocalStorage } from '../../hooks/useLocalStorage';
 import ViewModeToggle from './ViewModeToggle';
 import BattleLoadingScreen from './BattleLoadingScreen';
 import Button from '../ui/Button';
-import BattleHudSettingsModal from './BattleHudSettingsModal';
-import { useBattleHotkeys } from '@/hooks/battle/useBattleHotkeys';
-import BattleHelpOverlay from './BattleHelpOverlay';
-import { useSettingsStore } from '@/stores/settingsStore';
-import { useHudStore } from '@/stores';
-import { useShallow } from 'zustand/react/shallow';
+import { useBattleEventConsumer } from '@/src/hooks/battle/useBattleEventConsumer';
+import { EngineDevTools } from '@/src/components/debug/EngineDevTools';
 
 const BattleView3D = lazy(() => import('./BattleView3D'));
 
@@ -42,51 +38,13 @@ const BattleView = () => {
   
   const battleLogic = useBattleLogic();
   useBattleAutomations(scrollContainerRef);
+  useBattleEventConsumer();
   const [is3D, setIs3D] = useLocalStorage('battleViewMode', false);
-  const [isHudModalOpen, setHudModalOpen] = useState(false);
-  const [isHelpOpen, setHelpOpen] = useState(false);
-  const { reducedVfx } = useSettingsStore(useShallow((s) => ({ reducedVfx: s.reducedVfx })));
-  const { hudPreset, applyHudPreset } = useHudStore(
-    useShallow((s) => ({
-      hudPreset: s.preset,
-      applyHudPreset: s.actions.applyPreset,
-    }))
-  );
+  const [is3DMinimalUI, setIs3DMinimalUI] = useLocalStorage('battle3dMinimalUI', false);
 
   if (!battle) {
     return <div>Loading battle...</div>;
   }
-
-  useBattleHotkeys({
-    battleLogic,
-    is3D,
-    toggleHudModal: () => setHudModalOpen((v) => !v),
-    toggleHelp: () => setHelpOpen((v) => !v),
-  });
-
-  const cycleHudPreset = () => {
-    const order = ['full', 'tactical', 'minimal'] as const;
-    const idx = order.indexOf(hudPreset as any);
-    const next = idx === -1 ? order[0] : order[(idx + 1) % order.length];
-    applyHudPreset(next);
-  };
-
-  const hudPresetLabel =
-    hudPreset === 'full'
-      ? t('battle.hud.presetFull')
-      : hudPreset === 'tactical'
-        ? t('battle.hud.presetTactical')
-        : hudPreset === 'minimal'
-          ? t('battle.hud.presetMinimal')
-          : hudPreset === 'spectator'
-            ? t('battle.hud.presetSpectator')
-            : t('battle.hud.presetCustom');
-
-  const onBattlefieldContextMenu = (e: any) => {
-    e.preventDefault();
-    if (document.querySelector('[role="dialog"][aria-modal="true"]')) return;
-    if (battleLogic.uiState.mode !== 'idle') battleLogic.handlers.cancelAction();
-  };
 
   const BattleEndScreen = () => {
     if (battle.phase !== 'battle_over' || (battle.mission.status !== 'success' && battle.mission.status !== 'failure')) {
@@ -124,14 +82,16 @@ const BattleView = () => {
       )}
 
       <div className="flex items-center justify-end px-2 py-2">
-        <Button className="mr-2 px-3 py-1 text-sm" onClick={() => setHudModalOpen(true)}>
-          <SlidersHorizontal className="w-4 h-4" />
-          HUD
-        </Button>
         <ViewModeToggle is3D={is3D} setIs3D={setIs3D} disabled={isAnimating} />
-        <Button className="ml-2 px-3 py-1 text-sm" onClick={() => cycleHudPreset()}>
-          UI: {hudPresetLabel}
-        </Button>
+        {is3D && (
+          <Button
+            className="ml-2 px-3 py-1 text-sm"
+            selected={is3DMinimalUI}
+            onClick={() => setIs3DMinimalUI(!is3DMinimalUI)}
+          >
+            UI
+          </Button>
+        )}
       </div>
 
       <div
@@ -141,8 +101,6 @@ const BattleView = () => {
         <div
           ref={gridContainerRef}
           className={is3D ? 'relative w-full h-full min-h-[520px]' : 'relative inline-block min-w-full'}
-          data-testid="battlefield"
-          onContextMenu={onBattlefieldContextMenu}
         >
           {is3D ? (
             <Suspense fallback={<BattleLoadingScreen />}>
@@ -154,32 +112,15 @@ const BattleView = () => {
               <AnimationLayer gridRef={gridContainerRef} />
             </>
           )}
-          {is3D && !isHelpOpen && (
-            <div
-              className={`absolute bottom-3 left-3 pointer-events-none z-10 text-xs text-text-base bg-surface-overlay/70 ${reducedVfx ? '' : 'backdrop-blur-sm'} border border-border rounded-md px-2 py-1`}
-            >
-              {t('battle.help.miniHint')}
-            </div>
-          )}
         </div>
       </div>
 
       <div className="lg:absolute lg:inset-0 lg:pointer-events-none">
-        <BattleHUD battleLogic={battleLogic} />
+        <BattleHUD battleLogic={battleLogic} uiMode={is3D && is3DMinimalUI ? 'minimal' : 'full'} />
       </div>
 
-      {isHudModalOpen && (
-        <BattleHudSettingsModal
-          onClose={() => setHudModalOpen(false)}
-          onOpenHelp={() => {
-            setHudModalOpen(false);
-            setHelpOpen(true);
-          }}
-          is3D={is3D}
-        />
-      )}
-      {isHelpOpen && <BattleHelpOverlay onClose={() => setHelpOpen(false)} is3D={is3D} />}
       {battle.phase === 'battle_over' && <BattleEndScreen />}
+      <EngineDevTools />
     </div>
   );
 };

@@ -1,6 +1,5 @@
 import { useState } from 'react';
 import { useBattleStore } from '@/stores/battleStore';
-import { useShallow } from 'zustand/react/shallow';
 import { useMultiplayerStore } from '@/stores/multiplayerStore';
 import {
   selectEngineV2Enabled,
@@ -32,17 +31,17 @@ export function EngineDevTools() {
   const round = useBattleStore(selectRound);
   const activeParticipantId = useBattleStore(selectActiveParticipantId);
   const turnIndex = useBattleStore(selectTurnIndex);
-  const turnOrders = useBattleStore(useShallow(selectTurnOrders));
+  const turnOrders = useBattleStore(selectTurnOrders);
   const rngCursor = useBattleStore(selectRngCursor);
   const lastHash = useBattleStore(selectLastEngineStateHash);
   const actionCount = useBattleStore(selectEngineActionCount);
   const currentEvent = useBattleStore(selectCurrentEvent);
-  const cursorProgress = useBattleStore(useShallow(selectEventCursorProgress));
+  const cursorProgress = useBattleStore(selectEventCursorProgress);
   
-  const hasBattle = useBattleStore((state) => !!state.battle);
-  const hasRng = useBattleStore((state) => !!state.rng);
+  const battle = useBattleStore((state) => state.battle);
+  const rng = useBattleStore((state) => state.rng);
   const animatingParticipantId = useBattleStore((state) => state.animatingParticipantId);
-  const animation = useBattleStore(useShallow((state) => state.animation));
+  const animation = useBattleStore((state) => state.animation);
 
   const {
     setEngineV2Enabled,
@@ -55,7 +54,7 @@ export function EngineDevTools() {
 
   const multiplayerRole = useMultiplayerStore((state) => state.multiplayerRole);
   const isMultiplayer = multiplayerRole !== null;
-  const controlsDisabled = !hasBattle || !hasRng || isMultiplayer || !engineV2Enabled;
+  const controlsDisabled = !battle || !rng || isMultiplayer || !engineV2Enabled;
 
   const handleAction = (action: () => void) => {
     try {

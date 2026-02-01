@@ -67,7 +67,7 @@ describe('Deterministic State Hash (Engine V2)', () => {
     });
 
     it('Test G — Circular reference throws', () => {
-        const obj: any = {};
+        const obj: Record<string, unknown> = {};
         obj.self = obj;
         expect(() => calculateStateHash(obj)).toThrow(/circular/i);
     });

@@ -31,7 +31,7 @@ const BattleHUD: React.FC<BattleHUDProps> = ({ battleLogic, uiMode = 'full' }) =
       hoveredParticipantId: state.hoveredParticipantId,
     }))
   );
-  const panels = useHudStore(useShallow((state) => state.panels));
+  const panels = useHudStore((state) => state.panels, shallow);
 
   const participants = battle?.participants;
   const multiplayerRole = useMultiplayerStore(state => state.multiplayerRole);

@@ -1,0 +1,110 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`Golden V1 Mission Item Drop > Item Drop Logic (Casualty) > Scenario 1: Enemy carrying item is killed -> Item drops (Roll 2-6) 1`] = `
+[
+  "log.info.noSave",
+  "log.info.damageRoll",
+  "log.info.lethalHit",
+  "log.info.outcomeCasualty",
+  "log.mission.acquire.dropped",
+]
+`;
+
+exports[`Golden V1 Mission Item Drop > Item Drop Logic (Casualty) > Scenario 1: Enemy carrying item is killed -> Item drops (Roll 2-6) 2`] = `
+{
+  "activeId": "atk",
+  "log": [],
+  "mission": {
+    "itemCarrierId": null,
+    "itemPosition": "5,5",
+    "status": "in_progress",
+    "type": "Acquire",
+  },
+  "participants": [
+    {
+      "actions": 2,
+      "armor": undefined,
+      "effects": [],
+      "id": "atk",
+      "luck": 0,
+      "pos": "0,0",
+      "status": "active",
+      "stun": 0,
+      "taken": "m:0,c:0,d:0,i:0",
+      "type": "character",
+      "weapons": [],
+    },
+    {
+      "actions": 0,
+      "armor": undefined,
+      "effects": [],
+      "id": "carrier",
+      "luck": 0,
+      "pos": "5,5",
+      "status": "casualty",
+      "stun": 0,
+      "taken": "m:0,c:0,d:0,i:0",
+      "type": "enemy",
+      "weapons": [],
+    },
+  ],
+  "phase": "quick_actions",
+  "reactionRolls": [],
+  "round": 1,
+}
+`;
+
+exports[`Golden V1 Mission Item Drop > Item Drop Logic (Casualty) > Scenario 2: Enemy carrying item is killed -> Item destroyed (Roll 1) 1`] = `
+[
+  "log.info.noSave",
+  "log.info.damageRoll",
+  "log.info.lethalHit",
+  "log.info.outcomeCasualty",
+  "log.mission.acquire.destroyed",
+]
+`;
+
+exports[`Golden V1 Mission Item Drop > Item Drop Logic (Casualty) > Scenario 2: Enemy carrying item is killed -> Item destroyed (Roll 1) 2`] = `
+{
+  "activeId": "atk",
+  "log": [],
+  "mission": {
+    "itemCarrierId": null,
+    "itemDestroyed": true,
+    "itemPosition": null,
+    "status": "in_progress",
+    "type": "Acquire",
+  },
+  "participants": [
+    {
+      "actions": 2,
+      "armor": undefined,
+      "effects": [],
+      "id": "atk",
+      "luck": 0,
+      "pos": "0,0",
+      "status": "active",
+      "stun": 0,
+      "taken": "m:0,c:0,d:0,i:0",
+      "type": "character",
+      "weapons": [],
+    },
+    {
+      "actions": 0,
+      "armor": undefined,
+      "effects": [],
+      "id": "carrier",
+      "luck": 0,
+      "pos": "5,5",
+      "status": "casualty",
+      "stun": 0,
+      "taken": "m:0,c:0,d:0,i:0",
+      "type": "enemy",
+      "weapons": [],
+    },
+  ],
+  "phase": "quick_actions",
+  "reactionRolls": [],
+  "round": 1,
+}
+`;
