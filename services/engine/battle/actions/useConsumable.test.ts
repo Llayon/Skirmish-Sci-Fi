@@ -8,17 +8,30 @@ const createParticipant = (overrides: Partial<BattleParticipant>): BattlePartici
     id: 'p-1',
     type: 'character',
     name: 'Test',
+    pronouns: 'they/them',
     consumables: [],
     activeEffects: [],
     status: 'active',
     stunTokens: 0,
-    stats: { speed: 4, reactions: 3, combat: 3, toughness: 3, savvy: 3, aim: 0 },
+    stats: { speed: 4, reactions: 3, combat: 3, toughness: 3, savvy: 3, luck: 0 },
     actionsRemaining: 2,
     actionsTaken: { move: false, combat: false, dash: false, interact: false },
     position: { x: 0, y: 0 },
     weapons: [],
+    implants: [],
+    utilityDevices: [],
+    backstory: '',
+    injuries: [],
+    task: 'idle',
+    raceId: 'baseline_human',
+    backgroundId: 'bg-1',
+    motivationId: 'mot-1',
+    classId: 'cls-1',
+    xp: 0,
+    currentLuck: 0,
+    consumablesUsedThisTurn: 0,
     ...overrides
-});
+} as BattleParticipant);
 
 describe('useConsumable', () => {
     const createMockState = (): EngineBattleState => ({
@@ -63,6 +76,7 @@ describe('useConsumable', () => {
         // 2. Added effect
         expect(user.activeEffects).toHaveLength(1);
         expect(user.activeEffects[0].sourceId).toBe('booster_pills');
+        expect(user.activeEffects[0].statModifiers?.speed).toBe(1); // Check additive logic
         
         // 3. Removed stun tokens
         expect(user.stunTokens).toBe(0);
@@ -97,11 +111,6 @@ describe('useConsumable', () => {
 
     it('kiranin_crystals dazes opponents', () => {
         const state = createMockState();
-        const user = state.battle.participants[0]; // host-1
-        // Need to forcefully set consumable because createMockState helper puts booster_pills
-        // But we can just use booster_pills in array but call action with kiranin_crystals?
-        // No, logic checks indexOf.
-        
         // Let's create a specific state for this test
         const kiraninState = createMockState();
         kiraninState.battle.participants[0].consumables = ['kiranin_crystals'];
@@ -118,8 +127,11 @@ describe('useConsumable', () => {
         // Opponent is close (dist 1), active, and has 2 actions. Should be dazed.
         expect(opponent.status).toBe('dazed');
         
-        const event = result.events.find(e => e.type === 'CONSUMABLE_USED' && e.targetId === 'guest-1');
-        expect(event).toBeDefined();
+        // Verify only ONE event (for the user), no per-target events
+        const userEvents = result.events.filter(e => e.type === 'CONSUMABLE_USED');
+        expect(userEvents).toHaveLength(1);
+        expect(userEvents[0].participantId).toBe('host-1');
+        expect(userEvents[0].consumableId).toBe('kiranin_crystals');
 
         // Check immutability
         expect(kiraninState.battle.participants[1].status).toBe('active');
