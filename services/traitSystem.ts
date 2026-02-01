@@ -6,13 +6,24 @@ import { ALL_TRAITS } from './traits';
 export function fireHook<T extends TraitContext>(
   hookName: keyof TraitHandlers,
   context: T,
-  traits: string[]
+  traits: string[],
+  priorityFilter?: { min?: number; max?: number }
 ) {
   // 1. Get unique trait IDs from the input
   const uniqueTraits = new Set(traits);
 
   // 2. Find all matching plugins for the active traits
-  const activePlugins = ALL_TRAITS.filter(plugin => uniqueTraits.has(plugin.id));
+  let activePlugins = ALL_TRAITS.filter(plugin => uniqueTraits.has(plugin.id));
+
+  // Filter by priority if requested
+  if (priorityFilter) {
+    if (priorityFilter.min !== undefined) {
+      activePlugins = activePlugins.filter(p => p.priority >= priorityFilter.min!);
+    }
+    if (priorityFilter.max !== undefined) {
+      activePlugins = activePlugins.filter(p => p.priority < priorityFilter.max!);
+    }
+  }
 
   // 3. Sort plugins by priority (lower first)
   activePlugins.sort((a, b) => a.priority - b.priority);

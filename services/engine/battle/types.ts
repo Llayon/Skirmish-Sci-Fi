@@ -38,8 +38,17 @@ export type BattleAction =
     | { type: 'ROLL_INITIATIVE' }
     | { type: 'MOVE_PARTICIPANT'; participantId: string; to: Position }
     | { type: 'SHOOT_ATTACK'; attackerId: string; targetId: string; weapon: { id: string; range: number; shots: number; damage: number; traits: string[] } }
+    | { type: 'BRAWL_ATTACK'; attackerId: string; targetId: string; weapon?: { id: string; damage: number; traits: string[] } }
     | { type: 'ADVANCE_PHASE' }
-    | { type: 'END_TURN'; participantId?: string };
+    | { type: 'END_TURN'; participantId?: string }
+    | { type: 'INTERACT_OBJECTIVE'; participantId: string; objectiveId: string }
+    | { type: 'USE_CONSUMABLE'; participantId: string; consumableId: string }
+    | { type: 'MISSION_SETUP' };
+
+export type ObjectiveInteractFailureReason = 
+    | 'out_of_range' 
+    | 'invalid_objective' 
+    | 'already_searched';
 
 /**
  * Events emitted by the engine for UI/Animation consumption.
@@ -51,10 +60,15 @@ export type BattleEvent =
     | { type: 'PARTICIPANT_MOVED'; participantId: string; from: Position; to: Position }
     | { type: 'SHOOT_DECLARED'; attackerId: string; targetId: string; weaponId: string }
     | { type: 'SHOT_RESOLVED'; attackerId: string; targetId: string; hit: boolean; roll: number }
+    | { type: 'BRAWL_DECLARED'; attackerId: string; targetId: string }
+    | { type: 'BRAWL_RESOLVED'; attackerId: string; targetId: string; winnerId: string | null; loserId: string | null }
     | { type: 'PHASE_CHANGED'; from: BattlePhase; to: BattlePhase }
     | { type: 'ACTIVE_PARTICIPANT_SET'; participantId: string | null }
     | { type: 'TURN_INDEX_SET'; index: number }
-    | { type: 'ROUND_INCREMENTED'; round: number };
+    | { type: 'ROUND_INCREMENTED'; round: number }
+    | { type: 'OBJECTIVE_INTERACT_DECLARED'; participantId: string; objectiveId: string }
+    | { type: 'OBJECTIVE_INTERACT_RESOLVED'; participantId: string; objectiveId: string; success: boolean; reason?: ObjectiveInteractFailureReason; roll?: number }
+    | { type: 'CONSUMABLE_USED'; participantId: string; consumableId: string; targetId?: string };
 
 /**
  * Dependencies injected into the reducer.

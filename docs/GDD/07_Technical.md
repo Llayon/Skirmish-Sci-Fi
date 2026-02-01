@@ -13,7 +13,6 @@
 | Styling | Tailwind CSS |
 | Build | Vite |
 | Multiplayer | PeerJS (WebRTC) |
-| AI | Gemini API |
 | Tests | Vitest |
 
 ---

@@ -57,8 +57,6 @@ function mapTerrainTo3D(t: Terrain): Terrain3D {
     type,
     position: t.position,
     height,
-    providesCover: !!t.providesCover,
-    blocksLineOfSight: !!t.blocksLineOfSight,
   };
 }
 

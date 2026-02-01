@@ -18,92 +18,14 @@
       "expand": "Expand Log",
       "collapse": "Collapse Log"
     },
-    "hud": {
-      "title": "HUD",
-      "presets": "Presets",
-      "presetFull": "Full",
-      "presetTactical": "Tactical",
-      "presetMinimal": "Minimal",
-      "presetSpectator": "Spectator",
-      "presetCustom": "Custom",
-      "density": "Density",
-      "panels": "Panels",
-      "behavior": "Behavior",
-      "autoHideSecondary": "Auto-hide panels during actions",
-      "inspectPinned": "PIN",
-      "tile": "Tile",
-      "terrain": "Terrain",
-      "occupied": "Occupied",
-      "reachable": "Reachable",
-      "cover": "Cover",
-      "blocksLos": "Blocks LoS",
-      "impassable": "Impassable",
-      "yes": "Yes",
-      "no": "No",
-      "queue": "Queue",
-      "mission": "Mission",
-      "status": "Status",
-      "actions": "Actions",
-      "weapons": "Weapons",
-      "log": "Log",
-      "normal": "Normal",
-      "compact": "Compact",
-      "reset": "Reset",
-      "close": "Close",
-      "hotkeys": "Hotkeys",
-      "hotkeysHint": "H: HUD • L: Log • M: Mission • Q: Queue",
-      "performance": {
-        "title": "Performance",
-        "reducedMotion": "Reduced motion",
-        "reducedVfx": "Reduced VFX"
-      },
-      "camera": {
-        "title": "Camera (3D)",
-        "followActive": "Follow active",
-        "focus": "Focus",
-        "reset": "Reset",
-        "quality": "Quality",
-        "qualityLow": "Low",
-        "qualityMedium": "Med",
-        "qualityHigh": "High",
-        "presetTactical": "Tactical",
-        "presetCinematic": "Cinematic",
-        "invertWheel": "Invert wheel",
-        "resetSettings": "Reset camera settings",
-        "zoomSpeed": "Zoom",
-        "panSpeed": "Pan",
-        "rotateSpeed": "Rotate",
-        "controlsHint": "Mouse: rotate • Wheel: zoom • Right mouse: pan • F: focus • R: reset"
-      },
-      "expand": "Expand panel",
-      "collapse": "Collapse panel",
-      "summary": {
-        "active": "Active: {name}",
-        "log": "{count} entries"
-      }
-    },
-    "help": {
-      "open": "Help (?)",
-      "close": "Close",
-      "miniHint": "?: help • F: focus • R: reset • Wheel: zoom • RMB: pan",
-      "title": "Battle Help",
-      "camera": {
-        "title": "Camera (3D)",
-        "body": "Mouse drag: rotate\nWheel: zoom\nRight mouse: pan\nF: focus selected/active\nR: reset camera"
-      },
-      "hotkeys": {
-        "title": "Hotkeys",
-        "body": "H: HUD settings\nL: Log panel\nM: Mission panel\nQ: Queue panel\nTab / Shift+Tab: cycle units\nEsc: cancel action\n?: help"
-      },
-      "selection": {
-        "title": "Selection",
-        "body": "Click unit: select\nHover unit: quick inspect\nRight click / Esc: cancel current action"
-      }
-    },
     "victory": "VICTORY",
     "defeat": "DEFEAT",
     "victoryMessage": "The mission is a success.",
     "defeatMessage": "The crew lives to fight another day.",
+    "engineV2": {
+      "rollInitiative": "Roll Initiative",
+      "advancePhase": "Advance Phase"
+    },
     "infoPanel": {
       "statsTab": "Stats",
       "loadoutTab": "Loadout",

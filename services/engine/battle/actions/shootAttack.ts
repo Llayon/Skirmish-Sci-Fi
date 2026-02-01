@@ -1,22 +1,6 @@
-import { EngineBattleState, EngineDeps, BattleEvent, EngineLogEntry, BattleAction, Position } from '../types';
+import { EngineBattleState, EngineDeps, BattleEvent, EngineLogEntry, BattleAction } from '../types';
 import { calculateEffectiveCombatOpenShot, calculateHitTargetNumberOpenShot } from '../rules/shootingRules';
-
-// Pure helper for pushback (matches V1 logic for cardinal/diagonal)
-function computePushbackPosition(targetPos: Position, fromPos: Position): Position {
-    const dx = targetPos.x - fromPos.x;
-    const dy = targetPos.y - fromPos.y;
-    // If on same tile (shouldn't happen in shooting), default to no push or minimal fallback
-    if (dx === 0 && dy === 0) return targetPos; 
-    
-    const pushX = Math.sign(dx);
-    const pushY = Math.sign(dy);
-    return { x: targetPos.x + pushX, y: targetPos.y + pushY };
-}
-
-// Pure helper for bounds check
-function isPositionValid(pos: Position, gridSize: { width: number; height: number }): boolean {
-    return pos.x >= 0 && pos.x < gridSize.width && pos.y >= 0 && pos.y < gridSize.height;
-}
+import { computePushbackPosition } from '../rules/pushbackRules';
 
 export function shootAttack(
     state: EngineBattleState,
@@ -27,7 +11,6 @@ export function shootAttack(
     let currentRng = state.rng;
     const events: BattleEvent[] = [];
     const log: EngineLogEntry[] = [];
-    let nextParticipants = battle.participants;
 
     const attacker = battle.participants.find(p => p.id === action.attackerId);
     const target = battle.participants.find(p => p.id === action.targetId);
@@ -36,6 +19,13 @@ export function shootAttack(
         // Fallback for safety, though caller should ensure valid IDs
         return { next: state, events, log };
     }
+
+    // Clone participants to allow mutation without side effects
+    const nextParticipants = battle.participants.map(p => {
+        if (p.id === target.id) return { ...p };
+        return p;
+    });
+    const targetMutable = nextParticipants.find(p => p.id === target.id)!;
 
     // 1. Declare Shot
     log.push({
@@ -66,7 +56,7 @@ export function shootAttack(
     const combatStat = calculateEffectiveCombatOpenShot(attacker);
     
     // Calculate Bonus (Minimal: just combat stat + base modifiers if any)
-    const bonus = combatStat;
+    let bonus = combatStat;
 
     // Log TN
     log.push({ key: 'log.info.targetNumber', params: { targetNum: targetNumber, reason: reasonKey } });
@@ -110,54 +100,53 @@ export function shootAttack(
         });
 
         if (totalDamage < targetToughness) {
-            // Non-lethal
-            const hasNeural = target.implants?.includes('neural_optimization');
-
-            if (hasNeural) {
+            // Non-lethal hit
+            // 1. Check Neural Optimization (Stage 4.2C)
+            const hasNeuralOpt = targetMutable.type === 'character' && targetMutable.implants.includes('neural_optimization');
+            
+            if (hasNeuralOpt) {
                 log.push({ key: 'log.trait.neuralOptimization' });
-                // No state change
             } else {
+                // Apply Stun
+                targetMutable.stunTokens = (targetMutable.stunTokens || 0) + 1;
+                targetMutable.status = 'stunned';
                 log.push({ key: 'log.info.outcomeStunned' });
+            }
 
-                // Pushback Logic
-                let newPos = target.position;
-                if (battle.gridSize) {
-                    const potentialPos = computePushbackPosition(target.position, attacker.position);
-                    // Minimal validation: Bounds only (as per current test requirements)
-                    if (isPositionValid(potentialPos, battle.gridSize)) {
-                        newPos = potentialPos;
-                        log.push({ key: 'log.info.pushedBack' });
-                        events.push({ 
-                            type: 'PARTICIPANT_MOVED', 
-                            participantId: target.id, 
-                            from: target.position, 
-                            to: newPos 
-                        });
-                    } else {
-                        log.push({ key: 'log.info.notPushedBack' });
-                    }
+            // 2. Apply Pushback (Stage 4.2D)
+            if (battle.gridSize) {
+                const occupied = new Set(battle.participants.map(p => `${p.position.x},${p.position.y}`));
+                const pushPos = computePushbackPosition({
+                    attackerPos: attacker.position,
+                    targetPos: targetMutable.position,
+                    gridSize: battle.gridSize,
+                    occupiedPositions: occupied
+                });
+
+                if (pushPos) {
+                    const oldPos = targetMutable.position;
+                    targetMutable.position = pushPos;
+                    log.push({ key: 'log.info.pushedBack' });
+                    events.push({
+                        type: 'PARTICIPANT_MOVED',
+                        participantId: target.id,
+                        from: oldPos,
+                        to: pushPos
+                    });
                 } else {
                     log.push({ key: 'log.info.notPushedBack' });
                 }
-
-                // Apply Stun + Move
-                nextParticipants = nextParticipants.map(p => 
-                    p.id === target.id 
-                        ? { ...p, stunTokens: (p.stunTokens || 0) + 1, status: 'stunned', position: newPos }
-                        : p
-                );
+            } else {
+                // Safety: no grid size, skip pushback (log as not pushed back or just skip? Test expects notPushedBack log)
+                log.push({ key: 'log.info.notPushedBack' });
             }
+
         } else {
-            // Lethal
+            // Lethal hit
             log.push({ key: 'log.info.lethalHit' });
+            targetMutable.status = 'casualty';
+            targetMutable.actionsRemaining = 0;
             log.push({ key: 'log.info.outcomeCasualty' });
-            
-            // Apply Casualty
-            nextParticipants = nextParticipants.map(p => 
-                p.id === target.id 
-                    ? { ...p, status: 'casualty', actionsRemaining: 0 }
-                    : p
-            );
         }
 
     } else {

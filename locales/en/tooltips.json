@@ -1,6 +1,10 @@
 
 {
   "tooltips": {
+    "engineV2": {
+      "rollInitiative": "Engine V2: only in reaction roll",
+      "advancePhase": "Engine V2: only in action phases"
+    },
     "stats": {
       "reactions": "Reactions: Determines turn order and initiative rolls. Higher is better.",
       "speed": "Speed: How many spaces a character can move with a standard Move action.",

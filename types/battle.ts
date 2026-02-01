@@ -201,6 +201,7 @@ export interface Battle {
   // --- Multiplayer specific ---
   firstPlayerRole?: MultiplayerRole;
   activePlayerRole?: MultiplayerRole | null;
+
 }
 
 /**

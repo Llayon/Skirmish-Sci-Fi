@@ -1,6 +1,7 @@
 import Peer, { DataConnection } from 'peerjs';
 import type { PeerJSOption } from 'peerjs';
 import { MultiplayerMessage, Crew, Battle, PlayerAction, Position, CharacterStats, ActiveEffect, ParticipantStatus, CharacterWeapon, Injury, TaskType, Character, Enemy, BattleParticipant, Terrain, Mission, BattlePhase, ReactionRollResult, LogEntry } from '../types';
+import type { BattleAction, EngineBattleState } from './engine/battle/types';
 import { logger } from './utils/logger';
 
 // --- START: DATA VALIDATION ---
@@ -167,6 +168,14 @@ const isPlayerAction = (obj: any): obj is PlayerAction => {
     return isObject(obj) && isString(obj.type) && isPlayerActionPayload(obj.type, obj.payload);
 }
 
+const isBattleAction = (obj: any): obj is BattleAction => {
+    return isObject(obj) && isString(obj.type);
+};
+
+const isEngineBattleState = (obj: any): obj is EngineBattleState => {
+    return isObject(obj) && isNumber(obj.schemaVersion) && isBattle(obj.battle) && isObject(obj.rng);
+};
+
 const isMultiplayerMessage = (obj: any): obj is MultiplayerMessage => {
     if (!isObject(obj) || !isString(obj.type)) return false;
     switch (obj.type) {
@@ -177,6 +186,30 @@ const isMultiplayerMessage = (obj: any): obj is MultiplayerMessage => {
         case 'PING': return true;
         case 'PONG': return true;
         case 'REQUEST_SYNC': return true;
+        case 'ENGINE_ACTION': 
+            return isObject(obj.payload) && 
+                   isNumber(obj.payload.seq) &&
+                   isBattleAction(obj.payload.action) && 
+                   isString(obj.payload.resultingHash) &&
+                   (obj.payload.battleId === undefined || isString(obj.payload.battleId)) &&
+                   (obj.payload.clientActionId === undefined || isString(obj.payload.clientActionId));
+        case 'ENGINE_SNAPSHOT':
+            return isObject(obj.payload) &&
+                   isNumber(obj.payload.seq) &&
+                   isEngineBattleState(obj.payload.snapshot) &&
+                   isString(obj.payload.hash) &&
+                   (obj.payload.battleId === undefined || isString(obj.payload.battleId));
+        case 'ENGINE_PROPOSE_ACTION':
+            return isObject(obj.payload) &&
+                   isString(obj.payload.clientActionId) &&
+                   isBattleAction(obj.payload.action) &&
+                   (obj.payload.battleId === undefined || isString(obj.payload.battleId)) &&
+                   (obj.payload.predictedHash === undefined || isString(obj.payload.predictedHash));
+        case 'ENGINE_ACTION_REJECT':
+            return isObject(obj.payload) &&
+                   isString(obj.payload.clientActionId) &&
+                   isString(obj.payload.reason) && ['invalid_action', 'battle_id_mismatch', 'resyncing'].includes(obj.payload.reason) &&
+                   (obj.payload.battleId === undefined || isString(obj.payload.battleId));
         default: return false;
     }
 }

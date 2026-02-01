@@ -11,6 +11,7 @@ import { useGameState } from '../../hooks/useGameState';
 import { useMultiplayerStore, useBattleStore } from '../../stores';
 import { BattleLogic } from '../../hooks/useBattleLogic';
 import { getWeaponById } from '../../services/data/items';
+import { EngineV2HudControls } from './EngineV2HudControls';
 
 /**
  * Props for the ActionControls component.
@@ -49,6 +50,7 @@ const ActionControls: React.FC<ActionControlsProps> = ({ participant, battleLogi
   const { setSelectedParticipantId } = useBattleStore(state => state.actions);
   const selectedParticipantId = useBattleStore(state => state.selectedParticipantId);
   const pendingActionFor = useBattleStore(state => state.pendingActionFor);
+  const engineNetPending = useBattleStore(state => state.engineNetPendingClientActionId);
 
   const mission = battle!.mission;
   const terrain = battle!.terrain;
@@ -57,7 +59,7 @@ const ActionControls: React.FC<ActionControlsProps> = ({ participant, battleLogi
   const isFrozenWorld = battle!.worldTraits?.some(trait => trait.id === 'frozen');
   const isNullZone = battle!.worldTraits?.some(trait => trait.id === 'null_zone');
 
-  const isPending = pendingActionFor === participant.id;
+  const isPending = pendingActionFor === participant.id || !!engineNetPending;
 
   const enemies = useMemo(() =>
     participants.filter(p => p.type === 'enemy' && p.status !== 'casualty'),
@@ -271,6 +273,8 @@ const ActionControls: React.FC<ActionControlsProps> = ({ participant, battleLogi
         {uiState.mode !== 'idle' && <ActionButton tooltip={t('buttons.cancel')} onClick={handlers.cancelAction} variant='danger'><XCircle /></ActionButton>}
         <Button onClick={() => handlers.endTurn()} variant='primary' className='py-2 px-6 ml-4 h-14 rounded-full'>{t('buttons.endTurn')}</Button>
       </div>
+
+      <EngineV2HudControls />
     </div>
   );
 };

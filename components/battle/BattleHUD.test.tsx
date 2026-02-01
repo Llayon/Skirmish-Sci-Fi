@@ -10,10 +10,10 @@ vi.mock('./ActionControls', () => ({ default: () => <div data-testid="action-con
 vi.mock('./ReactionRollPanel', () => ({ default: () => <div data-testid="reaction-roll-panel" /> }));
 vi.mock('./CharacterStatus', () => ({ default: () => <div data-testid="character-status" /> }));
 vi.mock('../../i18n', () => ({ useTranslation: () => ({ t: (key: string) => key }) }));
-vi.mock('../../stores', () => ({ useMultiplayerStore: vi.fn(), useBattleStore: vi.fn(), useHudStore: vi.fn() }));
+vi.mock('../../stores', () => ({ useMultiplayerStore: vi.fn(), useBattleStore: vi.fn() }));
 vi.mock('../../hooks/useGameState');
 
-const { useBattleStore, useMultiplayerStore, useHudStore } = await import('../../stores');
+const { useBattleStore, useMultiplayerStore } = await import('../../stores');
 const { useGameState } = await import('../../hooks/useGameState');
 
 const mockGameState = (battleOverride: any) => ({
@@ -35,34 +35,10 @@ describe('BattleHUD', () => {
   beforeEach(() => {
     vi.clearAllMocks();
     vi.mocked(useMultiplayerStore).mockImplementation((selector: any) => selector({ multiplayerRole: null }));
-    vi.mocked(useHudStore).mockImplementation((selector: any) =>
-      selector({
-        preset: 'full',
-        panels: { queue: true, mission: true, status: true, actions: true, log: true },
-        collapsed: { queue: false, mission: false, status: false, actions: false, log: false },
-        density: 'normal',
-        autoHideSecondaryPanels: false,
-        actions: {
-          applyPreset: vi.fn(),
-          setPanelVisible: vi.fn(),
-          togglePanel: vi.fn(),
-          toggleCollapsed: vi.fn(),
-          setDensity: vi.fn(),
-          setAutoHideSecondaryPanels: vi.fn(),
-          reset: vi.fn(),
-        },
-      })
-    );
     vi.mocked(useBattleStore).mockImplementation((selector: any) =>
       selector({
         selectedParticipantId: 'char1',
         hoveredParticipantId: null,
-        inspectLockedParticipantId: null,
-        inspectLockedPointer: null,
-        inspectLockedTile: null,
-        inspectLockedTilePointer: null,
-        animatingParticipantId: null,
-        isProcessingEnemies: false,
         battle: { activeParticipantId: 'char1', activePlayerRole: null },
       })
     );
@@ -70,20 +46,20 @@ describe('BattleHUD', () => {
 
   it('renders MissionPanel and BattleLog in all phases', () => {
     vi.mocked(useGameState).mockReturnValue(mockGameState({ mission: {}, log: [], phase: 'quick_actions', participants: [mockParticipant], activeParticipantId: 'char1' }));
-    render(<BattleHUD battleLogic={{ uiState: { mode: 'idle' } } as any} />);
+    render(<BattleHUD battleLogic={{} as any} />);
     expect(screen.getByTestId('mission-panel')).toBeInTheDocument();
     expect(screen.getByTestId('battle-log')).toBeInTheDocument();
   });
 
   it('renders ReactionRollPanel during the reaction_roll phase', () => {
     vi.mocked(useGameState).mockReturnValue(mockGameState({ mission: {}, log: [], phase: 'reaction_roll' }));
-    render(<BattleHUD battleLogic={{ uiState: { mode: 'idle' } } as any} />);
+    render(<BattleHUD battleLogic={{} as any} />);
     expect(screen.getByTestId('reaction-roll-panel')).toBeInTheDocument();
   });
 
   it('renders ActionControls when it is a player character\'s turn', () => {
     vi.mocked(useGameState).mockReturnValue(mockGameState({ mission: {}, log: [], phase: 'quick_actions', participants: [mockParticipant], activeParticipantId: 'char1' }));
-    render(<BattleHUD battleLogic={{ uiState: { mode: 'idle' } } as any} />);
+    render(<BattleHUD battleLogic={{} as any} />);
     expect(screen.getByTestId('action-controls')).toBeInTheDocument();
   });
 });

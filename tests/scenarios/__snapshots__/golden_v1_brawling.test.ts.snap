@@ -1,0 +1,417 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`Golden V1 Brawl Rules > Basic 1v1 Brawl > Scenario 1: Attacker wins basic brawl (unarmed) 1`] = `
+[
+  "log.action.brawls",
+  "log.action.brawlerUnarmed",
+  "log.action.brawlerUnarmed",
+  "log.info.brawlRoll",
+  "log.info.brawlRoll",
+  "log.info.brawlWinner",
+  "log.info.brawlTakesHits",
+  "log.info.noSave",
+  "log.info.damageRoll",
+  "log.info.outcomeStunned",
+  "log.info.pushedBack",
+  "log.info.pushedBack",
+]
+`;
+
+exports[`Golden V1 Brawl Rules > Basic 1v1 Brawl > Scenario 1: Attacker wins basic brawl (unarmed) 2`] = `
+{
+  "activeId": "atk",
+  "log": [],
+  "mission": {
+    "status": "in_progress",
+    "type": "Patrol",
+  },
+  "participants": [
+    {
+      "actions": 2,
+      "armor": undefined,
+      "effects": [],
+      "id": "atk",
+      "luck": 0,
+      "pos": "5,5",
+      "status": "active",
+      "stun": 0,
+      "taken": "m:0,c:0,d:0,i:0",
+      "type": "character",
+      "weapons": [],
+    },
+    {
+      "actions": 2,
+      "armor": undefined,
+      "effects": [],
+      "id": "tgt",
+      "luck": 0,
+      "pos": "5,8",
+      "status": "stunned",
+      "stun": 1,
+      "taken": "m:0,c:0,d:0,i:0",
+      "type": "enemy",
+      "weapons": [],
+    },
+  ],
+  "phase": "quick_actions",
+  "reactionRolls": [],
+  "round": 1,
+}
+`;
+
+exports[`Golden V1 Brawl Rules > Basic 1v1 Brawl > Scenario 2: Defender wins basic brawl (unarmed) 1`] = `
+[
+  "log.action.brawls",
+  "log.action.brawlerUnarmed",
+  "log.action.brawlerUnarmed",
+  "log.info.brawlRoll",
+  "log.info.brawlRoll",
+  "log.info.brawlWinner",
+  "log.info.brawlTakesHits",
+  "log.info.noSave",
+  "log.info.damageRoll",
+  "log.info.outcomeStunned",
+  "log.info.pushedBack",
+  "log.info.pushedBack",
+]
+`;
+
+exports[`Golden V1 Brawl Rules > Basic 1v1 Brawl > Scenario 2: Defender wins basic brawl (unarmed) 2`] = `
+{
+  "activeId": "atk",
+  "log": [],
+  "mission": {
+    "status": "in_progress",
+    "type": "Patrol",
+  },
+  "participants": [
+    {
+      "actions": 2,
+      "armor": undefined,
+      "effects": [],
+      "id": "atk",
+      "luck": 0,
+      "pos": "5,3",
+      "status": "stunned",
+      "stun": 1,
+      "taken": "m:0,c:0,d:0,i:0",
+      "type": "character",
+      "weapons": [],
+    },
+    {
+      "actions": 2,
+      "armor": undefined,
+      "effects": [],
+      "id": "tgt",
+      "luck": 0,
+      "pos": "5,6",
+      "status": "active",
+      "stun": 0,
+      "taken": "m:0,c:0,d:0,i:0",
+      "type": "enemy",
+      "weapons": [],
+    },
+  ],
+  "phase": "quick_actions",
+  "reactionRolls": [],
+  "round": 1,
+}
+`;
+
+exports[`Golden V1 Brawl Rules > Outnumbered > Scenario 5: 1v2 Brawl - Attacker vs 2 Enemies 1`] = `
+[
+  "log.action.brawls",
+  "log.action.brawlerUnarmed",
+  "log.action.brawlerUnarmed",
+  "log.info.brawlOutnumbered",
+  "log.info.brawlRoll",
+  "log.info.brawlRoll",
+  "log.info.brawlWinner",
+  "log.info.brawlTakesHits",
+  "log.info.noSave",
+  "log.info.damageRoll",
+  "log.info.outcomeStunned",
+  "log.info.pushedBack",
+  "log.info.pushedBack",
+]
+`;
+
+exports[`Golden V1 Brawl Rules > Outnumbered > Scenario 5: 1v2 Brawl - Attacker vs 2 Enemies 2`] = `
+{
+  "activeId": "atk",
+  "log": [],
+  "mission": {
+    "status": "in_progress",
+    "type": "Patrol",
+  },
+  "participants": [
+    {
+      "actions": 2,
+      "armor": undefined,
+      "effects": [],
+      "id": "atk",
+      "luck": 0,
+      "pos": "5,5",
+      "status": "active",
+      "stun": 0,
+      "taken": "m:0,c:0,d:0,i:0",
+      "type": "character",
+      "weapons": [],
+    },
+    {
+      "actions": 2,
+      "armor": undefined,
+      "effects": [],
+      "id": "e1",
+      "luck": 0,
+      "pos": "5,2",
+      "status": "stunned",
+      "stun": 1,
+      "taken": "m:0,c:0,d:0,i:0",
+      "type": "enemy",
+      "weapons": [],
+    },
+    {
+      "actions": 2,
+      "armor": undefined,
+      "effects": [],
+      "id": "e2",
+      "luck": 0,
+      "pos": "5,6",
+      "status": "active",
+      "stun": 0,
+      "taken": "m:0,c:0,d:0,i:0",
+      "type": "enemy",
+      "weapons": [],
+    },
+  ],
+  "phase": "quick_actions",
+  "reactionRolls": [],
+  "round": 1,
+}
+`;
+
+exports[`Golden V1 Brawl Rules > Trapped (Corner Case) > Scenario 6: Defender trapped in corner (cannot be pushed back) 1`] = `
+[
+  "log.action.brawls",
+  "log.action.brawlerUnarmed",
+  "log.action.brawlerUnarmed",
+  "log.info.brawlRoll",
+  "log.info.brawlRoll",
+  "log.info.brawlWinner",
+  "log.info.brawlTakesHits",
+  "log.info.noSave",
+  "log.info.damageRoll",
+  "log.info.outcomeStunned",
+  "log.info.notPushedBack",
+  "log.info.brawlTrappedCannotPush",
+  "log.info.brawlTrapped",
+  "log.info.brawlerStunBonus",
+  "log.info.brawlRoll",
+  "log.info.brawlRoll",
+  "log.info.brawlWinner",
+  "log.info.brawlTakesHits",
+  "log.info.noSave",
+  "log.info.damageRoll",
+  "log.info.outcomeStunned",
+  "log.info.notPushedBack",
+  "log.info.brawlTrappedCannotPush",
+  "log.info.brawlTrapped",
+  "log.info.brawlerStunBonus",
+  "log.info.brawlRoll",
+  "log.info.brawlRoll",
+  "log.info.brawlWinner",
+  "log.info.brawlTakesHits",
+  "log.info.noSave",
+  "log.info.damageRoll",
+  "log.info.outcomeStunned",
+  "log.info.notPushedBack",
+  "log.info.brawlTrappedCannotPush",
+  "log.info.brawlTrapped",
+  "log.info.brawlerStunBonus",
+  "log.info.brawlRoll",
+  "log.info.brawlRoll",
+  "log.info.brawlWinner",
+  "log.info.brawlTakesHits",
+  "log.info.noSave",
+  "log.info.damageRoll",
+  "log.info.outcomeStunned",
+  "log.info.notPushedBack",
+  "log.info.brawlTrappedCannotPush",
+  "log.info.brawlTrapped",
+  "log.info.brawlerStunBonus",
+  "log.info.brawlRoll",
+  "log.info.brawlRoll",
+  "log.info.brawlWinner",
+  "log.info.brawlTakesHits",
+  "log.info.noSave",
+  "log.info.damageRoll",
+  "log.info.outcomeStunned",
+  "log.info.notPushedBack",
+  "log.info.brawlTrappedCannotPush",
+]
+`;
+
+exports[`Golden V1 Brawl Rules > Trapped (Corner Case) > Scenario 6: Defender trapped in corner (cannot be pushed back) 2`] = `
+{
+  "activeId": "atk",
+  "log": [],
+  "mission": {
+    "status": "in_progress",
+    "type": "Patrol",
+  },
+  "participants": [
+    {
+      "actions": 2,
+      "armor": undefined,
+      "effects": [],
+      "id": "atk",
+      "luck": 0,
+      "pos": "0,1",
+      "status": "active",
+      "stun": 0,
+      "taken": "m:0,c:0,d:0,i:0",
+      "type": "character",
+      "weapons": [],
+    },
+    {
+      "actions": 2,
+      "armor": undefined,
+      "effects": [],
+      "id": "tgt",
+      "luck": 0,
+      "pos": "0,0",
+      "status": "stunned",
+      "stun": 1,
+      "taken": "m:0,c:0,d:0,i:0",
+      "type": "enemy",
+      "weapons": [],
+    },
+  ],
+  "phase": "quick_actions",
+  "reactionRolls": [],
+  "round": 1,
+}
+`;
+
+exports[`Golden V1 Brawl Rules > Weapon Traits & Modifiers > Scenario 3: Melee weapon bonus (+2) 1`] = `
+[
+  "log.action.brawls",
+  "log.action.brawlerWeapon",
+  "log.action.brawlerUnarmed",
+  "log.info.brawlRoll",
+  "log.info.brawlRoll",
+  "log.info.brawlWinner",
+  "log.info.brawlTakesHits",
+  "log.info.noSave",
+  "log.info.damageRoll",
+  "log.info.outcomeStunned",
+  "log.info.pushedBack",
+  "log.info.pushedBack",
+]
+`;
+
+exports[`Golden V1 Brawl Rules > Weapon Traits & Modifiers > Scenario 3: Melee weapon bonus (+2) 2`] = `
+{
+  "activeId": "atk",
+  "log": [],
+  "mission": {
+    "status": "in_progress",
+    "type": "Patrol",
+  },
+  "participants": [
+    {
+      "actions": 2,
+      "armor": undefined,
+      "effects": [],
+      "id": "atk",
+      "luck": 0,
+      "pos": "5,5",
+      "status": "active",
+      "stun": 0,
+      "taken": "m:0,c:0,d:0,i:0",
+      "type": "character",
+      "weapons": [
+        "blade",
+      ],
+    },
+    {
+      "actions": 2,
+      "armor": undefined,
+      "effects": [],
+      "id": "tgt",
+      "luck": 0,
+      "pos": "5,8",
+      "status": "stunned",
+      "stun": 1,
+      "taken": "m:0,c:0,d:0,i:0",
+      "type": "enemy",
+      "weapons": [],
+    },
+  ],
+  "phase": "quick_actions",
+  "reactionRolls": [],
+  "round": 1,
+}
+`;
+
+exports[`Golden V1 Brawl Rules > Weapon Traits & Modifiers > Scenario 4: Pistol bonus (+1) 1`] = `
+[
+  "log.action.brawls",
+  "log.action.brawlerWeapon",
+  "log.action.brawlerUnarmed",
+  "log.info.brawlRoll",
+  "log.info.brawlRoll",
+  "log.info.brawlWinner",
+  "log.info.brawlTakesHits",
+  "log.info.noSave",
+  "log.info.damageRoll",
+  "log.info.outcomeStunned",
+  "log.info.pushedBack",
+  "log.info.pushedBack",
+]
+`;
+
+exports[`Golden V1 Brawl Rules > Weapon Traits & Modifiers > Scenario 4: Pistol bonus (+1) 2`] = `
+{
+  "activeId": "atk",
+  "log": [],
+  "mission": {
+    "status": "in_progress",
+    "type": "Patrol",
+  },
+  "participants": [
+    {
+      "actions": 2,
+      "armor": undefined,
+      "effects": [],
+      "id": "atk",
+      "luck": 0,
+      "pos": "5,5",
+      "status": "active",
+      "stun": 0,
+      "taken": "m:0,c:0,d:0,i:0",
+      "type": "character",
+      "weapons": [
+        "hand_gun",
+      ],
+    },
+    {
+      "actions": 2,
+      "armor": undefined,
+      "effects": [],
+      "id": "tgt",
+      "luck": 0,
+      "pos": "5,8",
+      "status": "stunned",
+      "stun": 1,
+      "taken": "m:0,c:0,d:0,i:0",
+      "type": "enemy",
+      "weapons": [],
+    },
+  ],
+  "phase": "quick_actions",
+  "reactionRolls": [],
+  "round": 1,
+}
+`;

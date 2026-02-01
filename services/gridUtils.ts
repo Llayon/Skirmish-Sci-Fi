@@ -48,7 +48,11 @@ export const findPushbackPosition = (targetPos: Position, fromPos: Position, bat
     const pushPos = { x: targetPos.x + pushX, y: targetPos.y + pushY };
     
     // Check if new position is valid
-    if (!isCellWalkable(pushPos, battle, '')) return null;
+    console.log('DEBUG V1: Checking pushPos', pushPos);
+    if (!isCellWalkable(pushPos, battle, '')) {
+        console.log('DEBUG V1: pushPos not walkable');
+        return null;
+    }
     
     return pushPos;
 };

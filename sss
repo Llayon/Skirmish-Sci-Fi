@@ -1,0 +1,807 @@
+warning: in the working copy of 'components/battle/BattleHUD.tsx', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'components/battle/BattleView.tsx', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'components/battle/BattleView3D.tsx', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'components/battle/three/CameraCommands3D.tsx', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'components/battle/three/GridFloor.tsx', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'components/battle/three/MoveHighlights.tsx', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'components/battle/three/ParticipantMesh.tsx', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'components/battle/three/RaycastController.tsx', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'components/battle/three/TerrainMesh.tsx', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'components/battle/three/ThreeCanvas.tsx', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'services/adapters/battle3dAdapter.ts', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'services/engine/net/stableStringify.ts', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'services/engine/net/stateHash.test.ts', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'services/index.ts', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'src/components/debug/EngineDevTools.tsx', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'stores/battleStore.ts', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'stores/index.ts', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'stores/uiStore.ts', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'types/battle3d.ts', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'types/multiplayer.ts', LF will be replaced by CRLF the next time Git touches it
+[1mdiff --git a/App.tsx b/App.tsx[m
+[1mindex 0e41753..df774a3 100644[m
+[1m--- a/App.tsx[m
+[1m+++ b/App.tsx[m
+[36m@@ -2,7 +2,7 @@[m
+ import React, { useEffect, lazy, Suspense, useState } from 'react';[m
+ import { Dna, Star, Loader } from 'lucide-react';[m
+ import { useTranslation } from '@/i18n';[m
+[31m-import { useUiStore, useCampaignProgressStore, useMultiplayerStore, useSettingsStore } from '@/stores';[m
+[32m+[m[32mimport { useUiStore, useCampaignProgressStore, useMultiplayerStore } from '@/stores';[m
+ import ThemeSwitcher from '@/components/ThemeSwitcher';[m
+ import ToastContainer from '@/components/ui/ToastContainer';[m
+ import {[m
+[36m@@ -104,6 +104,9 @@[m [mconst GameContainer: React.FC = () => {[m
+           {renderContent()}[m
+         </main>[m
+       </div>[m
+[32m+[m[32m      <footer className="text-center mt-12 text-text-muted text-sm shrink-0">[m
+[32m+[m[32m        <p>{t('app.inspiredBy')}</p>[m
+[32m+[m[32m      </footer>[m
+     </div>[m
+   );[m
+ };[m
+[36m@@ -112,8 +115,6 @@[m [mconst App: React.FC = () => {[m
+   const gameMode = useUiStore((state) => state.gameMode);[m
+   const isHydrated = useCampaignProgressStore((state) => state.isHydrated);[m
+   const setJoinIdAndRole = useMultiplayerStore((state) => state.actions.setJoinIdAndRole);[m
+[31m-  const reducedMotion = useSettingsStore((state) => state.reducedMotion);[m
+[31m-  const reducedVfx = useSettingsStore((state) => state.reducedVfx);[m
+ [m
+   useEffect(() => {[m
+     if (!isHydrated) return;[m
+[36m@@ -128,11 +129,6 @@[m [mconst App: React.FC = () => {[m
+     document.body.classList.toggle('main-menu', gameMode === 'main_menu');[m
+   }, [gameMode]);[m
+ [m
+[31m-  useEffect(() => {[m
+[31m-    document.documentElement.setAttribute('data-reduced-motion', String(reducedMotion));[m
+[31m-    document.documentElement.setAttribute('data-reduced-vfx', String(reducedVfx));[m
+[31m-  }, [reducedMotion, reducedVfx]);[m
+[31m-[m
+   if (!isHydrated) {[m
+     return <LoadingFallback />;[m
+   }[m
+[1mdiff --git a/components/MainMenu.tsx b/components/MainMenu.tsx[m
+[1mindex b8a80d5..f1d61a3 100644[m
+[1m--- a/components/MainMenu.tsx[m
+[1m+++ b/components/MainMenu.tsx[m
+[36m@@ -6,7 +6,6 @@[m [mimport { Play, FilePlus, FolderOpen, Settings, Loader, Users, Calendar, Coins, U[m
+ import Modal from '@/components/ui/Modal';[m
+ import Card from '@/components/ui/Card';[m
+ import ThemeSwitcher from '@/components/ThemeSwitcher';[m
+[31m-import { useSettingsStore } from '@/stores';[m
+ import type { SaveSlot } from '@/types';[m
+ import {[m
+   preloadCampaignDashboard,[m
+[36m@@ -20,9 +19,6 @@[m [mconst LoadGameModal = lazy(preloadLoadGameModal);[m
+ [m
+ const SettingsModal: React.FC<{ onClose: () => void }> = ({ onClose }) => {[m
+   const { t, language, setLanguage, availableLanguages } = useTranslation();[m
+[31m-  const reducedMotion = useSettingsStore((state) => state.reducedMotion);[m
+[31m-  const reducedVfx = useSettingsStore((state) => state.reducedVfx);[m
+[31m-  const { toggleReducedMotion, toggleReducedVfx } = useSettingsStore((state) => state.actions);[m
+   return ([m
+     <Modal onClose={onClose} title={t('app.settings')}>[m
+       <Card className="w-full sm:max-w-md bg-surface-overlay !p-0">[m
+[36m@@ -45,18 +41,6 @@[m [mconst SettingsModal: React.FC<{ onClose: () => void }> = ({ onClose }) => {[m
+             <span className="text-text-base">Theme:</span>[m
+             <ThemeSwitcher />[m
+           </div>[m
+[31m-          <div className="flex items-center justify-between">[m
+[31m-            <span className="text-text-base">Reduced motion:</span>[m
+[31m-            <Button className="px-3 py-1 text-sm" selected={reducedMotion} onClick={toggleReducedMotion}>[m
+[31m-              {reducedMotion ? 'On' : 'Off'}[m
+[31m-            </Button>[m
+[31m-          </div>[m
+[31m-          <div className="flex items-center justify-between">[m
+[31m-            <span className="text-text-base">Reduced VFX:</span>[m
+[31m-            <Button className="px-3 py-1 text-sm" selected={reducedVfx} onClick={toggleReducedVfx}>[m
+[31m-              {reducedVfx ? 'On' : 'Off'}[m
+[31m-            </Button>[m
+[31m-          </div>[m
+         </div>[m
+         <div className="mt-6 text-right border-t border-border pt-4 px-6">[m
+           <Button onClick={onClose}>{t('buttons.close')}</Button>[m
+[36m@@ -299,18 +283,20 @@[m [mconst MainMenu: React.FC = () => {[m
+               </div>[m
+               <nav className="space-y-3 w-full max-w-2xl mx-auto lg:mx-0 relative">[m
+                 {menuItems.filter(item => item.condition).map((item, index) => ([m
+[31m-                  <button[m
+[32m+[m[32m                   <div[m
+                     key={item.id}[m
+[31m-                    type="button"[m
+[31m-                    className="menu-button-wrapper rounded-md opacity-0 animate-[fade-in-right_0.5s_ease-out_forwards] cursor-pointer border-0 bg-transparent p-0 text-left"[m
+[32m+[m[32m                    className="menu-button-wrapper rounded-md opacity-0 animate-[fade-in-right_0.5s_ease-out_forwards] cursor-pointer"[m
+                     style={{ animationDelay: `${0.6 + index * 0.1}s` }}[m
+                     onMouseEnter={() => { item.onMouseEnter(); }}[m
+                     onClick={(e) => handleMenuClick(e, item.action)}[m
+                   >[m
+[31m-                    <div className="menu-button w-full flex items-center p-4 text-xl justify-start font-bold border-l-4 bg-surface-base/50 text-text-base rounded-md">[m
+[31m-                      <item.icon className="mr-4 menu-icon" /> {item.label}[m
+[31m-                    </div>[m
+[31m-                  </button>[m
+[32m+[m[32m                      <button[m
+[32m+[m[32m                        className="menu-button w-full flex items-center p-4 text-xl justify-start font-bold border-l-4 bg-surface-base/50 text-text-base rounded-md"[m
+[32m+[m[32m                        tabIndex={-1} // Make the div the focusable element[m
+[32m+[m[32m                      >[m
+[32m+[m[32m                        <item.icon className="mr-4 menu-icon" /> {item.label}[m
+[32m+[m[32m                      </button>[m
+[32m+[m[32m                   </div>[m
+                 ))}[m
+                 <div className="main-menu-sound-wave">[m
+                     <div className="wave-bar" /><div className="wave-bar" /><div className="wave-bar" /><div className="wave-bar" /><div className="wave-bar" />[m
+[1mdiff --git a/components/battle/ActionControls.tsx b/components/battle/ActionControls.tsx[m
+[1mindex 3fd11e0..83591a6 100644[m
+[1m--- a/components/battle/ActionControls.tsx[m
+[1m+++ b/components/battle/ActionControls.tsx[m
+[36m@@ -11,6 +11,7 @@[m [mimport { useGameState } from '../../hooks/useGameState';[m
+ import { useMultiplayerStore, useBattleStore } from '../../stores';[m
+ import { BattleLogic } from '../../hooks/useBattleLogic';[m
+ import { getWeaponById } from '../../services/data/items';[m
+[32m+[m[32mimport { EngineV2HudControls } from './EngineV2HudControls';[m
+ [m
+ /**[m
+  * Props for the ActionControls component.[m
+[36m@@ -271,6 +272,8 @@[m [mconst ActionControls: React.FC<ActionControlsProps> = ({ participant, battleLogi[m
+         {uiState.mode !== 'idle' && <ActionButton tooltip={t('buttons.cancel')} onClick={handlers.cancelAction} variant='danger'><XCircle /></ActionButton>}[m
+         <Button onClick={() => handlers.endTurn()} variant='primary' className='py-2 px-6 ml-4 h-14 rounded-full'>{t('buttons.endTurn')}</Button>[m
+       </div>[m
+[32m+[m
+[32m+[m[32m      <EngineV2HudControls />[m
+     </div>[m
+   );[m
+ };[m
+[1mdiff --git a/components/battle/ActionQueue.tsx b/components/battle/ActionQueue.tsx[m
+[1mindex 8b85fe9..76b2feb 100644[m
+[1m--- a/components/battle/ActionQueue.tsx[m
+[1m+++ b/components/battle/ActionQueue.tsx[m
+[36m@@ -6,12 +6,7 @@[m [mimport { BattleParticipant } from '@/types';[m
+ import { Heart, Shield, Zap } from 'lucide-react';[m
+ import Tooltip from '../ui/Tooltip';[m
+ [m
+[31m-type ActionQueueProps = {[m
+[31m-  embedded?: boolean;[m
+[31m-  compact?: boolean;[m
+[31m-};[m
+[31m-[m
+[31m-const ActionQueue: React.FC<ActionQueueProps> = ({ embedded = false, compact = false }) => {[m
+[32m+[m[32mconst ActionQueue: React.FC = () => {[m
+   const { t } = useTranslation();[m
+   const battle = useBattleStore(state => state.battle);[m
+   if (!battle) return null;[m
+[36m@@ -22,10 +17,10 @@[m [mconst ActionQueue: React.FC<ActionQueueProps> = ({ embedded = false, compact = f[m
+   const isSlowPhase = phase === 'slow_actions';[m
+   const isEnemyPhase = phase === 'enemy_actions';[m
+ [m
+[31m-  const containerHeight = compact ? 'h-[96px]' : 'h-[120px]';[m
+[32m+[m[32m  const containerHeight = 'h-[120px]';[m
+ [m
+   if (!isQuickPhase && !isSlowPhase && !isEnemyPhase) {[m
+[31m-    return embedded ? null : <div className={containerHeight} />;[m
+[32m+[m[32m    return <div className={containerHeight} />; // Keep layout consistent[m
+   }[m
+ [m
+   let order: string[] = [];[m
+[36m@@ -45,8 +40,12 @@[m [mconst ActionQueue: React.FC<ActionQueueProps> = ({ embedded = false, compact = f[m
+     return `${t(`enemies.${nameParts[0]}`)} #${nameParts[1]}`;[m
+   };[m
+ [m
+[31m-  const list = ([m
+[31m-    <div className='flex items-start justify-center gap-3 flex-grow'>[m
+[32m+[m[32m  return ([m
+[32m+[m[32m    <div className={`bg-surface-base/40 border-b border-border/50 p-2 ${containerHeight} flex flex-col`}>[m
+[32m+[m[32m      <h3 className='text-center text-sm font-bold uppercase text-primary tracking-wider mb-2'>[m
+[32m+[m[32m        {t(`battle.phase.${phase}`)}[m
+[32m+[m[32m      </h3>[m
+[32m+[m[32m      <div className='flex items-start justify-center gap-3 flex-grow'>[m
+         {orderedParticipants.map(p => {[m
+           const isActive = p.id === activeParticipantId;[m
+           const hasActed = p.actionsRemaining <= 0;[m
+[36m@@ -90,18 +89,6 @@[m [mconst ActionQueue: React.FC<ActionQueueProps> = ({ embedded = false, compact = f[m
+           );[m
+         })}[m
+       </div>[m
+[31m-  );[m
+[31m-[m
+[31m-  if (embedded) {[m
+[31m-    return <div className={`${containerHeight} flex flex-col`}>{list}</div>;[m
+[31m-  }[m
+[31m-[m
+[31m-  return ([m
+[31m-    <div className={`bg-surface-base/40 border-b border-border/50 p-2 ${containerHeight} flex flex-col`}>[m
+[31m-      <h3 className='text-center text-sm font-bold uppercase text-primary tracking-wider mb-2'>[m
+[31m-        {t(`battle.phase.${phase}`)}[m
+[31m-      </h3>[m
+[31m-      {list}[m
+     </div>[m
+   );[m
+ };[m
+[1mdiff --git a/components/battle/BattleHUD.test.tsx b/components/battle/BattleHUD.test.tsx[m
+[1mindex 5e90ee0..18fbae5 100644[m
+[1m--- a/components/battle/BattleHUD.test.tsx[m
+[1m+++ b/components/battle/BattleHUD.test.tsx[m
+[36m@@ -10,10 +10,10 @@[m [mvi.mock('./ActionControls', () => ({ default: () => <div data-testid="action-con[m
+ vi.mock('./ReactionRollPanel', () => ({ default: () => <div data-testid="reaction-roll-panel" /> }));[m
+ vi.mock('./CharacterStatus', () => ({ default: () => <div data-testid="character-status" /> }));[m
+ vi.mock('../../i18n', () => ({ useTranslation: () => ({ t: (key: string) => key }) }));[m
+[31m-vi.mock('../../stores', () => ({ useMultiplayerStore: vi.fn(), useBattleStore: vi.fn(), useHudStore: vi.fn() }));[m
+[32m+[m[32mvi.mock('../../stores', () => ({ useMultiplayerStore: vi.fn(), useBattleStore: vi.fn() }));[m
+ vi.mock('../../hooks/useGameState');[m
+ [m
+[31m-const { useBattleStore, useMultiplayerStore, useHudStore } = await import('../../stores');[m
+[32m+[m[32mconst { useBattleStore, useMultiplayerStore } = await import('../../stores');[m
+ const { useGameState } = await import('../../hooks/useGameState');[m
+ [m
+ const mockGameState = (battleOverride: any) => ({[m
+[36m@@ -35,34 +35,10 @@[m [mdescribe('BattleHUD', () => {[m
+   beforeEach(() => {[m
+     vi.clearAllMocks();[m
+     vi.mocked(useMultiplayerStore).mockImplementation((selector: any) => selector({ multiplayerRole: null }));[m
+[31m-    vi.mocked(useHudStore).mockImplementation((selector: any) =>[m
+[31m-      selector({[m
+[31m-        preset: 'full',[m
+[31m-        panels: { queue: true, mission: true, status: true, actions: true, log: true },[m
+[31m-        collapsed: { queue: false, mission: false, status: false, actions: false, log: false },[m
+[31m-        density: 'normal',[m
+[31m-        autoHideSecondaryPanels: false,[m
+[31m-        actions: {[m
+[31m-          applyPreset: vi.fn(),[m
+[31m-          setPanelVisible: vi.fn(),[m
+[31m-          togglePanel: vi.fn(),[m
+[31m-          toggleCollapsed: vi.fn(),[m
+[31m-          setDensity: vi.fn(),[m
+[31m-          setAutoHideSecondaryPanels: vi.fn(),[m
+[31m-          reset: vi.fn(),[m
+[31m-        },[m
+[31m-      })[m
+[31m-    );[m
+     vi.mocked(useBattleStore).mockImplementation((selector: any) =>[m
+       selector({[m
+         selectedParticipantId: 'char1',[m
+         hoveredParticipantId: null,[m
+[31m-        inspectLockedParticipantId: null,[m
+[31m-        inspectLockedPointer: null,[m
+[31m-        inspectLockedTile: null,[m
+[31m-        inspectLockedTilePointer: null,[m
+[31m-        animatingParticipantId: null,[m
+[31m-        isProcessingEnemies: false,[m
+         battle: { activeParticipantId: 'char1', activePlayerRole: null },[m
+       })[m
+     );[m
+[36m@@ -70,20 +46,20 @@[m [mdescribe('BattleHUD', () => {[m
+ [m
+   it('renders MissionPanel and BattleLog in all phases', () => {[m
+     vi.mocked(useGameState).mockReturnValue(mockGameState({ mission: {}, log: [], phase: 'quick_actions', participants: [mockParticipant], activeParticipantId: 'char1' }));[m
+[31m-    render(<BattleHUD battleLogic={{ uiState: { mode: 'idle' } } as any} />);[m
+[32m+[m[32m    render(<BattleHUD battleLogic={{} as any} />);[m
+     expect(screen.getByTestId('mission-panel')).toBeInTheDocument();[m
+     expect(screen.getByTestId('battle-log')).toBeInTheDocument();[m
+   });[m
+ [m
+   it('renders ReactionRollPanel during the reaction_roll phase', () => {[m
+     vi.mocked(useGameState).mockReturnValue(mockGameState({ mission: {}, log: [], phase: 'reaction_roll' }));[m
+[31m-    render(<BattleHUD battleLogic={{ uiState: { mode: 'idle' } } as any} />);[m
+[32m+[m[32m    render(<BattleHUD battleLogic={{} as any} />);[m
+     expect(screen.getByTestId('reaction-roll-panel')).toBeInTheDocument();[m
+   });[m
+ [m
+   it('renders ActionControls when it is a player character\'s turn', () => {[m
+     vi.mocked(useGameState).mockReturnValue(mockGameState({ mission: {}, log: [], phase: 'quick_actions', participants: [mockParticipant], activeParticipantId: 'char1' }));[m
+[31m-    render(<BattleHUD battleLogic={{ uiState: { mode: 'idle' } } as any} />);[m
+[32m+[m[32m    render(<BattleHUD battleLogic={{} as any} />);[m
+     expect(screen.getByTestId('action-controls')).toBeInTheDocument();[m
+   });[m
+ });[m
+[1mdiff --git a/components/battle/BattleHUD.tsx b/components/battle/BattleHUD.tsx[m
+[1mindex 0371c97..af7ec18 100644[m
+[1m--- a/components/battle/BattleHUD.tsx[m
+[1m+++ b/components/battle/BattleHUD.tsx[m
+[36m@@ -1,6 +1,6 @@[m
+ [m
+ [m
+[31m-import React, { useMemo, useRef, useState, useEffect } from 'react';[m
+[32m+[m[32mimport { useMemo, useRef, useState, useEffect, type FC } from 'react';[m
+ import { BattleLogic } from '../../hooks/useBattleLogic';[m
+ import ActionControls from './ActionControls';[m
+ import CharacterStatus from './CharacterStatus';[m
+[36m@@ -13,7 +13,6 @@[m [mimport { Loader } from 'lucide-react';[m
+ import { useTranslation } from '../../i18n';[m
+ import ActionQueue from './ActionQueue';[m
+ import TargetInspector from './TargetInspector';[m
+[31m-import { shallow } from 'zustand/shallow';[m
+ import { useShallow } from 'zustand/react/shallow';[m
+ [m
+ interface BattleHUDProps {[m
+[36m@@ -21,7 +20,7 @@[m [minterface BattleHUDProps {[m
+   uiMode?: 'full' | 'minimal';[m
+ }[m
+ [m
+[31m-const BattleHUD: React.FC<BattleHUDProps> = ({ battleLogic, uiMode = 'full' }) => {[m
+[32m+[m[32mconst BattleHUD: FC<BattleHUDProps> = ({ battleLogic, uiMode = 'full' }) => {[m
+   const { t } = useTranslation();[m
+   const { battle } = useGameState();[m
+   const { selectedParticipantId, activeParticipantId, hoveredParticipantId } = useBattleStore([m
+[1mdiff --git a/components/battle/BattleHudSettingsModal.test.tsx b/components/battle/BattleHudSettingsModal.test.tsx[m
+[1mdeleted file mode 100644[m
+[1mindex 7670261..0000000[m
+[1m--- a/components/battle/BattleHudSettingsModal.test.tsx[m
+[1m+++ /dev/null[m
+[36m@@ -1,110 +0,0 @@[m
+[31m-import React from 'react';[m
+[31m-import { render, screen, fireEvent } from '@testing-library/react';[m
+[31m-import { describe, it, expect, vi, beforeEach } from 'vitest';[m
+[31m-import BattleHudSettingsModal from './BattleHudSettingsModal';[m
+[31m-[m
+[31m-vi.mock('@/components/ui/Modal', () => ({ default: ({ children }: any) => <div>{children}</div> }));[m
+[31m-vi.mock('@/i18n', () => ({ useTranslation: () => ({ t: (key: string) => key }) }));[m
+[31m-vi.mock('@/stores', () => ({ useHudStore: vi.fn(), useBattleStore: vi.fn() }));[m
+[31m-vi.mock('@/stores/settingsStore', () => ({ useSettingsStore: vi.fn() }));[m
+[31m-[m
+[31m-const { useHudStore, useBattleStore } = await import('@/stores');[m
+[31m-const { useSettingsStore } = await import('@/stores/settingsStore');[m
+[31m-[m
+[31m-describe('BattleHudSettingsModal', () => {[m
+[31m-  beforeEach(() => {[m
+[31m-    vi.clearAllMocks();[m
+[31m-[m
+[31m-    vi.mocked(useHudStore).mockImplementation((selector: any) =>[m
+[31m-      selector({[m
+[31m-        preset: 'full',[m
+[31m-        panels: { queue: true, mission: true, status: true, actions: true, log: true },[m
+[31m-        density: 'normal',[m
+[31m-        autoHideSecondaryPanels: true,[m
+[31m-        actions: {[m
+[31m-          applyPreset: vi.fn(),[m
+[31m-          togglePanel: vi.fn(),[m
+[31m-          setDensity: vi.fn(),[m
+[31m-          setAutoHideSecondaryPanels: vi.fn(),[m
+[31m-          reset: vi.fn(),[m
+[31m-        },[m
+[31m-      })[m
+[31m-    );[m
+[31m-[m
+[31m-    vi.mocked(useBattleStore).mockImplementation((selector: any) =>[m
+[31m-      selector({[m
+[31m-        battle: {[m
+[31m-          participants: [{ id: 'char1', type: 'character', name: 'Rook', position: { x: 0, y: 0 }, status: 'active' }],[m
+[31m-          activeParticipantId: 'char1',[m
+[31m-        },[m
+[31m-        selectedParticipantId: null,[m
+[31m-        followActive3D: false,[m
+[31m-        actions: {[m
+[31m-          requestCameraFocusOn: vi.fn(),[m
+[31m-          requestCameraReset: vi.fn(),[m
+[31m-          setFollowActive3D: vi.fn(),[m
+[31m-        },[m
+[31m-      })[m
+[31m-    );[m
+[31m-[m
+[31m-    vi.mocked(useSettingsStore).mockImplementation((selector: any) =>[m
+[31m-      selector({[m
+[31m-        reducedMotion: false,[m
+[31m-        reducedVfx: false,[m
+[31m-        threeQuality: 'high',[m
+[31m-        camera3dPreset: 'tactical',[m
+[31m-        camera3dInvertWheel: false,[m
+[31m-        camera3dZoomSpeed: 1,[m
+[31m-        camera3dPanSpeed: 1,[m
+[31m-        camera3dRotateSpeed: 1,[m
+[31m-        actions: {[m
+[31m-          toggleReducedMotion: vi.fn(),[m
+[31m-          toggleReducedVfx: vi.fn(),[m
+[31m-          setThreeQuality: vi.fn(),[m
+[31m-          setCamera3dPreset: vi.fn(),[m
+[31m-          setCamera3dInvertWheel: vi.fn(),[m
+[31m-          setCamera3dZoomSpeed: vi.fn(),[m
+[31m-          setCamera3dPanSpeed: vi.fn(),[m
+[31m-          setCamera3dRotateSpeed: vi.fn(),[m
+[31m-          resetCamera3D: vi.fn(),[m
+[31m-        },[m
+[31m-      })[m
+[31m-    );[m
+[31m-  });[m
+[31m-[m
+[31m-  it('renders 3D camera section only in 3D', () => {[m
+[31m-    const { rerender } = render(<BattleHudSettingsModal onClose={vi.fn()} onOpenHelp={vi.fn()} is3D />);[m
+[31m-    expect(screen.getByText('battle.hud.camera.title')).toBeInTheDocument();[m
+[31m-[m
+[31m-    rerender(<BattleHudSettingsModal onClose={vi.fn()} onOpenHelp={vi.fn()} is3D={false} />);[m
+[31m-    expect(screen.queryByText('battle.hud.camera.title')).toBeNull();[m
+[31m-  });[m
+[31m-[m
+[31m-  it('toggles followActive3D', () => {[m
+[31m-    const setFollowActive3D = vi.fn();[m
+[31m-    vi.mocked(useBattleStore).mockImplementation((selector: any) =>[m
+[31m-      selector({[m
+[31m-        battle: {[m
+[31m-          participants: [{ id: 'char1', type: 'character', name: 'Rook', position: { x: 0, y: 0 }, status: 'active' }],[m
+[31m-          activeParticipantId: 'char1',[m
+[31m-        },[m
+[31m-        selectedParticipantId: null,[m
+[31m-        followActive3D: false,[m
+[31m-        actions: {[m
+[31m-          requestCameraFocusOn: vi.fn(),[m
+[31m-          requestCameraReset: vi.fn(),[m
+[31m-          setFollowActive3D,[m
+[31m-        },[m
+[31m-      })[m
+[31m-    );[m
+[31m-[m
+[31m-    render(<BattleHudSettingsModal onClose={vi.fn()} onOpenHelp={vi.fn()} is3D />);[m
+[31m-    fireEvent.click(screen.getByText('battle.hud.camera.followActive'));[m
+[31m-    expect(setFollowActive3D).toHaveBeenCalledWith(true);[m
+[31m-  });[m
+[31m-[m
+[31m-  it('renders help button', () => {[m
+[31m-    render(<BattleHudSettingsModal onClose={vi.fn()} onOpenHelp={vi.fn()} is3D />);[m
+[31m-    expect(screen.getByText('battle.help.open')).toBeInTheDocument();[m
+[31m-  });[m
+[31m-});[m
+[1mdiff --git a/components/battle/BattleHudSettingsModal.tsx b/components/battle/BattleHudSettingsModal.tsx[m
+[1mdeleted file mode 100644[m
+[1mindex e885070..0000000[m
+[1m--- a/components/battle/BattleHudSettingsModal.tsx[m
+[1m+++ /dev/null[m
+[36m@@ -1,300 +0,0 @@[m
+[31m-import React from 'react';[m
+[31m-import Modal from '@/components/ui/Modal';[m
+[31m-import Card from '@/components/ui/Card';[m
+[31m-import Button from '@/components/ui/Button';[m
+[31m-import { useBattleStore, useHudStore } from '@/stores';[m
+[31m-import { useSettingsStore } from '@/stores/settingsStore';[m
+[31m-import { useShallow } from 'zustand/react/shallow';[m
+[31m-import { useTranslation } from '@/i18n';[m
+[31m-[m
+[31m-interface BattleHudSettingsModalProps {[m
+[31m-  onClose: () => void;[m
+[31m-  onOpenHelp: () => void;[m
+[31m-  is3D: boolean;[m
+[31m-}[m
+[31m-[m
+[31m-const BattleHudSettingsModal: React.FC<BattleHudSettingsModalProps> = ({ onClose, onOpenHelp, is3D }) => {[m
+[31m-  const { t } = useTranslation();[m
+[31m-  const { preset, panels, density, autoHideSecondaryPanels, applyPreset, togglePanel, setDensity, setAutoHideSecondaryPanels, reset } = useHudStore([m
+[31m-    useShallow((state) => ({[m
+[31m-      preset: state.preset,[m
+[31m-      panels: state.panels,[m
+[31m-      density: state.density,[m
+[31m-      autoHideSecondaryPanels: state.autoHideSecondaryPanels,[m
+[31m-      applyPreset: state.actions.applyPreset,[m
+[31m-      togglePanel: state.actions.togglePanel,[m
+[31m-      setDensity: state.actions.setDensity,[m
+[31m-      setAutoHideSecondaryPanels: state.actions.setAutoHideSecondaryPanels,[m
+[31m-      reset: state.actions.reset,[m
+[31m-    }))[m
+[31m-  );[m
+[31m-[m
+[31m-  const { battle, selectedParticipantId, activeParticipantId, followActive3D, requestCameraFocusOn, requestCameraReset, setFollowActive3D } =[m
+[31m-    useBattleStore([m
+[31m-      useShallow((state) => ({[m
+[31m-        battle: state.battle,[m
+[31m-        selectedParticipantId: state.selectedParticipantId,[m
+[31m-        activeParticipantId: state.battle?.activeParticipantId ?? null,[m
+[31m-        followActive3D: state.followActive3D,[m
+[31m-        requestCameraFocusOn: state.actions.requestCameraFocusOn,[m
+[31m-        requestCameraReset: state.actions.requestCameraReset,[m
+[31m-        setFollowActive3D: state.actions.setFollowActive3D,[m
+[31m-      }))[m
+[31m-    );[m
+[31m-[m
+[31m-  const focusSelectedOrActive = () => {[m
+[31m-    if (!battle) return;[m
+[31m-    const selected = selectedParticipantId ? battle.participants.find((p) => p.id === selectedParticipantId) : null;[m
+[31m-    const active = activeParticipantId ? battle.participants.find((p) => p.id === activeParticipantId) : null;[m
+[31m-    const target = selected ?? active;[m
+[31m-    if (!target) return;[m
+[31m-    requestCameraFocusOn(target.position);[m
+[31m-  };[m
+[31m-[m
+[31m-  const {[m
+[31m-    reducedMotion,[m
+[31m-    reducedVfx,[m
+[31m-    threeQuality,[m
+[31m-    camera3dPreset,[m
+[31m-    camera3dInvertWheel,[m
+[31m-    camera3dZoomSpeed,[m
+[31m-    camera3dPanSpeed,[m
+[31m-    camera3dRotateSpeed,[m
+[31m-    toggleReducedMotion,[m
+[31m-    toggleReducedVfx,[m
+[31m-    setThreeQuality,[m
+[31m-    setCamera3dPreset,[m
+[31m-    setCamera3dInvertWheel,[m
+[31m-    setCamera3dZoomSpeed,[m
+[31m-    setCamera3dPanSpeed,[m
+[31m-    setCamera3dRotateSpeed,[m
+[31m-    resetCamera3D,[m
+[31m-  } = useSettingsStore([m
+[31m-    useShallow((state) => ({[m
+[31m-      reducedMotion: state.reducedMotion,[m
+[31m-      reducedVfx: state.reducedVfx,[m
+[31m-      threeQuality: state.threeQuality,[m
+[31m-      camera3dPreset: state.camera3dPreset,[m
+[31m-      camera3dInvertWheel: state.camera3dInvertWheel,[m
+[31m-      camera3dZoomSpeed: state.camera3dZoomSpeed,[m
+[31m-      camera3dPanSpeed: state.camera3dPanSpeed,[m
+[31m-      camera3dRotateSpeed: state.camera3dRotateSpeed,[m
+[31m-      toggleReducedMotion: state.actions.toggleReducedMotion,[m
+[31m-      toggleReducedVfx: state.actions.toggleReducedVfx,[m
+[31m-      setThreeQuality: state.actions.setThreeQuality,[m
+[31m-      setCamera3dPreset: state.actions.setCamera3dPreset,[m
+[31m-      setCamera3dInvertWheel: state.actions.setCamera3dInvertWheel,[m
+[31m-      setCamera3dZoomSpeed: state.actions.setCamera3dZoomSpeed,[m
+[31m-      setCamera3dPanSpeed: state.actions.setCamera3dPanSpeed,[m
+[31m-      setCamera3dRotateSpeed: state.actions.setCamera3dRotateSpeed,[m
+[31m-      resetCamera3D: state.actions.resetCamera3D,[m
+[31m-    }))[m
+[31m-  );[m
+[31m-[m
+[31m-  return ([m
+[31m-    <Modal onClose={onClose} title={t('battle.hud.title')}>[m
+[31m-      <Card className="w-full sm:max-w-lg bg-surface-overlay !p-0">[m
+[31m-        <div className="p-6 space-y-6">[m
+[31m-          <div className="space-y-2">[m
+[31m-            <div className="text-text-muted text-sm">{t('battle.hud.presets')}</div>[m
+[31m-            <div className="flex flex-wrap gap-2">[m
+[31m-              <Button variant="secondary" selected={preset === 'full'} onClick={() => applyPreset('full')}>[m
+[31m-                {t('battle.hud.presetFull')}[m
+[31m-              </Button>[m
+[31m-              <Button variant="secondary" selected={preset === 'tactical'} onClick={() => applyPreset('tactical')}>[m
+[31m-                {t('battle.hud.presetTactical')}[m
+[31m-              </Button>[m
+[31m-              <Button variant="secondary" selected={preset === 'minimal'} onClick={() => applyPreset('minimal')}>[m
+[31m-                {t('battle.hud.presetMinimal')}[m
+[31m-              </Button>[m
+[31m-              <Button variant="secondary" selected={preset === 'spectator'} onClick={() => applyPreset('spectator')}>[m
+[31m-                {t('battle.hud.presetSpectator')}[m
+[31m-              </Button>[m
+[31m-              <Button variant="secondary" onClick={() => reset()}>[m
+[31m-                {t('battle.hud.reset')}[m
+[31m-              </Button>[m
+[31m-            </div>[m
+[31m-          </div>[m
+[31m-[m
+[31m-          <div className="space-y-2">[m
+[31m-            <div className="text-text-muted text-sm">{t('battle.hud.density')}</div>[m
+[31m-            <div className="flex flex-wrap gap-2">[m
+[31m-              <Button variant="secondary" selected={density === 'normal'} onClick={() => setDensity('normal')}>[m
+[31m-                {t('battle.hud.normal')}[m
+[31m-              </Button>[m
+[31m-              <Button variant="secondary" selected={density === 'compact'} onClick={() => setDensity('compact')}>[m
+[31m-                {t('battle.hud.compact')}[m
+[31m-              </Button>[m
+[31m-            </div>[m
+[31m-          </div>[m
+[31m-[m
+[31m-          <div className="space-y-2">[m
+[31m-            <div className="text-text-muted text-sm">{t('battle.hud.panels')}</div>[m
+[31m-            <div className="grid grid-cols-2 gap-2">[m
+[31m-              <Button variant="secondary" selected={panels.queue} onClick={() => togglePanel('queue')}>[m
+[31m-                {t('battle.hud.queue')}[m
+[31m-              </Button>[m
+[31m-              <Button variant="secondary" selected={panels.mission} onClick={() => togglePanel('mission')}>[m
+[31m-                {t('battle.hud.mission')}[m
+[31m-              </Button>[m
+[31m-              <Button variant="secondary" selected={panels.status} onClick={() => togglePanel('status')}>[m
+[31m-                {t('battle.hud.status')}[m
+[31m-              </Button>[m
+[31m-              <Button variant="secondary" selected={panels.actions} onClick={() => togglePanel('actions')}>[m
+[31m-                {t('battle.hud.actions')}[m
+[31m-              </Button>[m
+[31m-              <Button variant="secondary" selected={panels.log} onClick={() => togglePanel('log')}>[m
+[31m-                {t('battle.hud.log')}[m
+[31m-              </Button>[m
+[31m-            </div>[m
+[31m-          </div>[m
+[31m-[m
+[31m-          <div className="space-y-2">[m
+[31m-            <div className="text-text-muted text-sm">{t('battle.hud.behavior')}</div>[m
+[31m-            <div className="flex flex-wrap gap-2">[m
+[31m-              <Button[m
+[31m-                variant="secondary"[m
+[31m-                selected={autoHideSecondaryPanels}[m
+[31m-                onClick={() => setAutoHideSecondaryPanels(!autoHideSecondaryPanels)}[m
+[31m-              >[m
+[31m-                {t('battle.hud.autoHideSecondary')}[m
+[31m-              </Button>[m
+[31m-            </div>[m
+[31m-          </div>[m
+[31m-[m
+[31m-          <div className="space-y-2">[m
+[31m-            <div className="text-text-muted text-sm">{t('battle.hud.hotkeys')}</div>[m
+[31m-            <div className="text-sm text-text-base">[m
+[31m-              {t('battle.hud.hotkeysHint')}[m
+[31m-            </div>[m
+[31m-            <div>[m
+[31m-              <Button variant="secondary" onClick={onOpenHelp}>[m
+[31m-                {t('battle.help.open')}[m
+[31m-              </Button>[m
+[31m-            </div>[m
+[31m-          </div>[m
+[31m-[m
+[31m-          <div className="space-y-2">[m
+[31m-            <div className="text-text-muted text-sm">{t('battle.hud.performance.title')}</div>[m
+[31m-            <div className="flex flex-wrap gap-2">[m
+[31m-              <Button variant="secondary" selected={reducedMotion} onClick={() => toggleReducedMotion()}>[m
+[31m-                {t('battle.hud.performance.reducedMotion')}[m
+[31m-              </Button>[m
+[31m-              <Button variant="secondary" selected={reducedVfx} onClick={() => toggleReducedVfx()}>[m
+[31m-                {t('battle.hud.performance.reducedVfx')}[m
+[31m-              </Button>[m
+[31m-            </div>[m
+[31m-          </div>[m
+[31m-[m
+[31m-          {is3D && ([m
+[31m-            <div className="space-y-2">[m
+[31m-              <div className="text-text-muted text-sm">{t('battle.hud.camera.title')}</div>[m
+[31m-              <div className="flex flex-wrap gap-2">[m
+[31m-                <Button variant="secondary" onClick={() => setFollowActive3D(!followActive3D)} selected={followActive3D}>[m
+[31m-                  {t('battle.hud.camera.followActive')}[m
+[31m-                </Button>[m
+[31m-                <Button variant="secondary" onClick={focusSelectedOrActive}>[m
+[31m-                  {t('battle.hud.camera.focus')}[m
+[31m-                </Button>[m
+[31m-                <Button variant="secondary" onClick={() => requestCameraReset()}>[m
+[31m-                  {t('battle.hud.camera.reset')}[m
+[31m-                </Button>[m
+[31m-              </div>[m
+[31m-              <div className="space-y-2">[m
+[31m-                <div className="text-text-muted text-xs">{t('battle.hud.camera.quality')}</div>[m
+[31m-                <div className="flex flex-wrap gap-2">[m
+[31m-                  <Button variant="secondary" selected={threeQuality === 'low'} onClick={() => setThreeQuality('low')}>[m
+[31m-                    {t('battle.hud.camera.qualityLow')}[m
+[31m-                  </Button>[m
+[31m-                  <Button variant="secondary" selected={threeQuality === 'medium'} onClick={() => setThreeQuality('medium')}>[m
+[31m-                    {t('battle.hud.camera.qualityMedium')}[m
+[31m-                  </Button>[m
+[31m-                  <Button variant="secondary" selected={threeQuality === 'high'} onClick={() => setThreeQuality('high')}>[m
+[31m-                    {t('battle.hud.camera.qualityHigh')}[m
+[31m-                  </Button>[m
+[31m-                </div>[m
+[31m-              </div>[m
+[31m-              <div className="flex flex-wrap gap-2">[m
+[31m-                <Button[m
+[31m-                  variant="secondary"[m
+[31m-                  selected={camera3dPreset === 'tactical'}[m
+[31m-                  onClick={() => setCamera3dPreset('tactical')}[m
+[31m-                >[m
+[31m-                  {t('battle.hud.camera.presetTactical')}[m
+[31m-                </Button>[m
+[31m-                <Button[m
+[31m-                  variant="secondary"[m
+[31m-                  selected={camera3dPreset === 'cinematic'}[m
+[31m-                  onClick={() => setCamera3dPreset('cinematic')}[m
+[31m-                >[m
+[31m-                  {t('battle.hud.camera.presetCinematic')}[m
+[31m-                </Button>[m
+[31m-                <Button[m
+[31m-                  variant="secondary"[m
+[31m-                  selected={camera3dInvertWheel}[m
+[31m-                  onClick={() => setCamera3dInvertWheel(!camera3dInvertWheel)}[m
+[31m-                >[m
+[31m-                  {t('battle.hud.camera.invertWheel')}[m
+[31m-                </Button>[m
+[31m-                <Button variant="secondary" onClick={() => resetCamera3D()}>[m
+[31m-                  {t('battle.hud.camera.resetSettings')}[m
+[31m-                </Button>[m
+[31m-              </div>[m
+[31m-              <div className="space-y-2">[m
+[31m-                <div className="grid grid-cols-1 gap-2">[m
+[31m-                  <div className="flex items-center gap-3">[m
+[31m-                    <div className="w-28 text-xs text-text-muted">{t('battle.hud.camera.zoomSpeed')}</div>[m
+[31m-                    <input[m
+[31m-                      className="flex-1"[m
+[31m-                      type="range"[m
+[31m-                      min={0.5}[m
+[31m-                      max={3}[m
+[31m-                      step={0.1}[m
+[31m-                      value={camera3dZoomSpeed}[m
+[31m-                      onChange={(e) => setCamera3dZoomSpeed(parseFloat(e.target.value))}[m
+[31m-                    />[m
+[31m-                    <div className="w-10 text-xs text-text-base tabular-nums text-right">{camera3dZoomSpeed.toFixed(1)}</div>[m
+[31m-                  </div>[m
+[31m-                  <div className="flex items-center gap-3">[m
+[31m-                    <div className="w-28 text-xs text-text-muted">{t('battle.hud.camera.panSpeed')}</div>[m
+[31m-                    <input[m
+[31m-                      className="flex-1"[m
+[31m-                      type="range"[m
+[31m-                      min={0.5}[m
+[31m-                      max={3}[m
+[31m-                      step={0.1}[m
+[31m-                      value={camera3dPanSpeed}[m
+[31m-                      onChange={(e) => setCamera3dPanSpeed(parseFloat(e.target.value))}[m
+[31m-                    />[m
+[31m-                    <div className="w-10 text-xs text-text-base tabular-nums text-right">{camera3dPanSpeed.toFixed(1)}</div>[m
+[31m-                  </div>[m
+[31m-                  <div className="flex items-center gap-3">[m
+[31m-                    <div className="w-28 text-xs text-text-muted">{t('battle.hud.camera.rotateSpeed')}</div>[m
+[31m-                    <input[m
+[31m-                      className="flex-1"[m
+[31m-                      type="range"[m
+[31m-                      min={0.5}[m
+[31m-                      max={3}[m
+[31m-                      step={0.1}[m
+[31m-                      value={camera3dRotateSpeed}[m
+[31m-                      onChange={(e) => setCamera3dRotateSpeed(parseFloat(e.target.value))}[m
+[31m-                    />[m
+[31m-                    <div className="w-10 text-xs text-text-base tabular-nums text-right">{camera3dRotateSpeed.toFixed(1)}</div>[m
+[31m-                  </div>[m
+[31m-                </div>[m
+[31m-              </div>[m
+[31m-              <div className="text-sm text-text-base">[m
+[31m-                {t('battle.hud.camera.controlsHint')}[m
+[31m-              </div>[m
+[31m-            </div>[m
+[31m-          )}[m
+[31m-        </div>[m
+[31m-        <div className="border-t border-border px-6 py-4 flex justify-end">[m
+[31m-          <Button onClick={onClose}>{t('battle.hud.close')}</Button>[m
+[31m-        </div>[m
+[31m-      </Card>[m
+[31m-    </Modal>[m
+[31m-  );[m
+[31m-};[m
+[31m-[m
+[31m-export default BattleHudSettingsModal;[m
+[1mdiff --git a/components/battle/BattleLog.test.tsx b/components/battle/BattleLog.test.tsx[m
+[1mindex 5352550..1aa9cbb 100644[m
+[1m--- a/components/battle/BattleLog.test.tsx[m
+[1m+++ b/components/battle/BattleLog.test.tsx[m
+[36m@@ -1,5 +1,5 @@[m
+ import React from 'react';[m
+[31m-import { render, screen, fireEvent } from '@testing-library/react';[m
+[32m+[m[32mimport { render, screen } from '@testing-library/react';[m
+ import { describe, it, expect, vi } from 'vitest';[m
+ import BattleLog from './BattleLog';[m
+ [m
+[36m@@ -36,28 +36,4 @@[m [mdescribe('BattleLog', () => {[m
+     render(<BattleLog log={log as any} />);[m
+     expect(screen.getByText('log.action.shoots')).toBeInTheDocument();[m
+   });[m
+[31m-[m
+[31m-  it('filters entries by category', () => {[m
+[31m-    const log = [[m
+[31m-      '--- Round 1 ---',[m
+[31m-      { key: 'log.action.shoots', params: { attacker: 'Rook' } },[m
+[31m-      { key: 'log.info.hit', params: {} },[m
+[31m-    ];[m
+[31m-[m
+[31m-    render(<BattleLog log={log as any} embedded />);[m
+[31m-[m
+[31m-    expect(screen.getByText('--- Round 1 ---')).toBeInTheDocument();[m
+[31m-    expect(screen.getByText('log.action.shoots')).toBeInTheDocument();[m
+[31m-    expect(screen.getByText('log.info.hit')).toBeInTheDocument();[m
+[31m-[m
+[31m-    fireEvent.click(screen.getByText('log.filters.actions'));[m
+[31m-    expect(screen.getByText('log.action.shoots')).toBeInTheDocument();[m
+[31m-    expect(screen.queryByText('log.info.hit')).toBeNull();[m
+[31m-    expect(screen.queryByText('--- Round 1 ---')).toBeNull();[m
+[31m-[m
+[31m-    fireEvent.click(screen.getByText('log.filters.info'));[m
+[31m-    expect(screen.queryByText('log.action.shoots')).toBeNull();[m
+[31m-    expect(screen.getByText('log.info.hit')).toBeInTheDocument();[m
+[31m-    expect(screen.getByText('--- Round 1 ---')).toBeInTheDocument();[m
+[31m-  });[m
+ });[m
+[1mdiff --git a/components/battle/BattleLog.tsx b/components/battle/BattleLog.tsx[m
+[1mindex 46a7a47..3cc5b55 100644[m
+[1m--- a/components/battle/BattleLog.tsx[m
+[1m+++ b/components/battle/BattleLog.tsx[m
+[36m@@ -1,4 +1,4 @@[m
+[31m-import React, { useRef, useEffect, useState, useCallback, useMemo } from 'react';[m
+[32m+[m[32mimport React, { useRef, useEffect, useState } from 'react';[m
+ import { useVirtualizer } from '@tanstack/react-virtual';[m
+ import { LogEntry, Weapon } from '../../types';[m
+ import { useTranslation } from '../../i18n';[m
+[36m@@ -41,51 +41,6 @@[m [mconst WeaponTooltipContent: React.FC<{ weapon: Weapon }> = ({ weapon }) => {[m
+  */[m
+ type BattleLogProps = {[m
+   log: (string | LogEntry)[];[m
+[31m-  embedded?: boolean;[m
+[31m-  heightClassName?: string;[m
+[31m-};[m
+[31m-[m
+[31m-type BattleLogVirtualizedProps = {[m
+[31m-  log: (string | LogEntry)[];[m
+[31m-  isExpanded: boolean;[m

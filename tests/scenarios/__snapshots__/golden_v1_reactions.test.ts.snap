@@ -1,0 +1,116 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`Golden V1 Reaction System > Reaction Rolls > Scenario 1: Basic Reaction Roll (Success vs Failure) 1`] = `
+[
+  "log.info.reactionRolls",
+  "log.info.reactionSuccess",
+  "log.info.reactionFail",
+]
+`;
+
+exports[`Golden V1 Reaction System > Reaction Rolls > Scenario 1: Basic Reaction Roll (Success vs Failure) 2`] = `
+{
+  "activeId": "c1",
+  "log": [],
+  "mission": {
+    "status": "in_progress",
+    "type": "Patrol",
+  },
+  "participants": [
+    {
+      "actions": 2,
+      "armor": undefined,
+      "effects": [],
+      "id": "c1",
+      "luck": 0,
+      "pos": "0,0",
+      "status": "active",
+      "stun": 0,
+      "taken": "m:0,c:0,d:0,i:0",
+      "type": "character",
+      "weapons": [],
+    },
+    {
+      "actions": 2,
+      "armor": undefined,
+      "effects": [],
+      "id": "c2",
+      "luck": 0,
+      "pos": "0,1",
+      "status": "active",
+      "stun": 0,
+      "taken": "m:0,c:0,d:0,i:0",
+      "type": "character",
+      "weapons": [],
+    },
+  ],
+  "phase": "quick_actions",
+  "reactionRolls": [
+    "c1:1:true",
+    "c2:2:false",
+  ],
+  "round": 1,
+}
+`;
+
+exports[`Golden V1 Reaction System > Reaction Rolls > Scenario 2: Caught Off Guard (Round 1) -> All Fail 1`] = `
+[
+  "log.deployment.caughtOffGuard",
+  "log.info.reactionRolls",
+  "log.info.reactionFail",
+]
+`;
+
+exports[`Golden V1 Reaction System > Reaction Rolls > Scenario 3: Feral Reaction Fumble 1`] = `
+[
+  "log.info.reactionRolls",
+  "log.trait.feralFumble",
+  "log.info.reactionSuccess",
+  "log.info.reactionSuccess",
+]
+`;
+
+exports[`Golden V1 Reaction System > Reaction Rolls > Scenario 3: Feral Reaction Fumble 2`] = `
+{
+  "activeId": "feral",
+  "log": [],
+  "mission": {
+    "status": "in_progress",
+    "type": "Patrol",
+  },
+  "participants": [
+    {
+      "actions": 2,
+      "armor": undefined,
+      "effects": [],
+      "id": "feral",
+      "luck": 0,
+      "pos": "0,0",
+      "status": "active",
+      "stun": 0,
+      "taken": "m:0,c:0,d:0,i:0",
+      "type": "character",
+      "weapons": [],
+    },
+    {
+      "actions": 2,
+      "armor": undefined,
+      "effects": [],
+      "id": "other",
+      "luck": 0,
+      "pos": "0,1",
+      "status": "active",
+      "stun": 0,
+      "taken": "m:0,c:0,d:0,i:0",
+      "type": "character",
+      "weapons": [],
+    },
+  ],
+  "phase": "quick_actions",
+  "reactionRolls": [
+    "feral:1:true",
+    "other:2:true",
+  ],
+  "round": 1,
+}
+`;

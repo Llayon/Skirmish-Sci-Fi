@@ -51,8 +51,10 @@ export const resolveShooting = (
             }
             const potentialNewTargets = battle.participants.filter(p => {
                 const isOpponent = multiplayerRole ? !p.id.startsWith(multiplayerRole) : p.type !== attackerRef!.type;
+                const weaponRange = typeof weapon.range === 'number' ? weapon.range : 0;
                 return isOpponent && p.status !== 'casualty' && p.id !== attackerRef!.id &&
                 distance(p.position, currentTarget.position) <= 3 &&
+                distance(attackerRef!.position, p.position) <= weaponRange &&
                 hasLineOfSight(attackerRef!, p, battle);
             }).sort((a,b) => distance(attackerRef!.position, a.position) - distance(attackerRef!.position, b.position));
 
@@ -131,13 +133,23 @@ export const resolveShooting = (
         }
         
         const defenderArmor = getProtectiveDeviceById(defenderRef.armor);
-        const defenderTraits = defenderArmor?.traits || [];
+        const defenderScreen = getProtectiveDeviceById(defenderRef.screen);
+        const defenderTraits = [
+            ...(defenderArmor?.traits || []),
+            ...(defenderScreen?.traits || [])
+        ];
         const attackerUtilityTraits = attackerRef.type === 'character' ? (attackerRef.utilityDevices || []).flatMap(dId => getUtilityDeviceById(dId)?.traits || []) : [];
-        fireHook('onShootingRoll', shootingContext, [...weapon.traits, ...defenderTraits, ...attackerUtilityTraits]);
+        const allTraits = [...weapon.traits, ...defenderTraits, ...attackerUtilityTraits];
+
+        // Phase 1: Pre-hit modifications (priority < 200)
+        fireHook('onShootingRoll', shootingContext, allTraits, { max: 200 });
 
         shootingContext.roll.final = shootingContext.roll.base + shootingContext.roll.bonus;
         shootingContext.roll.isHit = shootingContext.roll.final >= shootingContext.roll.targetNumber;
         
+        // Phase 2: Post-hit effects like critical, overheat (priority >= 200)
+        fireHook('onShootingRoll', shootingContext, allTraits, { min: 200 });
+
         logEntries.push({ key: 'log.info.targetNumber', params: { targetNum: shootingContext.roll.targetNumber, reason: reasonKey }});
         logEntries.push({ key: 'log.info.rollInfo', params: { roll: shootingContext.roll.base, reroll: shootingContext.roll.rerolledText, combat: attackerRef.stats.combat, bonus: shootingContext.roll.bonus - attackerRef.stats.combat, total: shootingContext.roll.final }});
         
@@ -149,7 +161,10 @@ export const resolveShooting = (
                 let currentDefenderForHit = battle.participants.find(p => p.id === defenderRef!.id);
                 if (!currentDefenderForHit || currentDefenderForHit.status === 'casualty') break;
 
-                const weaponForHit = { ...weapon };
+                const weaponForHit: Weapon = { 
+                    ...weapon,
+                    traits: [...weapon.traits]
+                };
                 if (weaponForHit.traits.includes('shock_attachment_impact') && distance(attackerRef.position, defenderRef.position) <= 8) {
                     weaponForHit.traits.push('impact');
                 }

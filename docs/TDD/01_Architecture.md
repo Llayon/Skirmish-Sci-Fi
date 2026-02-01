@@ -23,7 +23,7 @@
 │   (Business Rules: shooting, damage, brawling)       │
 ├─────────────────────────────────────────────────────┤
 │              Infrastructure Layer                    │
-│   (PeerJS, LocalStorage, Gemini API)                 │
+│   (PeerJS, LocalStorage)                             │
 └─────────────────────────────────────────────────────┘
 ```
 
@@ -60,7 +60,6 @@ graph TD
     subgraph Infra["Infrastructure"]
         P[PeerJS Service]
         Q[LocalStorage]
-        R[Gemini API]
     end
     
     A --> B & C & D & E
@@ -69,7 +68,6 @@ graph TD
     G --> K & L & M & N & O
     E --> I --> P
     F --> Q
-    D --> R
 ```
 
 ---

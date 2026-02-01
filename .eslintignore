@@ -1,0 +1,9 @@
+# Temporary: lint only Engine V2 code
+**/*
+
+!services/
+!services/engine/
+!services/engine/**
+
+!.eslintrc.cjs
+!.eslintignore

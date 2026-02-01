@@ -1,7 +1,7 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { createTestCharacter, createTestEnemy, createMinimalBattle } from '../../fixtures/battleFixtures';
 import { resolveShooting } from '@/services/rules/shooting';
-import * as gridUtils from '@/services/gridUtils';
+// import * as gridUtils from '@/services/gridUtils'; // Removed as per constraint
 import { mockRng } from '../../helpers/mockRng';
 import { createMockRngScriptRecorder } from '../../helpers/mockRngRecorder';
 import { createBattleSignature } from '../../helpers/battleSignature';
@@ -43,14 +43,6 @@ describe('Parity: Shooting (Vertical Slice)', () => {
     vi.restoreAllMocks();
     vi.clearAllMocks();
     mockRng.reset();
-    // We allow findPushbackPosition to run normally to match Engine V2's pure implementation
-    // But we mock it to ensure it behaves deterministically and mirrors our V2 logic for this test
-    vi.spyOn(gridUtils, 'findPushbackPosition').mockImplementation((targetPos, sourcePos) => {
-        const dx = targetPos.x - sourcePos.x;
-        const dy = targetPos.y - sourcePos.y;
-        // Simple pure pushback logic for test parity
-        return { x: targetPos.x + Math.sign(dx), y: targetPos.y + Math.sign(dy) };
-    });
   });
 
   it('Scenario 1: Basic Shooting MISS', () => {
@@ -174,7 +166,12 @@ describe('Parity: Shooting (Vertical Slice)', () => {
         // No implants
     });
     
-    const baselineBattle = createMinimalBattle({ participants: [attacker, target] });
+    const baselineBattle = createMinimalBattle({ 
+        participants: [attacker, target]
+    });
+    // Explicitly set grid/terrain to ensure pushback is valid regardless of fixture defaults
+    baselineBattle.gridSize = { width: 10, height: 10 };
+    baselineBattle.terrain = [];
     baselineBattle.phase = 'quick_actions';
 
     const battleV1 = structuredClone(baselineBattle);
@@ -218,7 +215,14 @@ describe('Parity: Shooting (Vertical Slice)', () => {
     expect(targetV1?.stunTokens).toBe(1);
     expect(targetV1?.status).toBe('stunned');
     
-    // Ensure position changed (pushback enabled)
+    // Ensure Pushback Happened in V1
+    const pushedLog = logsV1.find(l => typeof l !== 'string' && l.key === 'log.info.pushedBack');
+    expect(pushedLog, 'V1 should produce a PushedBack log').toBeDefined();
+    
+    const notPushedLog = logsV1.find(l => typeof l !== 'string' && l.key === 'log.info.notPushedBack');
+    expect(notPushedLog, 'V1 should NOT produce a NotPushedBack log').toBeUndefined();
+
+    // Verify V1 Position Change
     expect(targetV1?.position).toEqual({ x: 0, y: 6 });
 
     // 3. Run V2 (Replay)
@@ -249,6 +253,7 @@ describe('Parity: Shooting (Vertical Slice)', () => {
     const sigV1 = createBattleSignature(battleV1);
     const sigV2 = createBattleSignature(result.next.battle);
     
+    // Signatures MUST match without manual patching
     expect(sigV1).toEqual(sigV2);
     
     // Check Events
@@ -258,6 +263,16 @@ describe('Parity: Shooting (Vertical Slice)', () => {
         expect(resolvedEvent.hit).toBe(true);
         expect(resolvedEvent.roll).toBe(6);
     }
+    
+    // Check V2 Moved Event
+    const movedEvent = result.events.find(e => e.type === 'PARTICIPANT_MOVED');
+    expect(movedEvent).toBeDefined();
+    expect(movedEvent).toMatchObject({
+        type: 'PARTICIPANT_MOVED',
+        participantId: 'tgt_hit',
+        from: { x: 0, y: 5 },
+        to: { x: 0, y: 6 }
+    });
 
     // Check TN Parity
     const tnLogV1 = logsV1.find(l => typeof l !== 'string' && l.key === 'log.info.targetNumber');
