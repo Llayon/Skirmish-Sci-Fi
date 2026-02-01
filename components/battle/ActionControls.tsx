@@ -59,6 +59,7 @@ const ActionControls: React.FC<ActionControlsProps> = ({ participant, battleLogi
   const isFrozenWorld = battle!.worldTraits?.some(trait => trait.id === 'frozen');
   const isNullZone = battle!.worldTraits?.some(trait => trait.id === 'null_zone');
 
+  // V2 Pending Logic: if engine is waiting for ACK, block ALL controls to prevent desync
   const isPending = pendingActionFor === participant.id || !!engineNetPending;
 
   const enemies = useMemo(() =>
