@@ -11,8 +11,8 @@ import type { ActionMiddleware } from './types';
 
 
 const resolveMoveAction = (battle: Battle, action: Extract<PlayerAction, { type: 'move' }>): LogEntry[] => {
-    let tempLog: LogEntry[] = [];
-    let charToUpdate = battle.participants.find(p => p.id === action.payload.characterId);
+    const tempLog: LogEntry[] = [];
+    const charToUpdate = battle.participants.find(p => p.id === action.payload.characterId);
     
     if (!charToUpdate) return [];
 
@@ -46,8 +46,8 @@ const resolveMoveAction = (battle: Battle, action: Extract<PlayerAction, { type:
 };
 
 const resolveTeleportAction = (battle: Battle, action: Extract<PlayerAction, { type: 'teleport' }>): LogEntry[] => {
-    let tempLog: LogEntry[] = [];
-    let charToUpdate = battle.participants.find(p => p.id === action.payload.characterId);
+    const tempLog: LogEntry[] = [];
+    const charToUpdate = battle.participants.find(p => p.id === action.payload.characterId);
     
     if (!charToUpdate) return [];
 
@@ -139,8 +139,8 @@ const resolveUseConsumableAction = (battle: Battle, action: Extract<PlayerAction
     const consumable = getConsumableById(action.payload.consumableId);
     if (!consumable) return [];
     
-    let tempLog: LogEntry[] = [{ key: 'log.playerPhase.usesConsumable', params: { name: '', consumable: action.payload.consumableId } }];
-    let user = battle.participants.find(p => p.id === action.payload.characterId);
+    const tempLog: LogEntry[] = [{ key: 'log.playerPhase.usesConsumable', params: { name: '', consumable: action.payload.consumableId } }];
+    const user = battle.participants.find(p => p.id === action.payload.characterId);
     
     if (!user || user.type !== 'character') return [];
     
@@ -206,7 +206,7 @@ const resolveUseConsumableAction = (battle: Battle, action: Extract<PlayerAction
 };
 
 const resolveInteractAction = (battle: Battle, action: Extract<PlayerAction, { type: 'interact' }>): LogEntry[] => {
-    let logs: LogEntry[] = [];
+    const logs: LogEntry[] = [];
     const interactor = battle.participants.find(p => p.id === action.payload.characterId);
     if (!interactor || interactor.type !== 'character') return [];
     
@@ -374,7 +374,7 @@ const resolveEndTurnAction = (battle: Battle, action: Extract<PlayerAction, { ty
 
 const resolveRollInitiativeAction = (battle: Battle, multiplayerRole: MultiplayerRole | null): LogEntry[] => {
     const isMultiplayer = !!battle.firstPlayerRole;
-    let tempLog: LogEntry[] = [];
+    const tempLog: LogEntry[] = [];
     
     let roleToRollFor: MultiplayerRole | undefined;
 
@@ -489,7 +489,7 @@ export const applyEnemyAction = (battle: Battle, enemyId: string, actionPlan: AI
     const enemy = battle.participants.find(p => p.id === enemyId);
     if (!enemy) return [];
 
-    let logs: LogEntry[] = [];
+    const logs: LogEntry[] = [];
     const wasStunned = enemy.status === 'stunned';
 
     switch(actionPlan.type) {

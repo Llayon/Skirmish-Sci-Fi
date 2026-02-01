@@ -24,7 +24,7 @@ export const resolveShooting = (
     isAreaBonusShot: boolean = false,
     multiplayerRole: MultiplayerRole | null
 ): LogEntry[] => {
-    let logEntries: LogEntry[] = [];
+    const logEntries: LogEntry[] = [];
     let volleyEndedEarly = false;
     
     if (!isAreaBonusShot) {
@@ -39,7 +39,7 @@ export const resolveShooting = (
     for (let i = 0; i < weapon.shots; i++) {
         if (volleyEndedEarly) break;
 
-        let attackerRef = battle.participants.find(p => p.id === attacker.id);
+        const attackerRef = battle.participants.find(p => p.id === attacker.id);
         if (!attackerRef || attackerRef.status === 'casualty') break;
 
         let defenderRef = battle.participants.find(p => p.id === currentTarget.id);
@@ -146,7 +146,7 @@ export const resolveShooting = (
             for (let h = 0; h < shootingContext.hitsToResolve; h++) {
                 if (volleyEndedEarly) break;
 
-                let currentDefenderForHit = battle.participants.find(p => p.id === defenderRef!.id);
+                const currentDefenderForHit = battle.participants.find(p => p.id === defenderRef!.id);
                 if (!currentDefenderForHit || currentDefenderForHit.status === 'casualty') break;
 
                 const weaponForHit = { ...weapon };

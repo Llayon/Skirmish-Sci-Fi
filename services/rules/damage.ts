@@ -82,7 +82,7 @@ export const applyHitAndSaves = (
     isRanged: boolean,
 ): LogEntry[] => {
     
-    let logEntries: LogEntry[] = [];
+    const logEntries: LogEntry[] = [];
     
     // 0. LUCK ROLL (before any other effects)
     if (target.currentLuck > 0) {

@@ -37,7 +37,7 @@ export const setupBattle = async (
         forceTerrainTheme?: TerrainTheme;
     } = {}
 ): Promise<Battle> => {
-    let participants: BattleParticipant[] = [];
+    const participants: BattleParticipant[] = [];
 
     // Shuffle portraits for this battle
     PORTRAITS.sort(() => Math.random() - 0.5);
@@ -454,7 +454,7 @@ export const setupMultiplayerBattle = async (
     hostCrew: Crew,
     guestCrew: Crew
 ): Promise<Battle> => {
-    let participants: BattleParticipant[] = [];
+    const participants: BattleParticipant[] = [];
 
     const terrain = generateTerrain('Industrial', BATTLE_GRID_SIZE);
 

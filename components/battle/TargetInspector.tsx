@@ -16,7 +16,7 @@ const TargetInspector: React.FC<TargetInspectorProps> = ({ participant, pinned }
   const { t } = useTranslation();
   const isOpponent = participant.type === 'enemy';
 
-  let name = participant.type === 'character' ? sanitizeToText(participant.name) : t(`enemies.${participant.name.split(' #')[0]}`) + ` #${participant.name.split(' #')[1]}`;
+  const name = participant.type === 'character' ? sanitizeToText(participant.name) : t(`enemies.${participant.name.split(' #')[0]}`) + ` #${participant.name.split(' #')[1]}`;
 
   const getStatusText = () => {
     if (participant.status === 'stunned') return t('battle.infoPanel.status.stunned', { tokens: participant.stunTokens });

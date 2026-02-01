@@ -308,7 +308,7 @@ const featureGenerators: Record<FeatureType, (rect: Rect, existing: Terrain[]) =
 
 export const generateTerrain = (theme: TerrainTheme, gridSize: { width: number; height: number }, worldTraits: WorldTrait[] = []): Terrain[] => {
     terrainIdCounter = 0;
-    let terrain: Terrain[] = [];
+    const terrain: Terrain[] = [];
     const themeGenerator = TERRAIN_THEME_GENERATORS[theme];
 
     // Step 1: Define Quarters

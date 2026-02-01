@@ -125,7 +125,7 @@ export const useBattleDerivedData = (uiState: PlayerActionUIState, hoveredPos: P
         const visibleOpponents = opponents.filter(e => hasLineOfSight(characterPerformingAction, e, battleForCover as any));
 
         if (visibleOpponents.length > 0) {
-          let closestOpponent = visibleOpponents.reduce((closest, opp) => distance(characterPerformingAction.position, opp.position) < distance(characterPerformingAction.position, closest.position) ? opp : closest);
+          const closestOpponent = visibleOpponents.reduce((closest, opp) => distance(characterPerformingAction.position, opp.position) < distance(characterPerformingAction.position, closest.position) ? opp : closest);
           for (const posKey of reachableCells.keys()) {
             const [xStr, yStr] = posKey.split(',');
             const pos = { x: parseInt(xStr, 10), y: parseInt(yStr, 10) };

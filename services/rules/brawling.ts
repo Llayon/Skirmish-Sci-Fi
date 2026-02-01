@@ -14,7 +14,7 @@ export const resolveBrawling = (
     multiplayerRole: MultiplayerRole | null
 ): LogEntry[] => {
     
-    let log: LogEntry[] = [];
+    const log: LogEntry[] = [];
     let followUpAttackerId: string | null = null;
     let finalLoserId: string | null = null;
     const attackerInitialWeapon = attackerWeaponInstanceId ? BattleDomain.getEffectiveWeapon(attacker, attackerWeaponInstanceId) : undefined;
@@ -40,7 +40,7 @@ export const resolveBrawling = (
         brawlDefender: BattleParticipant,
         isOutnumberedCheck: boolean
     ): { log: LogEntry[], winnerId: string | null, loserId: string | null } => {
-        let roundLog: LogEntry[] = [];
+        const roundLog: LogEntry[] = [];
         let winnerId: string | null = null;
         let loserId: string | null = null;
 
@@ -61,7 +61,7 @@ export const resolveBrawling = (
         
             for (let i = 0; i < hits; i++) {
                 // Re-find the target in the current battle state before each hit to ensure we have the latest data
-                let currentTarget = battle.participants.find(p => p.id === targetId);
+                const currentTarget = battle.participants.find(p => p.id === targetId);
                 if (!currentTarget || currentTarget.status === 'casualty') {
                     return false; // Stop if target is down
                 }

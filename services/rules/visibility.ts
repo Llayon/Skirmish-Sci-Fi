@@ -25,7 +25,7 @@ function isAtEdgeOfArea(position: Position, areaTerrain: Terrain, battle: Battle
         }
     }
     return false;
-};
+}
 
 // Helper function, kept private to the domain
 function chebyshevDistanceToRect(point: Position, rect: {x:number, y:number, width:number, height:number}): number {
@@ -86,7 +86,7 @@ export const hasLineOfSight = (from: BattleParticipant, to: BattleParticipant, b
             if (otherParticipants.some(p => p.position.x === x && p.position.y === y)) return false;
         }
         if (x === x2 && y === y2) break;
-        let e2 = 2 * err;
+        const e2 = 2 * err;
         if (e2 >= dy) { err += dy; x += sx; }
         if (e2 <= dx) { err += dx; y += sy; }
     }
@@ -126,7 +126,7 @@ export const calculateCover = (attacker: BattleParticipant, target: BattlePartic
            if (coverProvidingTerrain.some(t => isPointInTerrain({ x, y }, t))) return true;
         }
         if (x === x2 && y === y2) break;
-        let e2 = 2 * err;
+        const e2 = 2 * err;
         if (e2 >= dy) { err += dy; x += sx; }
         if (e2 <= dx) { err += dx; y += sy; }
     }
