@@ -188,4 +188,69 @@ describe('useConsumable', () => {
         const events = result.events.filter(e => e.type === 'CONSUMABLE_USED');
         expect(events).toHaveLength(1);
     });
+
+    describe('guards (no-op)', () => {
+        it('returns no-op if participant not found', () => {
+            const state = createMockState();
+            const action: BattleAction = {
+                type: 'USE_CONSUMABLE',
+                participantId: 'missing-id',
+                consumableId: 'booster_pills'
+            };
+
+            const result = useConsumable(state, action);
+            expect(result.events).toHaveLength(0);
+            expect(result.log).toHaveLength(0);
+            expect(result.next).toEqual(state);
+        });
+
+        it('returns no-op if participant is not a character', () => {
+            const state = createMockState();
+            state.battle.participants.push({
+                id: 'enemy-1',
+                type: 'enemy',
+                consumables: ['booster_pills']
+            } as any);
+
+            const action: BattleAction = {
+                type: 'USE_CONSUMABLE',
+                participantId: 'enemy-1',
+                consumableId: 'booster_pills'
+            };
+
+            const result = useConsumable(state, action);
+            expect(result.events).toHaveLength(0);
+            expect(result.log).toHaveLength(0);
+            expect(result.next).toEqual(state);
+        });
+
+        it('returns no-op if consumable does not exist', () => {
+            const state = createMockState();
+            const action = {
+                type: 'USE_CONSUMABLE',
+                participantId: 'host-1',
+                consumableId: 'invalid_id'
+            } as unknown as BattleAction; // Explicit cast to unknown first to avoid partial overlap error
+
+            const result = useConsumable(state, action);
+            expect(result.events).toHaveLength(0);
+            expect(result.log).toHaveLength(0);
+            expect(result.next).toEqual(state);
+        });
+
+        it('returns no-op if consumable not in inventory', () => {
+            const state = createMockState();
+            // user only has booster_pills, try to use stim_pack
+            const action: BattleAction = {
+                type: 'USE_CONSUMABLE',
+                participantId: 'host-1',
+                consumableId: 'stim_pack'
+            };
+
+            const result = useConsumable(state, action);
+            expect(result.events).toHaveLength(0);
+            expect(result.log).toHaveLength(0);
+            expect(result.next).toEqual(state);
+        });
+    });
 });
