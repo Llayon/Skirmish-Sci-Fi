@@ -209,14 +209,27 @@ describe('useConsumable', () => {
             state.battle.participants.push({
                 id: 'enemy-1',
                 type: 'enemy',
-                consumables: ['booster_pills']
-            } as any);
+                name: 'Test Enemy',
+                ai: 'Aggressive',
+                stats: { speed: 4, reactions: 3, combat: 3, toughness: 3, savvy: 3, luck: 0 },
+                position: { x: 0, y: 0 },
+                status: 'active',
+                actionsRemaining: 2,
+                actionsTaken: { move: false, combat: false, dash: false, interact: false },
+                stunTokens: 0,
+                currentLuck: 0,
+                activeEffects: [],
+                consumables: ['booster_pills'],
+                consumablesUsedThisTurn: 0,
+                weapons: [],
+                utilityDevices: []
+            });
 
             const action: BattleAction = {
                 type: 'USE_CONSUMABLE',
                 participantId: 'enemy-1',
                 consumableId: 'booster_pills'
-            };
+            } as unknown as BattleAction;
 
             const result = useConsumable(state, action);
             expect(result.events).toHaveLength(0);
