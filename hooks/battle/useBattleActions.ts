@@ -148,9 +148,24 @@ export const useBattleActions = (
     }
   }, [interactionState.uiState, setUiState]);
 
-  const selectInteractAction = useCallback((characterId: string) => {
+  const selectInteractAction = useCallback((characterId: string, targetId?: string) => {
+    const { engineV2Enabled, engineNetPendingClientActionId } = useBattleStore.getState();
+
+    if (engineV2Enabled && engineNetPendingClientActionId) return;
+
+    if (engineV2Enabled && targetId) {
+      const dispatchEngineAction = useBattleStore.getState().actions.dispatchEngineAction;
+      dispatchEngineAction({
+        type: 'INTERACT_OBJECTIVE',
+        participantId: characterId,
+        objectiveId: targetId
+      });
+      cancelAction();
+      return;
+    }
+
     dispatchAction({ type: 'interact', payload: { characterId } });
-  }, [dispatchAction]);
+  }, [dispatchAction, cancelAction]);
 
   const selectTeleportAction = useCallback((characterId: string) => {
     const character = battle.participants.find(p => p.id === characterId);
