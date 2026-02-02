@@ -163,4 +163,29 @@ describe('useConsumable', () => {
         // Check immutability
         expect(kiraninState.battle.participants[1].status).toBe('active');
     });
+
+    it('kiranin_crystals with no targets (range)', () => {
+        const state = createMockState();
+        const user = state.battle.participants[0];
+        user.consumables = ['kiranin_crystals'];
+        
+        // Opponent is far away (> 4)
+        const opponent = state.battle.participants[1];
+        opponent.position = { x: 10, y: 0 }; 
+
+        const action: BattleAction = {
+            type: 'USE_CONSUMABLE',
+            participantId: 'host-1',
+            consumableId: 'kiranin_crystals'
+        };
+
+        const result = useConsumable(state, action);
+        
+        // No status change
+        expect(result.next.battle.participants[1].status).toBe('active');
+        
+        // Still produces 1 event
+        const events = result.events.filter(e => e.type === 'CONSUMABLE_USED');
+        expect(events).toHaveLength(1);
+    });
 });
