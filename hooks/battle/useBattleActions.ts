@@ -179,8 +179,11 @@ export const useBattleActions = (
   }, [setBattle, cancelAction]);
 
   const handleUseConsumable = useCallback((characterId: string, consumableId: string) => {
-    const engineV2Enabled = useBattleStore.getState().engineV2Enabled;
+    const { engineV2Enabled, engineNetPendingClientActionId } = useBattleStore.getState();
     const dispatchEngineAction = useBattleStore.getState().actions.dispatchEngineAction;
+
+    // Guard: Prevent action if engine is waiting for ACK (V2)
+    if (engineNetPendingClientActionId) return;
 
     if (engineV2Enabled) {
       dispatchEngineAction({
