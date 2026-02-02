@@ -109,6 +109,33 @@ describe('useConsumable', () => {
         expect(updatedUser.actionsTaken.combat).toBe(true);
     });
 
+    it('consumes action and ends turn if AP reaches 0', () => {
+        const state = createMockState();
+        // Setup: user has already used 1 consumable and has 1 AP left
+        const user = state.battle.participants[0];
+        user.consumablesUsedThisTurn = 1;
+        user.actionsRemaining = 1;
+        user.consumables = ['booster_pills', 'booster_pills'];
+
+        const action: BattleAction = {
+            type: 'USE_CONSUMABLE',
+            participantId: 'host-1',
+            consumableId: 'booster_pills'
+        };
+
+        const result = useConsumable(state, action);
+        const updatedUser = result.next.battle.participants.find(p => p.id === 'host-1')!;
+
+        // Expect: -1 AP (becomes 0), combat action taken, and full turn ended flags
+        expect(updatedUser.actionsRemaining).toBe(0);
+        expect(updatedUser.consumablesUsedThisTurn).toBe(2);
+        expect(updatedUser.actionsTaken.combat).toBe(true);
+        // Logic: if actionsRemaining <= 0 -> set all actionsTaken to true
+        expect(updatedUser.actionsTaken.move).toBe(true);
+        expect(updatedUser.actionsTaken.dash).toBe(true);
+        expect(updatedUser.actionsTaken.interact).toBe(true);
+    });
+
     it('kiranin_crystals dazes opponents', () => {
         const state = createMockState();
         // Let's create a specific state for this test
