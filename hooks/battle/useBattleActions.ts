@@ -207,7 +207,22 @@ export const useBattleActions = (
   const endTurn = useCallback(() => {
     const activeParticipant = battle.participants.find(p => p.id === battle.activeParticipantId);
     if (activeParticipant) {
-        endTurnAction(activeParticipant.id);
+      const { engineV2Enabled, engineNetPendingClientActionId } = useBattleStore.getState();
+      const dispatchEngineAction = useBattleStore.getState().actions.dispatchEngineAction;
+
+      // Guard: Prevent action if engine is waiting for ACK (V2)
+      if (engineNetPendingClientActionId) return;
+
+      if (engineV2Enabled) {
+        dispatchEngineAction({
+          type: 'END_TURN',
+          participantId: activeParticipant.id
+        });
+        cancelAction();
+        return;
+      }
+
+      endTurnAction(activeParticipant.id);
     }
     cancelAction();
   }, [battle, endTurnAction, cancelAction]);
