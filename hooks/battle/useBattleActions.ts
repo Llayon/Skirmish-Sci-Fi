@@ -226,7 +226,7 @@ export const useBattleActions = (
       const dispatchEngineAction = useBattleStore.getState().actions.dispatchEngineAction;
 
       // Guard: Prevent action if engine is waiting for ACK (V2)
-      if (engineNetPendingClientActionId) return;
+      if (engineV2Enabled && engineNetPendingClientActionId) return;
 
       if (engineV2Enabled) {
         dispatchEngineAction({
