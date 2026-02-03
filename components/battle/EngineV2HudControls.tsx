@@ -27,7 +27,10 @@ export function EngineV2HudControls() {
     <div className="flex flex-wrap gap-2 justify-center mt-2">
       <Button
         disabled={!canRoll}
-        onClick={() => dispatchEngineAction({ type: 'ROLL_INITIATIVE' })}
+        onClick={() => {
+          if (engineNetPendingClientActionId) return;
+          dispatchEngineAction({ type: 'ROLL_INITIATIVE' });
+        }}
         title={t('tooltips.engineV2.rollInitiative')}
         variant="primary"
         className="text-sm py-1 px-3"
@@ -38,7 +41,10 @@ export function EngineV2HudControls() {
 
       <Button
         disabled={!canAdvance}
-        onClick={() => dispatchEngineAction({ type: 'ADVANCE_PHASE' })}
+        onClick={() => {
+          if (engineNetPendingClientActionId) return;
+          dispatchEngineAction({ type: 'ADVANCE_PHASE' });
+        }}
         title={t('tooltips.engineV2.advancePhase')}
         variant="secondary"
         className="text-sm py-1 px-3"
