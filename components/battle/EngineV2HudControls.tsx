@@ -11,6 +11,7 @@ export function EngineV2HudControls() {
   const hasBattle = useBattleStore(s => !!s.battle);
   const hasRng = useBattleStore(s => !!s.rng);
   const dispatchEngineAction = useBattleStore(s => s.actions.dispatchEngineAction);
+  const engineNetPendingClientActionId = useBattleStore(s => s.engineNetPendingClientActionId);
   const multiplayerRole = useMultiplayerStore(s => s.multiplayerRole);
 
   const mpDebug = isEngineV2MpDebugEnabled();
@@ -18,7 +19,7 @@ export function EngineV2HudControls() {
   if (!engineV2Enabled) return null;
   if (multiplayerRole !== null && !mpDebug) return null;
 
-  const disabledBase = !hasBattle || !hasRng;
+  const disabledBase = !hasBattle || !hasRng || !!engineNetPendingClientActionId;
   const canRoll = !disabledBase && phase === 'reaction_roll';
   const canAdvance = !disabledBase && (phase === 'quick_actions' || phase === 'enemy_actions' || phase === 'slow_actions');
 

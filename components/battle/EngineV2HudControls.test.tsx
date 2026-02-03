@@ -124,4 +124,21 @@ describe('EngineV2HudControls', () => {
     expect(rollBtn).toBeDisabled();
     expect(advanceBtn).not.toBeDisabled();
   });
+
+  it('disables all controls when engineNetPendingClientActionId is set (waiting for ACK)', () => {
+    useBattleStore.setState({ 
+      engineV2Enabled: true,
+      battle: { phase: 'quick_actions' } as unknown as Battle,
+      rng: { cursor: 0, seed: 1 } as RngState,
+      engineNetPendingClientActionId: 'pending-action-id'
+    });
+
+    render(<EngineV2HudControls />);
+    
+    const rollBtn = screen.getByTestId('enginev2-roll-initiative');
+    const advanceBtn = screen.getByTestId('enginev2-advance-phase');
+
+    expect(rollBtn).toBeDisabled();
+    expect(advanceBtn).toBeDisabled();
+  });
 });
