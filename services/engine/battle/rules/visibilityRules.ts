@@ -49,3 +49,40 @@ export function hasLineOfSight(
 
     return true;
 }
+
+/**
+ * Calculates if a target has cover from an attacker.
+ * Pure function for Engine V2.
+ */
+export function calculateCover(
+    state: EngineBattleState,
+    attackerPos: Position,
+    targetPos: Position
+): boolean {
+    // 1. If no LoS, no cover
+    if (!hasLineOfSight(state, attackerPos, targetPos)) return false;
+
+    // 2. Check if target is INSIDE cover terrain
+    const terrainTargetIsIn = state.battle.terrain.find(t => 
+        t.providesCover && isPointInTerrain(targetPos, t)
+    );
+    if (terrainTargetIsIn) return true;
+
+    // 3. Check if the ray between them intersects any cover terrain
+    const rayCells = getSupercoverCells(attackerPos, targetPos);
+    const coverTerrain = state.battle.terrain.filter(t => t.providesCover);
+
+    for (const cell of rayCells) {
+        // Skip attacker and target cells
+        if ((cell.x === attackerPos.x && cell.y === attackerPos.y) || 
+            (cell.x === targetPos.x && cell.y === targetPos.y)) {
+            continue;
+        }
+
+        if (coverTerrain.some(t => isPointInTerrain(cell, t))) {
+            return true;
+        }
+    }
+
+    return false;
+}
