@@ -3,6 +3,19 @@ import { Position } from '@/types/character';
 import { getSupercoverCells } from '../../utils/raycast';
 
 /**
+ * Checks if a point is within the bounds of a terrain object.
+ * Multi-cell aware.
+ */
+function isPointInTerrain(point: Position, terrain: any): boolean {
+    return (
+        point.x >= terrain.position.x &&
+        point.x < terrain.position.x + terrain.size.width &&
+        point.y >= terrain.position.y &&
+        point.y < terrain.position.y + terrain.size.height
+    );
+}
+
+/**
  * Checks if there is a clear Line of Sight between two points.
  * Pure function for Engine V2.
  */
@@ -25,11 +38,9 @@ export function hasLineOfSight(
             continue;
         }
 
-        // Find any terrain at this cell that blocks LoS
+        // Find any terrain that covers this cell and blocks LoS
         const blockingTerrain = state.battle.terrain.find(t => 
-            t.position.x === cell.x && 
-            t.position.y === cell.y && 
-            t.blocksLineOfSight
+            t.blocksLineOfSight && isPointInTerrain(cell, t)
         );
 
         if (blockingTerrain) return false;

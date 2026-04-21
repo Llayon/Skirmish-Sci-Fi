@@ -84,4 +84,69 @@ describe('Parity: Visibility (Line of Sight)', () => {
         expect(resV1).toBe(false);
         expect(resV2).toBe(resV1);
     });
+
+    it('Scenario 4: Closed door blocks sight', () => {
+        const terrain = [
+            { 
+                id: 'd1', 
+                type: 'Door', 
+                position: { x: 5, y: 5 }, 
+                size: { width: 1, height: 1 }, 
+                blocksLineOfSight: true,
+                status: 'closed'
+            } as any
+        ];
+        const state = createState(terrain);
+        const pA = createParticipant('A', { x: 2, y: 5 });
+        const pB = createParticipant('B', { x: 8, y: 5 });
+
+        const resV1 = hasLoSV1(pA, pB, state.battle);
+        const resV2 = hasLoSV2(state, pA.position, pB.position);
+
+        expect(resV1).toBe(false);
+        expect(resV2).toBe(resV1);
+    });
+
+    it('Scenario 5: Open door allows sight', () => {
+        const terrain = [
+            { 
+                id: 'd1', 
+                type: 'Door', 
+                position: { x: 5, y: 5 }, 
+                size: { width: 1, height: 1 }, 
+                blocksLineOfSight: false,
+                status: 'open'
+            } as any
+        ];
+        const state = createState(terrain);
+        const pA = createParticipant('A', { x: 2, y: 5 });
+        const pB = createParticipant('B', { x: 8, y: 5 });
+
+        const resV1 = hasLoSV1(pA, pB, state.battle);
+        const resV2 = hasLoSV2(state, pA.position, pB.position);
+
+        expect(resV1).toBe(true);
+        expect(resV2).toBe(resV1);
+    });
+
+    it('Scenario 6: Multi-cell block (2x2) blocking sight', () => {
+        const terrain = [
+            { 
+                id: 'b1', 
+                type: 'Block', 
+                position: { x: 4, y: 4 }, 
+                size: { width: 2, height: 2 }, 
+                blocksLineOfSight: true 
+            } as any
+        ];
+        const state = createState(terrain);
+        const pA = createParticipant('A', { x: 2, y: 5 });
+        const pB = createParticipant('B', { x: 8, y: 5 });
+
+        const resV1 = hasLoSV1(pA, pB, state.battle);
+        const resV2 = hasLoSV2(state, pA.position, pB.position);
+
+        expect(resV1).toBe(false);
+        expect(resV2).toBe(resV1);
+    });
 });
