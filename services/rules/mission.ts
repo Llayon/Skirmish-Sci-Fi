@@ -45,6 +45,11 @@ export function checkMissionStatus(battle: Battle, context: 'after_action' | 'en
 
     // Check mission-specific success conditions that can happen mid-round
     if (context === 'after_action') {
+        if (mission.status === 'success' || mission.status === 'failure') {
+            battle.phase = 'battle_over';
+            return { battle, logs };
+        }
+
         // Check for VIP casualty in Protect mission.
         if (mission.type === 'Protect' && mission.vipId) {
             const vip = battle.participants.find(p => p.id === mission.vipId);

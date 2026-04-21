@@ -1,5 +1,6 @@
 import { EngineBattleState, BattleEvent, EngineLogEntry, EngineDeps } from '../types';
 import type { Position } from '@/types/character';
+import { checkMissionStatus } from '@/services/rules/mission';
 
 const chebyshevDistance = (a: Position, b: Position): number => {
     return Math.max(Math.abs(a.x - b.x), Math.abs(a.y - b.y));
@@ -131,18 +132,20 @@ export function interactObjective(
             roll 
         });
 
+        const { battle: finalBattle, logs: missionLogs } = checkMissionStatus({
+            ...battle,
+            participants: nextParticipants,
+            mission: nextMission
+        }, 'after_action');
+
         return {
             next: {
                 schemaVersion: state.schemaVersion,
-                battle: {
-                    ...battle,
-                    participants: nextParticipants,
-                    mission: nextMission
-                },
+                battle: finalBattle,
                 rng: currentRng
             },
             events,
-            log
+            log: [...log, ...missionLogs]
         };
     }
 
@@ -200,18 +203,20 @@ export function interactObjective(
             success: true
         });
 
+        const { battle: finalBattle, logs: missionLogs } = checkMissionStatus({
+            ...battle,
+            participants: nextParticipants,
+            mission: nextMission
+        }, 'after_action');
+
         return {
             next: {
                 schemaVersion: state.schemaVersion,
-                battle: {
-                    ...battle,
-                    participants: nextParticipants,
-                    mission: nextMission
-                },
+                battle: finalBattle,
                 rng: currentRng
             },
             events,
-            log
+            log: [...log, ...missionLogs]
         };
     }
 
@@ -264,18 +269,20 @@ export function interactObjective(
                 success: true
             });
 
+            const { battle: finalBattle, logs: missionLogs } = checkMissionStatus({
+                ...battle,
+                participants: nextParticipants,
+                mission: nextMission
+            }, 'after_action');
+
             return {
                 next: {
                     schemaVersion: state.schemaVersion,
-                    battle: {
-                        ...battle,
-                        participants: nextParticipants,
-                        mission: nextMission
-                    },
+                    battle: finalBattle,
                     rng: currentRng
                 },
                 events,
-                log
+                log: [...log, ...missionLogs]
             };
         } else {
              // Divergence: V1 consumes AP, V2 is No-Op with event
@@ -419,18 +426,20 @@ export function interactObjective(
             roll 
         });
 
+        const { battle: finalBattle, logs: missionLogs } = checkMissionStatus({
+            ...battle,
+            participants: nextParticipants,
+            mission: nextMission
+        }, 'after_action');
+
         return {
             next: {
                 schemaVersion: state.schemaVersion,
-                battle: {
-                    ...battle,
-                    participants: nextParticipants,
-                    mission: nextMission
-                },
+                battle: finalBattle,
                 rng: currentRng
             },
             events,
-            log
+            log: [...log, ...missionLogs]
         };
     }
 

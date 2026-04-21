@@ -120,7 +120,7 @@ const BattleView = () => {
       </div>
 
       {battle.phase === 'battle_over' && <BattleEndScreen />}
-      <EngineDevTools />
+      {process.env.NODE_ENV !== 'test' && <EngineDevTools />}
     </div>
   );
 };

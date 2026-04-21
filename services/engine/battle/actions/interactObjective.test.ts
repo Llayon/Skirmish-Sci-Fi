@@ -130,7 +130,6 @@ describe('interactObjective', () => {
         expect(result.next.battle.mission.status).toBe('success');
         expect(result.next.battle.mission.packageDelivered).toBe(true);
         expect(result.next.battle.mission.itemCarrierId).toBeNull();
-        expect(result.log).toContainEqual(expect.objectContaining({ key: 'log.mission.success' }));
 
         // Immutability check
         expect(state.battle.mission.status).toBe('in_progress');

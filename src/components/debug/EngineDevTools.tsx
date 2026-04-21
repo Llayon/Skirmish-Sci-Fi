@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { useBattleStore } from '@/stores/battleStore';
 import { useMultiplayerStore } from '@/stores/multiplayerStore';
+import { useShallow } from 'zustand/react/shallow';
 import {
   selectEngineV2Enabled,
   selectBattlePhase,
@@ -26,22 +27,41 @@ export function EngineDevTools() {
   const [verifyResult, setVerifyResult] = useState<EngineVerifyResult | null>(null);
   const [lastError, setLastError] = useState<string | null>(null);
 
-  const engineV2Enabled = useBattleStore(selectEngineV2Enabled);
-  const phase = useBattleStore(selectBattlePhase);
-  const round = useBattleStore(selectRound);
-  const activeParticipantId = useBattleStore(selectActiveParticipantId);
-  const turnIndex = useBattleStore(selectTurnIndex);
-  const turnOrders = useBattleStore(selectTurnOrders);
-  const rngCursor = useBattleStore(selectRngCursor);
-  const lastHash = useBattleStore(selectLastEngineStateHash);
-  const actionCount = useBattleStore(selectEngineActionCount);
-  const currentEvent = useBattleStore(selectCurrentEvent);
-  const cursorProgress = useBattleStore(selectEventCursorProgress);
-  
-  const battle = useBattleStore((state) => state.battle);
-  const rng = useBattleStore((state) => state.rng);
-  const animatingParticipantId = useBattleStore((state) => state.animatingParticipantId);
-  const animation = useBattleStore((state) => state.animation);
+  const {
+    engineV2Enabled,
+    phase,
+    round,
+    activeParticipantId,
+    turnIndex,
+    turnOrders,
+    rngCursor,
+    lastHash,
+    actionCount,
+    currentEvent,
+    cursorProgress,
+    battle,
+    rng,
+    animatingParticipantId,
+    animation,
+    actions
+  } = useBattleStore(useShallow((state) => ({
+    engineV2Enabled: selectEngineV2Enabled(state),
+    phase: selectBattlePhase(state),
+    round: selectRound(state),
+    activeParticipantId: selectActiveParticipantId(state),
+    turnIndex: selectTurnIndex(state),
+    turnOrders: selectTurnOrders(state),
+    rngCursor: selectRngCursor(state),
+    lastHash: selectLastEngineStateHash(state),
+    actionCount: selectEngineActionCount(state),
+    currentEvent: selectCurrentEvent(state),
+    cursorProgress: selectEventCursorProgress(state),
+    battle: state.battle,
+    rng: state.rng,
+    animatingParticipantId: state.animatingParticipantId,
+    animation: state.animation,
+    actions: state.actions
+  })));
 
   const {
     setEngineV2Enabled,
@@ -50,7 +70,7 @@ export function EngineDevTools() {
     replayAndApplyEngine,
     resetEventStream,
     resetEngineTracking,
-  } = useBattleStore((state) => state.actions);
+  } = actions;
 
   const multiplayerRole = useMultiplayerStore((state) => state.multiplayerRole);
   const isMultiplayer = multiplayerRole !== null;
