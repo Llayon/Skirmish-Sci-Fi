@@ -1,12 +1,13 @@
 import { EngineBattleState } from '../types';
 import { Position } from '@/types/character';
+import { Terrain } from '@/types/battle';
 import { getSupercoverCells } from '../../utils/raycast';
 
 /**
  * Checks if a point is within the bounds of a terrain object.
  * Multi-cell aware.
  */
-function isPointInTerrain(point: Position, terrain: any): boolean {
+function isPointInTerrain(point: Position, terrain: Terrain): boolean {
     return (
         point.x >= terrain.position.x &&
         point.x < terrain.position.x + terrain.size.width &&

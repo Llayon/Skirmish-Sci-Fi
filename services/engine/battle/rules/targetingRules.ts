@@ -1,7 +1,7 @@
 import { EngineBattleState, EngineDeps } from '../types';
 import { BattleParticipant, Position } from '@/types/battle';
 import { hasLineOfSight } from './visibilityRules';
-import { calculateHitTargetNumberOpenShot } from './shootingRules';
+import { calculateHitTargetNumberOpenShot, ShootingWeapon } from './shootingRules';
 import { RngState } from '../../rng/rng';
 
 // Inline distance helper
@@ -37,7 +37,7 @@ export function findBestTarget(
     const evaluated = candidates
         .filter(target => hasLineOfSight(state, actor.position, target.position))
         .map(target => {
-            const { targetNumber } = calculateHitTargetNumberOpenShot(actor, target, weapon as any);
+            const { targetNumber } = calculateHitTargetNumberOpenShot(actor, target, weapon as ShootingWeapon);
             const dist = distance(actor.position, target.position);
             return { id: target.id, tn: targetNumber, dist };
         });

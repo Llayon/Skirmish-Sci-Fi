@@ -2,7 +2,7 @@ import { describe, it, expect } from 'vitest';
 import { hasLineOfSight as hasLoSV1 } from '@/services/rules/visibility';
 import { hasLineOfSight as hasLoSV2 } from '@/services/engine/battle/rules/visibilityRules';
 import { EngineBattleState } from '@/services/engine/battle/types';
-import { Battle, BattleParticipant } from '@/types';
+import { Battle, BattleParticipant, Terrain } from '@/types';
 
 describe('Parity: Visibility (Line of Sight)', () => {
     const createParticipant = (id: string, pos: { x: number, y: number }): BattleParticipant => ({
@@ -20,7 +20,7 @@ describe('Parity: Visibility (Line of Sight)', () => {
         weapons: []
     } as BattleParticipant);
 
-    const createState = (terrain: any[]): EngineBattleState => ({
+    const createState = (terrain: Terrain[]): EngineBattleState => ({
         schemaVersion: 1,
         battle: {
             terrain,
@@ -44,13 +44,17 @@ describe('Parity: Visibility (Line of Sight)', () => {
     });
 
     it('Scenario 2: Wall blocking horizontal sight', () => {
-        const terrain = [
+        const terrain: Terrain[] = [
             { 
                 id: 'w1', 
+                name: 'Wall',
                 type: 'Wall', 
                 position: { x: 5, y: 5 }, 
                 size: { width: 1, height: 1 }, 
-                blocksLineOfSight: true 
+                blocksLineOfSight: true,
+                isDifficult: false,
+                providesCover: true,
+                isImpassable: true
             }
         ];
         const state = createState(terrain);
