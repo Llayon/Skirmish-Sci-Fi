@@ -1,7 +1,9 @@
 import { EngineBattleState, BattleAction, EngineDeps } from '../types';
 import { findBestTarget } from '../rules/targetingRules';
 import { getShortestPath } from '../../utils/pathfinding';
-import { Position, BattleParticipant } from '@/types/character';
+import { Position } from '@/types/character';
+import { RngState } from '../../rng/rng';
+import { ShootingWeapon } from '../rules/shootingRules';
 
 // Inline distance helper
 function getDistance(p1: Position, p2: Position): number {
@@ -15,7 +17,7 @@ export function generateAggressiveAIPlan(
     state: EngineBattleState,
     actorId: string,
     deps: EngineDeps
-): { actions: BattleAction[], nextRng: any } {
+): { actions: BattleAction[], nextRng: RngState } {
     const actor = state.battle.participants.find(p => p.id === actorId);
     let currentRng = state.rng;
     const plan: BattleAction[] = [];
@@ -39,14 +41,23 @@ export function generateAggressiveAIPlan(
 
     const dist = getDistance(actor.position, target.position);
     const speed = actor.stats.speed;
+    const weapon = actor.weapons[0] as ShootingWeapon;
+    const isHeavy = weapon?.traits.includes('heavy');
 
     // 2. Action Logic
+    
+    // Rule: Heavy weapon figures will not move if they have a Line of Sight to a target.
+    if (isHeavy && targetId) {
+        plan.push({ type: 'SHOOT_ATTACK', attackerId: actorId, targetId: target.id, weapon });
+        return { actions: plan, nextRng: currentRng };
+    }
+
     if (dist <= 1 || (dist <= 12)) {
         // CHARGE MODE: Move full speed and try to Brawl
-        // Find path to target, but we want to stop adjacent to it
         const path = getShortestPath(state, actor.position, target.position);
         if (path && path.length > 0) {
-            // Remove the target cell itself from the path to stay adjacent
+            // Find the best cell to stop at (adjacent to target)
+            // We take the path and find the last cell that is NOT the target's cell
             const movePath = path.filter(p => p.x !== target.position.x || p.y !== target.position.y);
             
             if (movePath.length > 0) {
@@ -54,14 +65,13 @@ export function generateAggressiveAIPlan(
                 plan.push({ type: 'MOVE_PARTICIPANT', participantId: actorId, to: moveTarget });
                 
                 const finalDist = getDistance(moveTarget, target.position);
+                // Aggressive only brawls if Combat is equal or better
                 if (finalDist <= 1 && actor.stats.combat >= target.stats.combat) {
-                    const weapon = actor.weapons[0];
-                    plan.push({ type: 'BRAWL_ATTACK', attackerId: actorId, targetId: target.id, weapon: weapon as any });
+                    plan.push({ type: 'BRAWL_ATTACK', attackerId: actorId, targetId: target.id, weapon });
                 }
             } else if (dist <= 1 && actor.stats.combat >= target.stats.combat) {
                 // Already adjacent
-                const weapon = actor.weapons[0];
-                plan.push({ type: 'BRAWL_ATTACK', attackerId: actorId, targetId: target.id, weapon: weapon as any });
+                plan.push({ type: 'BRAWL_ATTACK', attackerId: actorId, targetId: target.id, weapon });
             }
         }
     } else {
@@ -76,7 +86,7 @@ export function generateAggressiveAIPlan(
             if (targetId) {
                 const weapon = actor.weapons[0];
                 if (weapon) {
-                    plan.push({ type: 'SHOOT_ATTACK', attackerId: actorId, targetId: target.id, weapon: weapon as any });
+                    plan.push({ type: 'SHOOT_ATTACK', attackerId: actorId, targetId: target.id, weapon: weapon as ShootingWeapon });
                 }
             }
         }

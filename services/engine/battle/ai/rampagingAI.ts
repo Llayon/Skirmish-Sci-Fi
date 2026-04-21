@@ -1,6 +1,9 @@
-import { EngineBattleState, BattleAction, EngineDeps } from '../types';
+import { EngineBattleState, BattleAction } from '../types';
 import { getShortestPath } from '../../utils/pathfinding';
-import { Position, BattleParticipant } from '@/types/character';
+import { Position } from '@/types/character';
+import { RngState } from '../../rng/rng';
+import { ShootingWeapon } from '../rules/shootingRules';
+import { hasLineOfSight } from '../rules/visibilityRules';
 
 // Inline distance helper
 function getDistance(p1: Position, p2: Position): number {
@@ -13,11 +16,10 @@ function getDistance(p1: Position, p2: Position): number {
  */
 export function generateRampagingAIPlan(
     state: EngineBattleState,
-    actorId: string,
-    deps: EngineDeps
-): { actions: BattleAction[], nextRng: any } {
+    actorId: string
+): { actions: BattleAction[], nextRng: RngState } {
     const actor = state.battle.participants.find(p => p.id === actorId);
-    let currentRng = state.rng;
+    const currentRng = state.rng;
     const plan: BattleAction[] = [];
 
     if (!actor || actor.status === 'casualty' || actor.actionsRemaining <= 0) {
@@ -34,6 +36,14 @@ export function generateRampagingAIPlan(
     if (!target) return { actions: [], nextRng: currentRng };
 
     const speed = actor.stats.speed;
+    const weapon = actor.weapons[0] as ShootingWeapon;
+    const isHeavy = weapon?.traits.includes('heavy');
+
+    // Rule: Rampagers with Heavy weapons will stand still and fire, if in sight of a target.
+    if (isHeavy && hasLineOfSight(state, actor.position, target.position)) {
+        plan.push({ type: 'SHOOT_ATTACK', attackerId: actorId, targetId: target.id, weapon });
+        return { actions: plan, nextRng: currentRng };
+    }
 
     // 2. Action Logic: Always Charge
     const path = getShortestPath(state, actor.position, target.position);
@@ -48,11 +58,11 @@ export function generateRampagingAIPlan(
             // Rampaging ALWAYS tries to Brawl
             const finalDist = getDistance(moveTarget, target.position);
             if (finalDist <= 1) {
-                plan.push({ type: 'BRAWL_ATTACK', attackerId: actorId, targetId: target.id, weapon: actor.weapons[0] as any });
+                plan.push({ type: 'BRAWL_ATTACK', attackerId: actorId, targetId: target.id, weapon: weapon });
             }
         } else {
             // Already adjacent
-            plan.push({ type: 'BRAWL_ATTACK', attackerId: actorId, targetId: target.id, weapon: actor.weapons[0] as any });
+            plan.push({ type: 'BRAWL_ATTACK', attackerId: actorId, targetId: target.id, weapon: weapon });
         }
     }
 
