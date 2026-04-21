@@ -14,6 +14,25 @@ module.exports = {
     {
       files: ['services/engine/**/*.{ts,tsx}'],
       rules: {
+        'no-restricted-imports': [
+          'error',
+          {
+            patterns: [
+              {
+                group: ['zustand', 'zustand/*'],
+                message: 'Engine V2 must be pure and decoupled from Zustand. Do not import store hooks or create functions.'
+              },
+              {
+                group: ['react', 'react-dom'],
+                message: 'Engine V2 must be pure logic. UI libraries like React are forbidden.'
+              },
+              {
+                group: ['@/components/*', '@/hooks/*', '@/stores/*'],
+                message: 'Engine V2 cannot depend on UI components, React hooks, or global stores.'
+              }
+            ]
+          }
+        ],
         'no-restricted-properties': [
           'error',
           {

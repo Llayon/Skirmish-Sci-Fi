@@ -42,3 +42,32 @@ The application follows a feature-based domain-driven structure:
 - **Component Design:** Separation of concerns is maintained. Keep complex logic in `/services/` or `/hooks/` rather than directly in React components.
 - **Testing:** Unit and component tests are written using Vitest. New features and bug fixes should be accompanied by relevant tests.
 - **Pre-commit:** The project uses Husky and lint-staged to run ESLint (`eslint --fix`) and Prettier (`prettier --write`) on staged files before committing.
+
+## Engine V2 Hard Constraints & Development Patterns
+
+<hard_constraints>
+- **Golden v1 Stability**: `Golden v1` tests must remain stable. Do not change v1 behavior without a feature flag and regression testing (or updating snapshots "by meaning").
+- **Strict Determinism**: In `services/engine/**`, non-deterministic sources like `Math.random()`, `Date.now()`, `performance.now()` are FORBIDDEN (enforced by ESLint). Use the seeded `RngState` instead.
+- **Pure Engine V2**: Engine V2 is absolutely pure. NO Zustand, NO UI, NO `localStorage`, NO timers, NO network (`PeerJS`) code inside the `services/engine` directory.
+- **Strict Separation of Output**: Engine output must strictly separate `nextState`, `events`, `log` (EngineLogDelta), and `stateHash`.
+- **Event Stream Immutability**: The UI event stream (`events` array) is append-only. Consume it via an `eventCursor`. NEVER use `shift()` or mutate the events array.
+- **Strict Typing**: Avoid `any` and `eslint-disable`, especially in engine code and tests.
+- **Multiplayer UI Guards**: Any engine V2 UI controls must be `disabled/hidden` when `multiplayerRole != null`.
+- **Micro-Iterations**: Make the smallest possible PRs/commits. Minimum files, minimum diff, single goal.
+</hard_constraints>
+
+### Parity Testing Methodology
+Parity testing is our golden standard for the Engine V2 migration.
+1. When planning the migration of a remaining mechanic (e.g., AoE weapons, Enemy AI), the **first step** must always be creating `enginev2_[feature]_parity.test.ts`.
+2. Do not write new V2 logic until you have written a parity test that runs V1 with `MockRng`, records the script, and explicitly requires V2 to produce the exact same behavior (hash matching, event parity).
+
+### Micro-Iterations and "Occam's Razor" (Single Goal PRs)
+When using the `subagent-driven-development` skill or working iteratively:
+1. Break down broad tasks ("Implement Shooting for V2") into atomic steps ("4.2A: Hit Roll", "4.2B: Damage Roll", "4.2C: Stun/Implants").
+2. Focus AI agents strictly on one atomic step per task to prevent hallucination, context overflow, and to ensure code remains easy to review.
+
+### Context Hydration (Standard Template)
+When delegating work to subagents for Engine V2, structure the prompt to include exact context:
+- State the exact architecture primitives in use (`EngineBattleState`, `EngineLogEntry`, `BattleAction`, `BattleEvent`).
+- Outline the sequence of operations (e.g., Phase -> Action -> Result -> Hash).
+- Include current status and known workarounds explicitly to avoid redundant discoveries.
