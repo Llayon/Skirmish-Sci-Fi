@@ -15,21 +15,21 @@ describe('targetingRules: findBestTarget', () => {
         weapons: [{ id: 'pistol', range: 12, shots: 1, damage: 0, traits: [] }] as any
     } as BattleParticipant);
 
-    const createState = (): EngineBattleState => ({
+    const createState = (participants: BattleParticipant[] = []): EngineBattleState => ({
         schemaVersion: 1,
         battle: {
             terrain: [],
-            participants: [],
+            participants,
             gridSize: { width: 20, height: 20 }
         } as unknown as Battle,
         rng: { cursor: 0, seed: 123 }
     });
 
     it('Scenario 1: Chooses target with lowest TN (closest range bracket)', () => {
-        const state = createState();
         const actor = createParticipant('Enemy', { x: 0, y: 0 });
         const targetA = createParticipant('Far', { x: 10, y: 0 }); // dist 10 -> TN 5
         const targetB = createParticipant('Near', { x: 5, y: 0 }); // dist 5 -> TN 3
+        const state = createState([actor, targetA, targetB]);
 
         const result = findBestTarget(state, actor.id, [targetA, targetB], {
             rng: { d100: (s: any) => ({ value: 50, next: s }) }
@@ -39,10 +39,10 @@ describe('targetingRules: findBestTarget', () => {
     });
 
     it('Scenario 2: Chooses closest target when TNs are equal', () => {
-        const state = createState();
         const actor = createParticipant('Enemy', { x: 0, y: 0 });
         const targetA = createParticipant('Medium', { x: 6, y: 0 }); // dist 6 -> TN 3
         const targetB = createParticipant('Near', { x: 3, y: 0 }); // dist 3 -> TN 3
+        const state = createState([actor, targetA, targetB]);
 
         const result = findBestTarget(state, actor.id, [targetA, targetB], {
             rng: { d100: (s: any) => ({ value: 50, next: s }) }
@@ -52,10 +52,10 @@ describe('targetingRules: findBestTarget', () => {
     });
 
     it('Scenario 3: Breaks tie with RNG when TN and Distance are identical', () => {
-        const state = createState();
         const actor = createParticipant('Enemy', { x: 0, y: 0 });
         const targetA = createParticipant('Alpha', { x: 3, y: 0 });
         const targetB = createParticipant('Beta', { x: 0, y: 3 });
+        const state = createState([actor, targetA, targetB]);
         // Both dist 3, both TN 3
 
         // Mock RNG to pick second target (val > 50)
