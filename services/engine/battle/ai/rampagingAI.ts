@@ -1,9 +1,10 @@
-import { EngineBattleState, BattleAction } from '../types';
+import { EngineBattleState, BattleAction, EngineDeps } from '../types';
 import { getShortestPath } from '../../utils/pathfinding';
 import { Position } from '@/types/character';
 import { RngState } from '../../rng/rng';
 import { ShootingWeapon } from '../rules/shootingRules';
 import { hasLineOfSight } from '../rules/visibilityRules';
+import { findBestTarget } from '../rules/targetingRules';
 
 // Inline distance helper
 function getDistance(p1: Position, p2: Position): number {
@@ -16,10 +17,11 @@ function getDistance(p1: Position, p2: Position): number {
  */
 export function generateRampagingAIPlan(
     state: EngineBattleState,
-    actorId: string
+    actorId: string,
+    deps: EngineDeps
 ): { actions: BattleAction[], nextRng: RngState } {
     const actor = state.battle.participants.find(p => p.id === actorId);
-    const currentRng = state.rng;
+    let currentRng = state.rng;
     const plan: BattleAction[] = [];
 
     if (!actor || actor.status === 'casualty' || actor.actionsRemaining <= 0) {
@@ -30,8 +32,11 @@ export function generateRampagingAIPlan(
         p.id !== actorId && p.status !== 'casualty' && p.type === 'character'
     );
 
-    // 1. Identify Closest Target
-    const target = enemies.sort((a, b) => getDistance(actor.position, a.position) - getDistance(actor.position, b.position))[0];
+    // 1. Identify Closest Target (Deterministic)
+    const { targetId, nextRng } = findBestTarget(state, actorId, enemies, deps, 'Distance');
+    currentRng = nextRng;
+
+    const target = enemies.find(e => e.id === targetId);
 
     if (!target) return { actions: [], nextRng: currentRng };
 

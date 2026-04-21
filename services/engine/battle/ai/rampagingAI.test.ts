@@ -44,4 +44,5 @@ describe('rampagingAI: generateRampagingAIPlan', () => {
         expect(actions[0]).toMatchObject({ type: 'MOVE_PARTICIPANT', to: { x: 1, y: 0 } });
         expect(actions[1]).toMatchObject({ type: 'BRAWL_ATTACK', targetId: 'Player' });
     });
-});
+    });
+
