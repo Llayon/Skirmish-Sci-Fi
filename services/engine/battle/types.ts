@@ -3,8 +3,6 @@ import type { RngState } from '../rng/rng';
 import type { Position } from '@/types/character';
 import type { JsonValue } from '../types';
 
-export type { Position };
-
 /**
  * Engine-specific log entry type.
  * Decoupled from application LogEntry to maintain boundary.
@@ -40,15 +38,7 @@ export type BattleAction =
     | { type: 'SHOOT_ATTACK'; attackerId: string; targetId: string; weapon: { id: string; range: number; shots: number; damage: number; traits: string[] } }
     | { type: 'BRAWL_ATTACK'; attackerId: string; targetId: string; weapon?: { id: string; damage: number; traits: string[] } }
     | { type: 'ADVANCE_PHASE' }
-    | { type: 'END_TURN'; participantId?: string }
-    | { type: 'INTERACT_OBJECTIVE'; participantId: string; objectiveId: string }
-    | { type: 'USE_CONSUMABLE'; participantId: string; consumableId: string }
-    | { type: 'MISSION_SETUP' };
-
-export type ObjectiveInteractFailureReason = 
-    | 'out_of_range' 
-    | 'invalid_objective' 
-    | 'already_searched';
+    | { type: 'END_TURN'; participantId?: string };
 
 /**
  * Events emitted by the engine for UI/Animation consumption.
@@ -65,10 +55,7 @@ export type BattleEvent =
     | { type: 'PHASE_CHANGED'; from: BattlePhase; to: BattlePhase }
     | { type: 'ACTIVE_PARTICIPANT_SET'; participantId: string | null }
     | { type: 'TURN_INDEX_SET'; index: number }
-    | { type: 'ROUND_INCREMENTED'; round: number }
-    | { type: 'OBJECTIVE_INTERACT_DECLARED'; participantId: string; objectiveId: string }
-    | { type: 'OBJECTIVE_INTERACT_RESOLVED'; participantId: string; objectiveId: string; success: boolean; reason?: ObjectiveInteractFailureReason; roll?: number }
-    | { type: 'CONSUMABLE_USED'; participantId: string; consumableId: string; targetId?: string };
+    | { type: 'ROUND_INCREMENTED'; round: number };
 
 /**
  * Dependencies injected into the reducer.

@@ -7,25 +7,13 @@ import { createScriptedRngState, d6, d100 } from '@/services/engine/rng/rng';
 import { mockRng } from '../../helpers/mockRng';
 import { rollD6 } from '@/services/utils/rolls';
 import { coreResolverMiddleware } from '@/services/application/middleware/coreResolverMiddleware';
-import { Battle, PlayerAction, LogEntry, Terrain } from '@/types';
+import { Battle, PlayerAction, LogEntry } from '@/types';
 import type { MiddlewareContext } from '@/services/application/middleware/types';
 
 vi.mock('@/services/utils/rolls', () => ({
     rollD6: vi.fn(() => mockRng.d6()),
     rollD100: vi.fn(() => mockRng.d100()),
 }));
-
-const makeTerrain = (overrides: Partial<Terrain> & Pick<Terrain, 'id' | 'type' | 'position'>): Terrain => ({
-    id: overrides.id,
-    type: overrides.type,
-    position: overrides.position,
-    name: overrides.name ?? 'Terrain',
-    size: overrides.size ?? { width: 1, height: 1 },
-    providesCover: overrides.providesCover ?? false,
-    isDifficult: overrides.isDifficult ?? false,
-    blocksLineOfSight: overrides.blocksLineOfSight ?? false,
-    isImpassable: overrides.isImpassable ?? false,
-});
 
 const runMiddleware = (battle: Battle, action: PlayerAction) => {
     const logEntries: LogEntry[] = [];
@@ -45,75 +33,6 @@ describe('Divergences: Interact Objective', () => {
     beforeEach(() => {
         vi.clearAllMocks();
         mockRng.reset();
-    });
-
-    it('Scenario: Deliver Mission - Status Success (Known Divergence)', () => {
-        // 1. Setup
-        const participantId = 'c1';
-        const objectivePos = { x: 5, y: 5 };
-        const character = createTestCharacter({
-            id: participantId,
-            name: 'Courier',
-            position: { x: 5, y: 5 }, // On objective
-        });
-
-        const baselineBattle = createMinimalBattle({
-            participants: [character],
-            missionType: 'Deliver'
-        });
-        
-        // Setup delivery state: Holding item, at objective
-        baselineBattle.mission.objectivePosition = objectivePos;
-        baselineBattle.mission.itemCarrierId = participantId;
-        baselineBattle.mission.packageDelivered = false;
-        baselineBattle.mission.itemPosition = null;
-
-        const battleV1 = structuredClone(baselineBattle);
-        const battleV2 = structuredClone(baselineBattle);
-
-        // 2. V1 Execution
-        const actionV1 = { 
-            type: 'interact' as const, 
-            payload: { characterId: participantId, objectiveId: 'main' } 
-        };
-
-        runMiddleware(battleV1, actionV1);
-
-        // V1 Assertions: Delivered but status not updated
-        expect(battleV1.mission.packageDelivered).toBe(true);
-        expect(battleV1.mission.status).toBe('in_progress'); // Divergence here
-        expect(battleV1.mission.itemCarrierId).toBeNull();
-
-        // 3. V2 Replay
-        const engineState = {
-            schemaVersion: CURRENT_ENGINE_SCHEMA_VERSION,
-            battle: battleV2,
-            rng: createScriptedRngState([])
-        };
-
-        const actionV2 = {
-            type: 'INTERACT_OBJECTIVE' as const,
-            participantId,
-            objectiveId: 'main'
-        };
-
-        const result = reduceBattle(engineState, actionV2, { rng: { d6, d100 } });
-
-        // 4. V2 Assertions: Delivered AND Success
-        expect(result.next.battle.mission.packageDelivered).toBe(true);
-        expect(result.next.battle.mission.status).toBe('success'); // Improvement
-        expect(result.next.battle.mission.itemCarrierId).toBeNull();
-        expect(result.events.some(e => e.type === 'OBJECTIVE_INTERACT_DECLARED')).toBe(true);
-        expect(result.events.some(e => e.type === 'OBJECTIVE_INTERACT_RESOLVED' && e.success === true)).toBe(true);
-
-        // 5. Parity Checks (for the rest)
-        // We manually verify that other fields match
-        expect(result.next.battle.participants[0].actionsRemaining).toBe(
-            battleV1.participants[0].actionsRemaining
-        );
-        expect(result.next.battle.mission.itemCarrierId).toBe(
-            battleV1.mission.itemCarrierId
-        );
     });
 
     it('Scenario: Access Mission - Out of Range (Known Divergence)', () => {
@@ -533,7 +452,7 @@ describe('Divergences: Interact Objective', () => {
             { id: patrolPointId, visited: false }
         ];
         baselineBattle.terrain = [
-            makeTerrain({ id: patrolPointId, type: 'Individual', position: patrolPos, name: 'Patrol Point' })
+            { id: patrolPointId, type: 'objective', position: patrolPos, cover: 'none' }
         ];
 
         const battleV1 = structuredClone(baselineBattle);

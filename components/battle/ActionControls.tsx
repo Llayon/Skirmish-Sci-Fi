@@ -59,7 +59,6 @@ const ActionControls: React.FC<ActionControlsProps> = ({ participant, battleLogi
   const isFrozenWorld = battle!.worldTraits?.some(trait => trait.id === 'frozen');
   const isNullZone = battle!.worldTraits?.some(trait => trait.id === 'null_zone');
 
-  // V2 Pending Logic: if engine is waiting for ACK, block ALL controls to prevent desync
   const isPending = pendingActionFor === participant.id || !!engineNetPending;
 
   const enemies = useMemo(() =>
@@ -94,30 +93,28 @@ const ActionControls: React.FC<ActionControlsProps> = ({ participant, battleLogi
     const objectivePos = mission.objectivePosition;
 
     if ((mission.type === 'Acquire' || mission.type === 'Deliver') && mission.itemPosition && distance(participant.position, mission.itemPosition) <= 1) {
-      return { textKey: 'buttons.pickupItem', icon: Hand, targetId: 'mission_item' };
+      return { textKey: 'buttons.pickupItem', icon: Hand };
     }
 
     switch (mission.type) {
       case 'Access':
         if (objectivePos && (distance(participant.position, objectivePos) === 0 || (participant.type === 'character' && participant.classId === 'engineer' && distance(participant.position, objectivePos) <= 6))) {
-          return { textKey: 'buttons.accessConsole', icon: Hand, targetId: 'access_point' };
+          return { textKey: 'buttons.accessConsole', icon: Hand };
         }
         break;
       case 'Deliver':
         if (objectivePos && mission.itemCarrierId === participant.id && distance(participant.position, objectivePos) === 0) {
-          return { textKey: 'buttons.placePackage', icon: Hand, targetId: 'delivery_point' };
+          return { textKey: 'buttons.placePackage', icon: Hand };
         }
         break;
       case 'Patrol':
-        // Patrol logic finds a specific terrain point
-        const patrolPoint = terrain.find(t => mission.patrolPoints?.some(p => !p.visited && p.id === t.id) && distance(participant.position, { x: t.position.x + Math.floor(t.size.width / 2), y: t.position.y + Math.floor(t.size.height / 2) }) <= 2);
-        if (patrolPoint) {
-          return { textKey: 'buttons.scanArea', icon: Hand, targetId: patrolPoint.id };
+        if (terrain.find(t => mission.patrolPoints?.some(p => !p.visited && p.id === t.id) && distance(participant.position, { x: t.position.x + Math.floor(t.size.width / 2), y: t.position.y + Math.floor(t.size.height / 2) }) <= 2)) {
+          return { textKey: 'buttons.scanArea', icon: Hand };
         }
         break;
       case 'Search':
         if (objectivePos && mission.searchRadius && distance(participant.position, objectivePos) <= mission.searchRadius && !mission.searchedPositions?.some(p => p.x === participant.position.x && p.y === participant.position.y)) {
-          return { textKey: 'buttons.search', icon: Search, targetId: 'search_zone' };
+          return { textKey: 'buttons.search', icon: Search };
         }
         break;
       default: return null;
@@ -259,7 +256,7 @@ const ActionControls: React.FC<ActionControlsProps> = ({ participant, battleLogi
             <ActionButton tooltip={teleportTooltip} onClick={() => handlers.selectTeleportAction(participant.id)} disabled={baseActionDisabled || participant.actionsTaken.move || hasStillEffect || hasPreventMoveEffect || mustBrawl || isNullZone} selected={uiState.mode === 'teleporting'}><Zap /></ActionButton>
         }
 
-        {interaction && <ActionButton tooltip={t(interaction.textKey)} onClick={() => handlers.selectInteractAction(participant.id, interaction.targetId)} disabled={baseActionDisabled || mustBrawl} selected={uiState.mode === 'interact'} variant='primary'>{React.createElement(interaction.icon)}</ActionButton>}
+        {interaction && <ActionButton tooltip={t(interaction.textKey)} onClick={() => handlers.selectInteractAction(participant.id)} disabled={baseActionDisabled || mustBrawl} selected={uiState.mode === 'interact'} variant='primary'>{React.createElement(interaction.icon)}</ActionButton>}
 
         {isEngaged ? (
           <ActionButton tooltip={t('tooltips.actions.brawl')} onClick={() => handlers.selectBrawlAction(participant.id)} disabled={baseActionDisabled || participant.actionsTaken.dash || participant.specialAbilities?.includes('manipulator_rules')} variant='danger' selected={uiState.mode === 'selectingBrawlWeapon' || uiState.mode === 'brawling'}><Swords /></ActionButton>

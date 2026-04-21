@@ -8,7 +8,6 @@ import { endTurn } from './actions/endTurn';
 import { advancePhase } from './actions/advancePhase';
 import { interactObjective } from './actions/interactObjective';
 import { missionSetup } from './actions/missionSetup';
-import { useConsumable } from './actions/useConsumable';
 
 function assertNever(x: never): never {
     throw new Error(`reduceBattle: unhandled action ${JSON.stringify(x)}`);
@@ -36,8 +35,6 @@ function dispatchAction(
             return interactObjective(state, action, deps);
         case 'MISSION_SETUP':
             return missionSetup(state, deps);
-        case 'USE_CONSUMABLE':
-            return useConsumable(state, action);
         default:
             assertNever(action);
     }

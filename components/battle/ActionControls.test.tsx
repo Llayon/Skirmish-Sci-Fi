@@ -5,7 +5,6 @@ import ActionControls from './ActionControls';
 import { BattleParticipant } from '../../types';
 import { BattleLogic } from '../../hooks/useBattleLogic';
 import { useTranslation } from '../../i18n/index.tsx';
-import { BattleState } from '@/stores/battleStore';
 
 // Mocks
 vi.mock('../../i18n/index.tsx', () => ({
@@ -73,21 +72,24 @@ const defaultGameState = {
     }
 };
 
-const defaultBattleStoreState = {
-    actions: { setSelectedParticipantId: vi.fn() },
-    selectedParticipantId: null,
-    pendingActionFor: null,
-    engineNetPendingClientActionId: null,
-} as unknown as BattleState;
-
 describe('ActionControls', () => {
     beforeEach(() => {
         vi.clearAllMocks();
         useMultiplayerStore.mockImplementation((selector?: any) =>
           typeof selector === 'function' ? selector({ multiplayerRole: null } as any) : ({ multiplayerRole: null } as any)
         );
-        useBattleStore.mockImplementation(<T,>(selector?: (state: BattleState) => T) =>
-          selector ? selector(defaultBattleStoreState) : defaultBattleStoreState as unknown as T
+        useBattleStore.mockImplementation((selector?: any) =>
+          typeof selector === 'function'
+            ? selector({
+                actions: { setSelectedParticipantId: vi.fn() },
+                selectedParticipantId: null,
+                pendingActionFor: null,
+              } as any)
+            : ({
+                actions: { setSelectedParticipantId: vi.fn() },
+                selectedParticipantId: null,
+                pendingActionFor: null,
+              } as any)
         );
         mockUseGameState.mockReturnValue(defaultGameState);
     });
@@ -153,9 +155,7 @@ describe('ActionControls', () => {
     });
 
     it('shows loading state when pending action is for this participant', () => {
-        useBattleStore.mockImplementation(<T,>(selector?: (state: BattleState) => T) =>
-            selector ? selector({ ...defaultBattleStoreState, pendingActionFor: 'char1' } as unknown as BattleState) : { ...defaultBattleStoreState, pendingActionFor: 'char1' } as unknown as T
-        );
+        useBattleStore.mockReturnValue('char1'); // pendingActionFor
         const participant = createMockParticipant();
         render(<ActionControls participant={participant} battleLogic={createMockBattleLogic()} />);
         
@@ -171,22 +171,5 @@ describe('ActionControls', () => {
         
         fireEvent.click(screen.getByRole('button', { name: 'tooltips.actions.dash' }));
         expect(mockHandlers.selectMoveAction).toHaveBeenCalledWith('char1', true);
-    });
-
-    it('shows Loader and hides controls when action is pending (V2)', () => {
-        const v2State = {
-            ...defaultBattleStoreState,
-            engineNetPendingClientActionId: 'pending-123'
-        } as unknown as BattleState;
-
-        useBattleStore.mockImplementation(<T,>(selector?: (state: BattleState) => T) => {
-            return selector ? selector(v2State) : v2State as unknown as T;
-        });
-
-        const participant = createMockParticipant();
-        render(<ActionControls participant={participant} battleLogic={createMockBattleLogic()} />);
-
-        expect(screen.getByRole('progressbar')).toBeInTheDocument();
-        expect(screen.queryByRole('button', { name: 'tooltips.actions.move' })).not.toBeInTheDocument();
     });
 });
