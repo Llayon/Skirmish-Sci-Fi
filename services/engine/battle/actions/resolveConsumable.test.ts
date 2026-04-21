@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { useConsumable } from './useConsumable';
+import { resolveConsumable } from './resolveConsumable';
 import { EngineBattleState, BattleAction } from '../types';
 import { Battle, BattleParticipant } from '@/types/battle';
 
@@ -54,7 +54,7 @@ describe('useConsumable', () => {
             consumableId: 'booster_pills'
         };
 
-        const result = useConsumable(state, action);
+        const result = resolveConsumable(state, action);
         const user = result.next.battle.participants.find(p => p.id === 'host-1')!;
 
         // 1. Removed one pill
@@ -87,7 +87,7 @@ describe('useConsumable', () => {
             consumableId: 'booster_pills'
         };
 
-        const result = useConsumable(state, action);
+        const result = resolveConsumable(state, action);
         const updatedUser = result.next.battle.participants.find(p => p.id === 'host-1')!;
 
         expect(updatedUser.actionsRemaining).toBe(1);

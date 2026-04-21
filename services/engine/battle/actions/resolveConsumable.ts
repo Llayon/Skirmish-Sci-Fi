@@ -3,7 +3,7 @@ import { EngineBattleState, BattleAction, BattleEvent, EngineLogEntry } from '..
 import { getConsumableById } from '@/services/data/items';
 import { distance } from '@/services/gridUtils';
 
-export const useConsumable = (
+export const resolveConsumable = (
     state: EngineBattleState,
     action: Extract<BattleAction, { type: 'USE_CONSUMABLE' }>
 ): { next: EngineBattleState; events: BattleEvent[]; log: EngineLogEntry[] } => {
@@ -51,7 +51,7 @@ export const useConsumable = (
                 user.activeEffects.push({ sourceId: 'still', sourceName: 'Still Stance', duration: 2, preventMovement: true });
                 log.push({ key: 'log.playerPhase.stillEffect' });
                 break;
-            case 'kiranin_crystals':
+            case 'kiranin_crystals': {
                 // Logic: Affects opponents within 4 spaces who haven't acted fully (actionsRemaining === 2)
                 const userRole = user.id.split('-')[0]; // 'host' or 'guest' (simplified)
                 
@@ -74,6 +74,7 @@ export const useConsumable = (
                     log.push({ key: 'log.playerPhase.kiraninCrystalsNoEffect' });
                 }
                 break;
+            }
              case 'stim_pack':
                 user.status = 'active';
                 user.stunTokens = 0;
@@ -102,3 +103,4 @@ export const useConsumable = (
 
     return { next, events, log };
 };
+
