@@ -8,12 +8,15 @@ import {
   selectRound,
   selectActiveParticipantId,
   selectTurnIndex,
-  selectTurnOrders,
   selectRngCursor,
   selectLastEngineStateHash,
   selectEngineActionCount,
   selectCurrentEvent,
-  selectEventCursorProgress,
+  selectQuickOrderCount,
+  selectSlowOrderCount,
+  selectEnemyOrderCount,
+  selectEventCursor,
+  selectEventTotal,
 } from '@/stores/battleStore.selectors';
 import type { EngineVerifyResult } from '@/services/engine/battle/types';
 
@@ -33,35 +36,41 @@ export function EngineDevTools() {
     round,
     activeParticipantId,
     turnIndex,
-    turnOrders,
     rngCursor,
     lastHash,
     actionCount,
-    currentEvent,
-    cursorProgress,
-    battle,
-    rng,
+    eventCursor,
+    eventTotal,
     animatingParticipantId,
     animation,
-    actions
+    actions,
+    battle,
+    rng,
+    quickOrderCount,
+    slowOrderCount,
+    enemyOrderCount,
   } = useBattleStore(useShallow((state) => ({
     engineV2Enabled: selectEngineV2Enabled(state),
     phase: selectBattlePhase(state),
     round: selectRound(state),
     activeParticipantId: selectActiveParticipantId(state),
     turnIndex: selectTurnIndex(state),
-    turnOrders: selectTurnOrders(state),
     rngCursor: selectRngCursor(state),
     lastHash: selectLastEngineStateHash(state),
     actionCount: selectEngineActionCount(state),
-    currentEvent: selectCurrentEvent(state),
-    cursorProgress: selectEventCursorProgress(state),
-    battle: state.battle,
-    rng: state.rng,
+    eventCursor: selectEventCursor(state),
+    eventTotal: selectEventTotal(state),
     animatingParticipantId: state.animatingParticipantId,
     animation: state.animation,
-    actions: state.actions
+    actions: state.actions,
+    battle: state.battle,
+    rng: state.rng,
+    quickOrderCount: selectQuickOrderCount(state),
+    slowOrderCount: selectSlowOrderCount(state),
+    enemyOrderCount: selectEnemyOrderCount(state),
   })));
+
+  const currentEvent = useBattleStore(selectCurrentEvent);
 
   const {
     setEngineV2Enabled,
@@ -145,7 +154,7 @@ export function EngineDevTools() {
 
         <div className="text-text-secondary">Orders:</div>
         <div>
-          Q:{turnOrders?.quick ?? 0} E:{turnOrders?.enemy ?? 0} S:{turnOrders?.slow ?? 0}
+          Q:{quickOrderCount} E:{enemyOrderCount} S:{slowOrderCount}
         </div>
 
         <div className="text-text-secondary">RNG Cursor:</div>
@@ -158,7 +167,7 @@ export function EngineDevTools() {
         <div>{actionCount}</div>
 
         <div className="text-text-secondary">Events:</div>
-        <div>{cursorProgress.cursor} / {cursorProgress.total}</div>
+        <div>{eventCursor} / {eventTotal}</div>
 
         <div className="text-text-secondary">Animating:</div>
         <div className="truncate" title={animatingParticipantId || ''}>{animatingParticipantId || '-'}</div>
