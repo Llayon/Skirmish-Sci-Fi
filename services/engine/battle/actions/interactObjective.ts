@@ -29,158 +29,17 @@ export function interactObjective(
     const objectivePos = mission.objectivePosition;
 
     // 3. Logic based on Mission Type (Vertical Slice: Access only)
-    if (mission.type === 'Patrol') {
-        const patrolPoints = mission.patrolPoints;
-        const terrain = battle.terrain.find(t => t.id === objectiveId);
-
-        // Validation
-        if (!patrolPoints || !terrain) {
-             return { 
-                next: state, 
-                events: [
-                    { type: 'OBJECTIVE_INTERACT_DECLARED' as const, participantId, objectiveId },
-                    { 
-                        type: 'OBJECTIVE_INTERACT_RESOLVED' as const, 
-                        participantId, 
-                        objectiveId, 
-                        success: false, 
-                        reason: 'invalid_objective' 
-                    }
-                ], 
-                log 
-            };
-        }
-
-        const pointIndex = patrolPoints.findIndex(p => p.id === objectiveId);
-        if (pointIndex === -1) {
-             // Objective ID refers to terrain, but is it a patrol point?
-             // The prompt implies checking "id" matches.
-              return { 
-                 next: state, 
-                 events: [
-                    { type: 'OBJECTIVE_INTERACT_DECLARED' as const, participantId, objectiveId },
-                    { 
-                        type: 'OBJECTIVE_INTERACT_RESOLVED' as const, 
-                        participantId, 
-                        objectiveId, 
-                        success: false, 
-                        reason: 'invalid_objective' 
-                    }
-                 ], 
-                 log 
-             };
-        }
-
-        const terrainCenter = { 
-            x: terrain.position.x + Math.floor(terrain.size.width / 2), 
-            y: terrain.position.y + Math.floor(terrain.size.height / 2), 
-        };
-        const dist = chebyshevDistance(participant.position, terrainCenter);
-        
-        // Check range (UI uses <= 2)
-        if (dist > 2) {
-             return { 
-                next: state, 
-                events: [
-                    { type: 'OBJECTIVE_INTERACT_DECLARED' as const, participantId, objectiveId },
-                    { 
-                        type: 'OBJECTIVE_INTERACT_RESOLVED' as const, 
-                        participantId, 
-                        objectiveId, 
-                        success: false, 
-                        reason: 'out_of_range' 
-                    }
-                ], 
-                log 
-            };
-        }
-
-        const point = patrolPoints[pointIndex];
-        if (point.visited) {
-             return { 
-                next: state, 
-                events: [
-                    { type: 'OBJECTIVE_INTERACT_DECLARED' as const, participantId, objectiveId },
-                    { 
-                        type: 'OBJECTIVE_INTERACT_RESOLVED' as const, 
-                        participantId, 
-                        objectiveId, 
-                        success: false, 
-                        reason: 'invalid_objective' 
-                    }
-                ], 
-                log 
-            };
-        }
-
-        // Success Logic
-        const events: BattleEvent[] = [
-            { type: 'OBJECTIVE_INTERACT_DECLARED' as const, participantId, objectiveId }
-        ];
-
-        log.push({ key: 'log.mission.patrol.scanned' });
-
-        const nextMission = { ...mission };
-        const nextPoints = [...patrolPoints];
-        nextPoints[pointIndex] = { ...point, visited: true };
-        nextMission.patrolPoints = nextPoints;
-
-        // Check completion
-        if (nextPoints.every(p => p.visited)) {
-            nextMission.status = 'success';
-            log.push({ key: 'log.mission.success' });
-        }
-
-        // Update Participant
-        const nextParticipant = { ...participant };
-        nextParticipant.actionsRemaining = Math.max(0, participant.actionsRemaining - 1);
-        
-        const currentActions = participant.actionsTaken ?? { move: false, combat: false, dash: false, interact: false };
-        nextParticipant.actionsTaken = { ...currentActions, interact: true };
-        
-        if (nextParticipant.actionsRemaining <= 0) {
-            nextParticipant.actionsTaken = { move: true, combat: true, dash: true, interact: true };
-        }
-
-        const nextParticipants = [...battle.participants];
-        nextParticipants[participantIndex] = nextParticipant;
-
-        events.push({ 
-            type: 'OBJECTIVE_INTERACT_RESOLVED' as const, 
-            participantId, 
-            objectiveId, 
-            success: true
-        });
-
-        return {
-            next: {
-                schemaVersion: state.schemaVersion,
-                battle: {
-                    ...battle,
-                    participants: nextParticipants,
-                    mission: nextMission
-                },
-                rng: currentRng
-            },
-            events,
-            log
-        };
-    }
-
     if (mission.type === 'Access') {
         if (!objectivePos) {
              return { 
                 next: state, 
-                events: [
-                    { type: 'OBJECTIVE_INTERACT_DECLARED' as const, participantId, objectiveId },
-                    { 
-                        type: 'OBJECTIVE_INTERACT_RESOLVED' as const, 
-                        participantId, 
-                        objectiveId, 
-                        success: false, 
-                        reason: 'invalid_objective' 
-                    }
-                ], 
+                events: [{ 
+                    type: 'OBJECTIVE_INTERACT_RESOLVED' as const, 
+                    participantId, 
+                    objectiveId, 
+                    success: false, 
+                    reason: 'invalid_objective' 
+                }], 
                 log 
             };
         }
@@ -376,7 +235,6 @@ export function interactObjective(
         else if (mission.itemCarrierId === participantId && objectivePos && chebyshevDistance(participant.position, objectivePos) === 0) {
             nextMission.packageDelivered = true;
             nextMission.itemCarrierId = null;
-            nextMission.status = 'success';
             log.push({ key: 'log.mission.deliver.placed', params: { name: participant.name } });
             performedAction = true;
         }

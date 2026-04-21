@@ -11,7 +11,6 @@ export function EngineV2HudControls() {
   const hasBattle = useBattleStore(s => !!s.battle);
   const hasRng = useBattleStore(s => !!s.rng);
   const dispatchEngineAction = useBattleStore(s => s.actions.dispatchEngineAction);
-  const engineNetPendingClientActionId = useBattleStore(s => s.engineNetPendingClientActionId);
   const multiplayerRole = useMultiplayerStore(s => s.multiplayerRole);
 
   const mpDebug = isEngineV2MpDebugEnabled();
@@ -19,7 +18,7 @@ export function EngineV2HudControls() {
   if (!engineV2Enabled) return null;
   if (multiplayerRole !== null && !mpDebug) return null;
 
-  const disabledBase = !hasBattle || !hasRng || !!engineNetPendingClientActionId;
+  const disabledBase = !hasBattle || !hasRng;
   const canRoll = !disabledBase && phase === 'reaction_roll';
   const canAdvance = !disabledBase && (phase === 'quick_actions' || phase === 'enemy_actions' || phase === 'slow_actions');
 
@@ -27,10 +26,7 @@ export function EngineV2HudControls() {
     <div className="flex flex-wrap gap-2 justify-center mt-2">
       <Button
         disabled={!canRoll}
-        onClick={() => {
-          if (engineNetPendingClientActionId) return;
-          dispatchEngineAction({ type: 'ROLL_INITIATIVE' });
-        }}
+        onClick={() => dispatchEngineAction({ type: 'ROLL_INITIATIVE' })}
         title={t('tooltips.engineV2.rollInitiative')}
         variant="primary"
         className="text-sm py-1 px-3"
@@ -41,10 +37,7 @@ export function EngineV2HudControls() {
 
       <Button
         disabled={!canAdvance}
-        onClick={() => {
-          if (engineNetPendingClientActionId) return;
-          dispatchEngineAction({ type: 'ADVANCE_PHASE' });
-        }}
+        onClick={() => dispatchEngineAction({ type: 'ADVANCE_PHASE' })}
         title={t('tooltips.engineV2.advancePhase')}
         variant="secondary"
         className="text-sm py-1 px-3"
