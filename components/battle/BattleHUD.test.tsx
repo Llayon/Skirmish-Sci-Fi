@@ -10,10 +10,14 @@ vi.mock('./ActionControls', () => ({ default: () => <div data-testid="action-con
 vi.mock('./ReactionRollPanel', () => ({ default: () => <div data-testid="reaction-roll-panel" /> }));
 vi.mock('./CharacterStatus', () => ({ default: () => <div data-testid="character-status" /> }));
 vi.mock('../../i18n', () => ({ useTranslation: () => ({ t: (key: string) => key }) }));
-vi.mock('../../stores', () => ({ useMultiplayerStore: vi.fn(), useBattleStore: vi.fn() }));
+vi.mock('../../stores', () => ({ 
+  useMultiplayerStore: vi.fn(), 
+  useBattleStore: vi.fn(),
+  useHudStore: vi.fn()
+}));
 vi.mock('../../hooks/useGameState');
 
-const { useBattleStore, useMultiplayerStore } = await import('../../stores');
+const { useBattleStore, useMultiplayerStore, useHudStore } = await import('../../stores');
 const { useGameState } = await import('../../hooks/useGameState');
 
 const mockGameState = (battleOverride: any) => ({
@@ -40,8 +44,12 @@ describe('BattleHUD', () => {
         selectedParticipantId: 'char1',
         hoveredParticipantId: null,
         battle: { activeParticipantId: 'char1', activePlayerRole: null },
+        actions: { setSelectedParticipantId: vi.fn() }
       })
     );
+    vi.mocked(useHudStore).mockImplementation((selector: any) => selector({ 
+      panels: { queue: true, mission: true, status: true, actions: true, log: true } 
+    }));
   });
 
   it('renders MissionPanel and BattleLog in all phases', () => {

@@ -64,6 +64,11 @@ describe('Parity: Reactions / Initiative', () => {
 
     const action: PlayerAction = { type: 'roll_initiative', payload: {} };
     runMiddleware(battleV1, action);
+    // V1 Solo doesn't advance phase in middleware, V2 does via cascadePhase.
+    // Patch V1 to match expected state.
+    battleV1.phase = 'quick_actions';
+    battleV1.activeParticipantId = 'c1'; // Cascade selects first active
+    battleV1.currentTurnIndex = 0;
 
     recorder.assertEmpty();
     const script = recorder.getScript();

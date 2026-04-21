@@ -61,7 +61,7 @@ const BattleLog: React.FC<BattleLogProps> = ({ log }) => {
 
   const rowVirtualizer = useVirtualizer({
     count: log.length,
-    getScrollElement: () => parentRef.current,
+    getScrollElement: () => parentRef.current ?? null,
     estimateSize: () => 22, // Estimated height of a single-line log entry
     overscan: 10,
   });

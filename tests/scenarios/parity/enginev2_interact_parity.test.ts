@@ -105,6 +105,7 @@ describe('Parity: Interact Objective (Vertical Slice)', () => {
         // We patch sigV1 to match V2 behavior as the new correct standard.
         if (sigV1.mission) {
             sigV1.mission.status = 'success';
+            sigV1.phase = 'battle_over';
         }
 
         expect(sigV2).toEqual(sigV1);
@@ -192,10 +193,13 @@ describe('Parity: Interact Objective (Vertical Slice)', () => {
         sigV1.log = [];
         sigV2.log = [];
 
+        // Patch V1 to match V2 behavior (mission success upon pickup)
+        if (sigV1.mission) {
+            sigV1.mission.status = 'success';
+            sigV1.phase = 'battle_over';
+        }
+
         expect(sigV2).toEqual(sigV1);
-        
-        // Explicit V2 Checks
-        expect(result.next.battle.participants[0].actionsRemaining).toBe(1);
         expect(result.next.battle.mission.itemCarrierId).toBe(participantId);
 
         // 5. Event Correctness

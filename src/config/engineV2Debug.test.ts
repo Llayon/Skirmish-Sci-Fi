@@ -19,7 +19,7 @@ describe('isEngineV2MpDebugEnabled', () => {
   it('returns true in PROD when VITE_ENGINE_DEBUG is "true" (fallback)', () => {
     const env: EngineV2MpDebugEnv = { 
       DEV: false, 
-      VITE_ENGINE_V2_MP_DEBUG: 'false',
+      VITE_ENGINE_V2_MP_DEBUG: undefined,
       VITE_ENGINE_DEBUG: 'true'
     };
     expect(isEngineV2MpDebugEnabled(env)).toBe(true);
