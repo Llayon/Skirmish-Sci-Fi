@@ -1,7 +1,6 @@
 import { EngineBattleState } from '../types';
 import { Position } from '@/types/character';
 import { calculateCover, hasLineOfSight } from '../rules/visibilityRules';
-import { getShortestPath } from '../../utils/pathfinding';
 
 export interface AIWeights {
     cover: number;
