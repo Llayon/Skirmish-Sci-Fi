@@ -61,3 +61,18 @@ export const selectTurnOrders = (state: Pick<BattleState, 'battle'>) => {
 
 export const selectRngCursor = (state: Pick<BattleState, 'rng'>) =>
   state.rng?.cursor;
+
+export const selectQuickOrderCount = (state: Pick<BattleState, 'battle'>) => 
+  state.battle?.quickActionOrder.length ?? 0;
+
+export const selectSlowOrderCount = (state: Pick<BattleState, 'battle'>) => 
+  state.battle?.slowActionOrder.length ?? 0;
+
+export const selectEnemyOrderCount = (state: Pick<BattleState, 'battle'>) => 
+  state.battle?.enemyTurnOrder.length ?? 0;
+
+export const selectEventCursor = (state: Pick<BattleState, 'eventCursor'>) => 
+  state.eventCursor;
+
+export const selectEventTotal = (state: Pick<BattleState, 'events'>) => 
+  state.events.length;

@@ -66,6 +66,7 @@ const BattleLog: React.FC<BattleLogProps> = ({ log }) => {
     overscan: 10,
   });
 
+
   useEffect(() => {
     if (log.length > 0) {
       rowVirtualizer.scrollToIndex(log.length - 1, { align: 'end', behavior: 'auto' });
