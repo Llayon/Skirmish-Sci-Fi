@@ -1,15 +1,14 @@
 import { EngineBattleState, BattleAction, EngineDeps } from '../types';
-import { findBestTarget } from '../rules/targetingRules';
+import { findBestTarget, findBestWeaponForTarget } from '../rules/targetingRules';
 import { hasLineOfSight } from '../rules/visibilityRules';
 import { evaluateMovementOptions, AIWeights } from './complexAIUtils';
-
 import { RngState } from '../../rng/rng';
 import { ShootingWeapon } from '../rules/shootingRules';
 
 const CAUTIOUS_WEIGHTS: AIWeights = {
-    cover: 300,    // Very high cover priority
+    cover: 300,
     los: 150,
-    distance: 100,  // High priority for staying away
+    distance: 100,
     proximity: 0
 };
 
@@ -37,38 +36,29 @@ export function generateCautiousAIPlan(
 
     if (!target) return { actions: [], nextRng: currentRng };
 
-    const weapon = actor.weapons[0] as ShootingWeapon;
+    // 1.1 Weapon Selection
+    const { weapon } = findBestWeaponForTarget(actor, target, actor.weapons as ShootingWeapon[]);
     const weaponRange = weapon?.range || 12;
+
     const distToTarget = Math.max(Math.abs(actor.position.x - target.position.x), Math.abs(actor.position.y - target.position.y));
     const hasClearLoS = hasLineOfSight(state, actor.position, target.position);
 
     // 2. Decision Logic
-
-    // Rule: Figures with an opponent in sight and range will remain where they are and take Aimed shots.
     if (hasClearLoS && distToTarget <= weaponRange) {
         plan.push({ type: 'SHOOT_ATTACK', attackerId: actorId, targetId: target.id, weapon });
         return { actions: plan, nextRng: currentRng };
     }
 
-    // 3. Movement (Seeking cover or establishing LoS, but avoiding 12" zone)
+    // 3. Movement
     const { bestCell } = evaluateMovementOptions(state, actorId, target.id, actor.stats.speed, {
         ...CAUTIOUS_WEIGHTS,
-        // Override distance logic: we want to be as close to weaponRange as possible, but > 12"
-        distance: 0 // We'll handle distance scoring manually here for better precision
+        distance: 0
     });
 
-    // Custom Scoring for Cautious Movement
-    // We re-evaluate cells to ensure we don't voluntarily move within 12"
-    // and we prefer max range.
     let finalMoveTarget = bestCell;
-
-    // Safety check: if currently outside 12", don't move inside 12".
-    const currentDist = distToTarget;
     const bestCellDist = Math.max(Math.abs(bestCell.x - target.position.x), Math.abs(bestCell.y - target.position.y));
-
-    if (currentDist > 12 && bestCellDist <= 12) {
-        // Find a better cell that is still > 12"
-        // (Simplified: just stay put if best option is too close)
+    
+    if (distToTarget > 12 && bestCellDist <= 12) {
         finalMoveTarget = actor.position;
     }
 
@@ -76,9 +66,7 @@ export function generateCautiousAIPlan(
         plan.push({ type: 'MOVE_PARTICIPANT', participantId: actorId, to: finalMoveTarget });
     }
 
-    // Shoot if LoS exists from new cell
     plan.push({ type: 'SHOOT_ATTACK', attackerId: actorId, targetId: target.id, weapon });
 
     return { actions: plan, nextRng: currentRng };
 }
-

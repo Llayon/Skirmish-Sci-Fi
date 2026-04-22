@@ -1,5 +1,5 @@
 import { EngineBattleState, BattleAction, EngineDeps } from '../types';
-import { findBestTarget } from '../rules/targetingRules';
+import { findBestTarget, findBestWeaponForTarget } from '../rules/targetingRules';
 import { getShortestPath } from '../../utils/pathfinding';
 import { evaluateMovementOptions } from './complexAIUtils';
 import { Position } from '@/types/character';
@@ -40,10 +40,12 @@ export function generateAggressiveAIPlan(
 
     if (!target) return { actions: [], nextRng: currentRng };
 
+    // 1.1 Weapon Selection
+    const { weapon } = findBestWeaponForTarget(actor, target, actor.weapons as ShootingWeapon[]);
+    const isHeavy = weapon?.traits.includes('heavy');
+
     const dist = getDistance(actor.position, target.position);
     const speed = actor.stats.speed;
-    const weapon = actor.weapons[0] as ShootingWeapon;
-    const isHeavy = weapon?.traits.includes('heavy');
 
     // 2. Action Logic
     
@@ -53,8 +55,6 @@ export function generateAggressiveAIPlan(
         return { actions: plan, nextRng: currentRng };
     }
 
-    // Rule: Enemies that are unable to see any opposition, or which are within 12", 
-    // will advance as fast as possible towards the nearest opponent, attempting to enter into a Brawl.
     const isChargeMode = !targetId || dist <= 12;
 
     if (isChargeMode) {
@@ -68,8 +68,6 @@ export function generateAggressiveAIPlan(
                 plan.push({ type: 'MOVE_PARTICIPANT', participantId: actorId, to: moveTarget });
                 
                 const finalDist = getDistance(moveTarget, target.position);
-                // Rule: They will not enter a Brawl with an opponent that has higher Combat Skill.
-                // (Meaning: Actor.Combat >= Target.Combat)
                 if (finalDist <= 1 && actor.stats.combat >= target.stats.combat) {
                     plan.push({ type: 'BRAWL_ATTACK', attackerId: actorId, targetId: target.id, weapon });
                 }
@@ -78,15 +76,11 @@ export function generateAggressiveAIPlan(
             }
         }
     } else {
-        // TACTICAL ADVANCE: At least half move towards them, attempting to remain in Cover if possible.
-        // We use evaluateMovementOptions with a preference for cover but a mandatory distance reduction.
-        
-        // We evaluate cells up to FULL speed, but we prioritize those that are at least half speed away 
-        // from the start and provide cover.
+        // TACTICAL ADVANCE: At least half move towards them, prioritizing cover.
         const { bestCell } = evaluateMovementOptions(state, actorId, target.id, speed, {
-            cover: 200,    // High priority for cover
-            los: 100,      // Need to see them
-            distance: -50, // Wants to get closer (at least half move)
+            cover: 200,
+            los: 100,
+            distance: -50,
             proximity: 0
         });
 
@@ -94,7 +88,6 @@ export function generateAggressiveAIPlan(
             plan.push({ type: 'MOVE_PARTICIPANT', participantId: actorId, to: bestCell });
         }
 
-        // Shoot if LoS exists
         plan.push({ type: 'SHOOT_ATTACK', attackerId: actorId, targetId: target.id, weapon });
     }
 

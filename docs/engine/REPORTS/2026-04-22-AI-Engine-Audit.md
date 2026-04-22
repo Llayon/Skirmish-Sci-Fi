@@ -28,8 +28,9 @@ The Engine V2 has successfully transitioned from an imperative, side-effect-heav
 
 ### 3.2 Targeting
 - **Implemented**: Priority-based (TN > Dist > ID > RNG).
-- **Strengths**: Supports different modes (`TN` for shooters, `Distance` for beasts).
-- **Recommendation**: Add "Weapon Selection" logic before targeting (AI currently only uses the first weapon).
+- **Strengths**: Supports different modes (`TN` for shooters, `Distance` for beasts). Added stable tie-breaking.
+- **Weapon Selection**: ✅ IMPLEMENTED. AI now evaluates all owned weapons and picks the one with the best TN for the target.
+- **RNG Math**: ✅ FIXED. Corrected the "101 Rule" skew. Index selection now uses `floor(((value-1)/100) * length)` for fair distribution of 1-100 results.
 
 ### 3.3 Pathfinding
 - **Implemented**: Deterministic A*.
