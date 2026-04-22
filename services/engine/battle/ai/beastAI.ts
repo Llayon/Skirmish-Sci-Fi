@@ -1,0 +1,73 @@
+import { EngineBattleState, BattleAction, EngineDeps } from '../types';
+import { findBestTarget } from '../rules/targetingRules';
+import { evaluateMovementOptions, AIWeights } from './complexAIUtils';
+import { RngState } from '../../rng/rng';
+import { ShootingWeapon } from '../rules/shootingRules';
+
+const BEAST_STALKING_WEIGHTS: AIWeights = {
+    cover: 500,
+    los: -200, // Wants to be hidden if far away
+    distance: -50, // Wants to close in
+    proximity: 50
+};
+
+const BEAST_CHARGE_WEIGHTS: AIWeights = {
+    cover: 50,
+    los: 100,
+    distance: -500, // Absolute priority to reach target
+    proximity: 0
+};
+
+export function generateBeastAIPlan(
+    state: EngineBattleState,
+    actorId: string,
+    deps: EngineDeps
+): { actions: BattleAction[], nextRng: RngState } {
+    const actor = state.battle.participants.find(p => p.id === actorId);
+    let currentRng = state.rng;
+    const plan: BattleAction[] = [];
+
+    if (!actor || actor.status === 'casualty' || actor.actionsRemaining <= 0) {
+        return { actions: [], nextRng: currentRng };
+    }
+
+    const enemies = state.battle.participants.filter(p => 
+        p.id !== actorId && p.status !== 'casualty' && p.type === 'character'
+    );
+
+    // 1. Identify Target (Nearest)
+    const { targetId, nextRng } = findBestTarget(state, actorId, enemies, deps, 'Distance');
+    currentRng = nextRng;
+    const target = enemies.find(e => e.id === targetId);
+
+    if (!target) return { actions: [], nextRng: currentRng };
+
+    const dist = Math.max(Math.abs(actor.position.x - target.position.x), Math.abs(actor.position.y - target.position.y));
+    const speed = actor.stats.speed;
+    const canReachInTwoMoves = dist <= (speed * 2);
+
+    // 2. Decision Tree
+    if (canReachInTwoMoves) {
+        // CHARGE MODE: Run full speed to get into Brawl
+        const { bestCell } = evaluateMovementOptions(state, actorId, target.id, speed, BEAST_CHARGE_WEIGHTS);
+        
+        if (bestCell.x !== actor.position.x || bestCell.y !== actor.position.y) {
+            plan.push({ type: 'MOVE_PARTICIPANT', participantId: actorId, to: bestCell });
+        }
+
+        // If adjacent after move, Brawl
+        const finalDist = Math.max(Math.abs(bestCell.x - target.position.x), Math.abs(bestCell.y - target.position.y));
+        if (finalDist <= 1) {
+            plan.push({ type: 'BRAWL_ATTACK', attackerId: actorId, targetId: target.id, weapon: actor.weapons[0] as ShootingWeapon });
+        }
+    } else {
+        // STALKING MODE: Stay in cover or move to break LoS
+        const { bestCell } = evaluateMovementOptions(state, actorId, target.id, speed, BEAST_STALKING_WEIGHTS);
+        
+        if (bestCell.x !== actor.position.x || bestCell.y !== actor.position.y) {
+            plan.push({ type: 'MOVE_PARTICIPANT', participantId: actorId, to: bestCell });
+        }
+    }
+
+    return { actions: plan, nextRng: currentRng };
+}
