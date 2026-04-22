@@ -1,7 +1,8 @@
 import { EngineBattleState, BattleAction, EngineDeps } from '../types';
 import { findBestTarget } from '../rules/targetingRules';
-import { calculateCover } from '../rules/visibilityRules';
+import { hasLineOfSight } from '../rules/visibilityRules';
 import { evaluateMovementOptions, AIWeights } from './complexAIUtils';
+
 import { RngState } from '../../rng/rng';
 import { ShootingWeapon } from '../rules/shootingRules';
 

@@ -1,6 +1,7 @@
 import { EngineBattleState, BattleAction, EngineDeps } from '../types';
 import { findBestTarget } from '../rules/targetingRules';
 import { getShortestPath } from '../../utils/pathfinding';
+import { evaluateMovementOptions } from './complexAIUtils';
 import { Position } from '@/types/character';
 import { RngState } from '../../rng/rng';
 import { ShootingWeapon } from '../rules/shootingRules';
@@ -79,9 +80,8 @@ export function generateAggressiveAIPlan(
     } else {
         // TACTICAL ADVANCE: At least half move towards them, attempting to remain in Cover if possible.
         // We use evaluateMovementOptions with a preference for cover but a mandatory distance reduction.
-        const halfSpeed = Math.floor(speed / 2);
         
-        // We evaluate cells up to FULL speed, but we prioritize those that are at least 'halfSpeed' away 
+        // We evaluate cells up to FULL speed, but we prioritize those that are at least half speed away 
         // from the start and provide cover.
         const { bestCell } = evaluateMovementOptions(state, actorId, target.id, speed, {
             cover: 200,    // High priority for cover
