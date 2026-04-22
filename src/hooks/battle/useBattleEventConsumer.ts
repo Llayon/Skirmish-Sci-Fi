@@ -46,6 +46,39 @@ export const useBattleEventConsumer = () => {
         });
         break;
       }
+      case 'SHOT_RESOLVED': {
+        const hashPart = lastEngineStateHash ?? 'nohash';
+        setAnimatingParticipantId(currentEvent.attackerId);
+        setAnimation({
+          id: `shoot-${currentEvent.attackerId}-${currentEvent.targetId}-${eventCursor}-${hashPart}`,
+          type: 'shoot',
+          targetId: currentEvent.targetId,
+          hit: currentEvent.hit
+        });
+        break;
+      }
+      case 'BRAWL_RESOLVED': {
+        const hashPart = lastEngineStateHash ?? 'nohash';
+        setAnimatingParticipantId(currentEvent.attackerId);
+        setAnimation({
+          id: `brawl-${currentEvent.attackerId}-${currentEvent.targetId}-${eventCursor}-${hashPart}`,
+          type: 'brawl',
+          targetId: currentEvent.targetId,
+          winnerId: currentEvent.winnerId
+        });
+        break;
+      }
+      case 'AOE_PARTICIPANT_HIT': {
+        const hashPart = lastEngineStateHash ?? 'nohash';
+        setAnimatingParticipantId(currentEvent.targetId);
+        setAnimation({
+          id: `hit-${currentEvent.targetId}-${eventCursor}-${hashPart}`,
+          type: 'damage', // Reusing damage animation for AoE hits
+          targetId: currentEvent.targetId,
+          damage: currentEvent.damage
+        });
+        break;
+      }
       // Other events are no-op for now (Stage 3C)
     }
 
