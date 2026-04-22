@@ -32,7 +32,14 @@ export function generateCautiousAIPlan(
     // 1. Target Evaluation
     const { targetId, nextRng } = findBestTarget(state, actorId, enemies, deps, 'TN');
     currentRng = nextRng;
-    const target = enemies.find(e => e.id === targetId);
+
+    // Regression Fix: fallback to nearest enemy if no visible target found
+    const target = enemies.find(e => e.id === targetId) || 
+                   enemies.sort((a, b) => {
+                       const dA = Math.max(Math.abs(a.position.x - actor.position.x), Math.abs(a.position.y - actor.position.y));
+                       const dB = Math.max(Math.abs(b.position.x - actor.position.x), Math.abs(b.position.y - actor.position.y));
+                       return dA - dB;
+                   })[0];
 
     if (!target) return { actions: [], nextRng: currentRng };
 
