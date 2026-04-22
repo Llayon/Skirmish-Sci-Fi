@@ -52,12 +52,14 @@ export function generateAggressiveAIPlan(
         return { actions: plan, nextRng: currentRng };
     }
 
-    if (dist <= 1 || (dist <= 12)) {
-        // CHARGE MODE: Move full speed and try to Brawl
+    // Rule: Enemies that are unable to see any opposition, or which are within 12", 
+    // will advance as fast as possible towards the nearest opponent, attempting to enter into a Brawl.
+    const isChargeMode = !targetId || dist <= 12;
+
+    if (isChargeMode) {
+        // FAST AS POSSIBLE (Full Speed)
         const path = getShortestPath(state, actor.position, target.position);
         if (path && path.length > 0) {
-            // Find the best cell to stop at (adjacent to target)
-            // We take the path and find the last cell that is NOT the target's cell
             const movePath = path.filter(p => p.x !== target.position.x || p.y !== target.position.y);
             
             if (movePath.length > 0) {
@@ -65,31 +67,35 @@ export function generateAggressiveAIPlan(
                 plan.push({ type: 'MOVE_PARTICIPANT', participantId: actorId, to: moveTarget });
                 
                 const finalDist = getDistance(moveTarget, target.position);
-                // Aggressive only brawls if Combat is equal or better
+                // Rule: They will not enter a Brawl with an opponent that has higher Combat Skill.
+                // (Meaning: Actor.Combat >= Target.Combat)
                 if (finalDist <= 1 && actor.stats.combat >= target.stats.combat) {
                     plan.push({ type: 'BRAWL_ATTACK', attackerId: actorId, targetId: target.id, weapon });
                 }
             } else if (dist <= 1 && actor.stats.combat >= target.stats.combat) {
-                // Already adjacent
                 plan.push({ type: 'BRAWL_ATTACK', attackerId: actorId, targetId: target.id, weapon });
             }
         }
     } else {
-        // TACTICAL ADVANCE: Move half speed (prefer cover) and Shoot
-        const path = getShortestPath(state, actor.position, target.position);
-        if (path && path.length > 0) {
-            const halfSpeed = Math.floor(speed / 2);
-            const moveTarget = path.slice(0, halfSpeed)[path.slice(0, halfSpeed).length - 1];
-            plan.push({ type: 'MOVE_PARTICIPANT', participantId: actorId, to: moveTarget });
-            
-            // Shoot if LoS exists (should exist if target found by findBestTarget)
-            if (targetId) {
-                const weapon = actor.weapons[0];
-                if (weapon) {
-                    plan.push({ type: 'SHOOT_ATTACK', attackerId: actorId, targetId: target.id, weapon: weapon as ShootingWeapon });
-                }
-            }
+        // TACTICAL ADVANCE: At least half move towards them, attempting to remain in Cover if possible.
+        // We use evaluateMovementOptions with a preference for cover but a mandatory distance reduction.
+        const halfSpeed = Math.floor(speed / 2);
+        
+        // We evaluate cells up to FULL speed, but we prioritize those that are at least 'halfSpeed' away 
+        // from the start and provide cover.
+        const { bestCell } = evaluateMovementOptions(state, actorId, target.id, speed, {
+            cover: 200,    // High priority for cover
+            los: 100,      // Need to see them
+            distance: -50, // Wants to get closer (at least half move)
+            proximity: 0
+        });
+
+        if (bestCell.x !== actor.position.x || bestCell.y !== actor.position.y) {
+            plan.push({ type: 'MOVE_PARTICIPANT', participantId: actorId, to: bestCell });
         }
+
+        // Shoot if LoS exists
+        plan.push({ type: 'SHOOT_ATTACK', attackerId: actorId, targetId: target.id, weapon });
     }
 
     return { actions: plan, nextRng: currentRng };
