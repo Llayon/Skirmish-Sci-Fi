@@ -22,7 +22,7 @@ export function generateGuardianAIPlan(
     leadId: string | null
 ): { actions: BattleAction[], nextRng: RngState } {
     const actor = state.battle.participants.find(p => p.id === actorId);
-    let currentRng = state.rng;
+    const currentRng = state.rng;
     const plan: BattleAction[] = [];
 
     if (!actor || actor.status === 'casualty' || actor.actionsRemaining <= 0) {
