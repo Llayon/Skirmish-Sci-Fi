@@ -76,7 +76,10 @@ export function generateTacticalAIPlan(
         plan.push({ type: 'MOVE_PARTICIPANT', participantId: actorId, to: moveOption.bestCell });
     }
 
-    plan.push({ type: 'SHOOT_ATTACK', attackerId: actorId, targetId: target.id, weapon });
+    // Always try to shoot if LoS exists from new position
+    if (hasLineOfSight(state, moveOption.bestCell, target.position) && weapon.range > 1) {
+        plan.push({ type: 'SHOOT_ATTACK', attackerId: actorId, targetId: target.id, weapon });
+    }
 
     return { actions: plan, nextRng: currentRng };
 }

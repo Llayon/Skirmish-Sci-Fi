@@ -1,6 +1,6 @@
 import { EngineBattleState, BattleAction, EngineDeps } from '../types';
-import { findBestTarget } from '../rules/targetingRules';
-import { calculateCover } from '../rules/visibilityRules';
+import { findBestTarget, findBestWeaponForTarget } from '../rules/targetingRules';
+import { calculateCover, hasLineOfSight } from '../rules/visibilityRules';
 import { evaluateMovementOptions, AIWeights } from './complexAIUtils';
 import { RngState } from '../../rng/rng';
 import { ShootingWeapon } from '../rules/shootingRules';
@@ -14,7 +14,6 @@ const DEFENSIVE_WEIGHTS: AIWeights = {
 
 /**
  * Generates an Action Plan for a Defensive AI participant.
- * Stays in cover, avoids crossing the center line, and reinforcements allies.
  */
 export function generateDefensiveAIPlan(
     state: EngineBattleState,
@@ -40,17 +39,16 @@ export function generateDefensiveAIPlan(
 
     if (!target) return { actions: [], nextRng: currentRng };
 
-    const weapon = actor.weapons[0] as ShootingWeapon;
+    const { weapon } = findBestWeaponForTarget(actor, target, actor.weapons as ShootingWeapon[]);
     const isCurrentlyInCover = calculateCover(state, target.position, actor.position);
+    const distToTarget = Math.max(Math.abs(actor.position.x - target.position.x), Math.abs(actor.position.y - target.position.y));
     
-    // 2. Territorial Constraint: Determine Home Half
     const midLine = state.battle.gridSize.width / 2;
     const isHomeLeft = actor.position.x < midLine;
 
-    // 3. Decision Logic
+    // 2. Decision Logic
     
-    // Special Rule: Reactive Brawl (if opponent is adjacent)
-    const distToTarget = Math.max(Math.abs(actor.position.x - target.position.x), Math.abs(actor.position.y - target.position.y));
+    // Special Rule: Reactive Brawl
     if (distToTarget <= 1 && actor.stats.combat >= target.stats.combat) {
         plan.push({ type: 'BRAWL_ATTACK', attackerId: actorId, targetId: target.id, weapon });
         return { actions: plan, nextRng: currentRng };
@@ -63,11 +61,9 @@ export function generateDefensiveAIPlan(
         // Need to move, but stay in half
         const { bestCell } = evaluateMovementOptions(state, actorId, target.id, actor.stats.speed, {
             ...DEFENSIVE_WEIGHTS,
-            // Custom scoring for half-field logic
             distance: 0 
         });
 
-        // Forced constraint: Don't cross the line
         const wouldCrossLine = isHomeLeft ? bestCell.x >= midLine : bestCell.x < midLine;
         const moveTarget = wouldCrossLine ? actor.position : bestCell;
 
@@ -75,8 +71,10 @@ export function generateDefensiveAIPlan(
             plan.push({ type: 'MOVE_PARTICIPANT', participantId: actorId, to: moveTarget });
         }
 
-        // Shoot if LoS exists
-        plan.push({ type: 'SHOOT_ATTACK', attackerId: actorId, targetId: target.id, weapon });
+        // Shoot if LoS exists from new position
+        if (hasLineOfSight(state, moveTarget, target.position) && weapon.range > 1) {
+            plan.push({ type: 'SHOOT_ATTACK', attackerId: actorId, targetId: target.id, weapon });
+        }
     }
 
     return { actions: plan, nextRng: currentRng };

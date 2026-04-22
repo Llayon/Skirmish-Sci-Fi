@@ -64,6 +64,9 @@ export function generateRampagingAIPlan(
             const finalDist = getDistance(moveTarget, target.position);
             if (finalDist <= 1) {
                 plan.push({ type: 'BRAWL_ATTACK', attackerId: actorId, targetId: target.id, weapon: weapon });
+            } else if (hasLineOfSight(state, moveTarget, target.position) && weapon.range > 1) {
+                // If couldn't brawl but can shoot, do it!
+                plan.push({ type: 'SHOOT_ATTACK', attackerId: actorId, targetId: target.id, weapon: weapon });
             }
         } else {
             // Already adjacent

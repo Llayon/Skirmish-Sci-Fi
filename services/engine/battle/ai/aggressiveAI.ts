@@ -5,6 +5,7 @@ import { evaluateMovementOptions } from './complexAIUtils';
 import { Position } from '@/types/character';
 import { RngState } from '../../rng/rng';
 import { ShootingWeapon } from '../rules/shootingRules';
+import { hasLineOfSight } from '../rules/visibilityRules';
 
 // Inline distance helper
 function getDistance(p1: Position, p2: Position): number {
@@ -60,6 +61,7 @@ export function generateAggressiveAIPlan(
     if (isChargeMode) {
         // FAST AS POSSIBLE (Full Speed)
         const path = getShortestPath(state, actor.position, target.position);
+        
         if (path && path.length > 0) {
             const movePath = path.filter(p => p.x !== target.position.x || p.y !== target.position.y);
             
@@ -68,8 +70,12 @@ export function generateAggressiveAIPlan(
                 plan.push({ type: 'MOVE_PARTICIPANT', participantId: actorId, to: moveTarget });
                 
                 const finalDist = getDistance(moveTarget, target.position);
+                // Rule: They will not enter a Brawl with an opponent that has higher Combat Skill.
                 if (finalDist <= 1 && actor.stats.combat >= target.stats.combat) {
                     plan.push({ type: 'BRAWL_ATTACK', attackerId: actorId, targetId: target.id, weapon });
+                } else if (targetId && hasLineOfSight(state, moveTarget, target.position) && weapon.range > 1) {
+                    // If couldn't brawl but can shoot, do it!
+                    plan.push({ type: 'SHOOT_ATTACK', attackerId: actorId, targetId: target.id, weapon });
                 }
             } else if (dist <= 1 && actor.stats.combat >= target.stats.combat) {
                 plan.push({ type: 'BRAWL_ATTACK', attackerId: actorId, targetId: target.id, weapon });

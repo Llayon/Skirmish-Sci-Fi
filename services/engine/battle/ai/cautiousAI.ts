@@ -66,7 +66,10 @@ export function generateCautiousAIPlan(
         plan.push({ type: 'MOVE_PARTICIPANT', participantId: actorId, to: finalMoveTarget });
     }
 
-    plan.push({ type: 'SHOOT_ATTACK', attackerId: actorId, targetId: target.id, weapon });
+    // Shoot if LoS exists from new cell
+    if (hasLineOfSight(state, finalMoveTarget, target.position) && weapon.range > 1) {
+        plan.push({ type: 'SHOOT_ATTACK', attackerId: actorId, targetId: target.id, weapon });
+    }
 
     return { actions: plan, nextRng: currentRng };
 }

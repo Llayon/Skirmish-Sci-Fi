@@ -18,7 +18,12 @@ It includes features for procedurally generating characters, managing a campaign
 The application follows a feature-based domain-driven structure:
 - `/components/`: Reusable UI components categorized by domain (`battle/`, `campaign/`, `ui/`, `modals/`).
 - `/stores/`: Global state management using Zustand, divided into logical stores (`battleStore`, `campaignStore`, `crewStore`, `uiStore`, `multiplayerStore`).
-- `/services/`: Core application and business logic decoupled from the UI. Includes domain logic, external API adapters (e.g., Gemini), and Three.js logic.
+- `/services/`: Core application and business logic.
+    - `/services/engine/`: Pure deterministic battle engine (V2).
+        - `/services/engine/battle/ai/`: Decision logic for all 7 enemy profiles.
+        - `/services/engine/battle/rules/`: Pure game rules (LoS, Targeting, AoE, Accuracy).
+        - `/services/engine/battle/actions/`: Deterministic action reducers.
+        - `/services/engine/utils/`: Math and grid utilities (Raycast, Pathfinding).
 - `/constants/`: Static game data, lookup tables, and configuration (items, enemies, terrain).
 - `/hooks/`: Custom React hooks for shared logic, encapsulating state and service interactions.
 - `/types/`: TypeScript type definitions for domain models and UI props.
@@ -42,6 +47,22 @@ The application follows a feature-based domain-driven structure:
 - **Component Design:** Separation of concerns is maintained. Keep complex logic in `/services/` or `/hooks/` rather than directly in React components.
 - **Testing:** Unit and component tests are written using Vitest. New features and bug fixes should be accompanied by relevant tests.
 - **Pre-commit:** The project uses Husky and lint-staged to run ESLint (`eslint --fix`) and Prettier (`prettier --write`) on staged files before committing.
+
+### Engine V2 & AI Architecture (Stages 1-7)
+The battle engine has been migrated to a **Deterministic Reducer** architecture to support multiplayer sync and perfect replayability.
+
+#### Core AI Profiles
+The engine supports 7 distinct behavioral profiles from the rulebook:
+1.  **Aggressive**: Charges and brawls weaker opponents, fires on the move.
+2.  **Rampaging**: Pure aggression, always charges for the closest brawl.
+3.  **Cautious**: Cover-seeker, maintains 12" distance, prefers Aimed shots.
+4.  **Tactical**: Balanced flanking behavior, stays near allies, half-speed cover advance.
+5.  **Defensive**: Territorial control, stays in initial table half, reinforces allies.
+6.  **Beast**: Stalking predator, stays in cover unless a pounce (charge) is possible.
+7.  **Guardian**: Protector drone, mimics lead participant's pace and combat method.
+
+#### Integration Logic
+AI turns are processed atomically via the `PROCESS_AI_TURN` action, which generates a plan and executes it sequentially. The results are broadcast as an **Event Stream** consumed by the UI to trigger animations.
 
 ## Engine V2 Hard Constraints & Development Patterns
 
