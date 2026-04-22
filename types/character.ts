@@ -97,6 +97,7 @@ export interface Character {
   screen?: string; 
   implants: string[];
   utilityDevices: string[];
+  side: 'player' | 'enemy' | 'neutral';
   backstory: string;
   injuries: Injury[];
   task: TaskType;
@@ -201,6 +202,7 @@ export interface Enemy {
   isSpecialist?: boolean;
   isLieutenant?: boolean;
   isUnique?: boolean;
+  side: 'player' | 'enemy' | 'neutral';
   // Battle-specific fields
   position: Position;
   status: ParticipantStatus;

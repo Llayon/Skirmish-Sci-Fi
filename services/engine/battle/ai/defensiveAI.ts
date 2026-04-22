@@ -30,7 +30,7 @@ export function generateDefensiveAIPlan(
     }
 
     const enemies = state.battle.participants.filter(p => 
-        p.id !== actorId && p.status !== 'casualty' && p.type === 'character'
+        p.side !== actor.side && p.status !== 'casualty'
     );
 
     // 1. Identify Target

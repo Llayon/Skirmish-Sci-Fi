@@ -53,12 +53,11 @@ export const resolveConsumable = (
                 break;
             case 'kiranin_crystals': {
                 // Logic: Affects opponents within 4 spaces who haven't acted fully (actionsRemaining === 2)
-                const userRole = user.id.split('-')[0]; // 'host' or 'guest' (simplified)
+                const userSide = user.side;
                 
                 const targets = draft.battle.participants.filter(p => {
                     if (p.id === user.id) return false;
-                    const pRole = p.id.split('-')[0];
-                    const isOpponent = pRole !== userRole; 
+                    const isOpponent = p.side !== userSide; 
                     
                     return isOpponent && p.status === 'active' && p.actionsRemaining === 2 && distance(user.position, p.position) <= 4;
                 });

@@ -4,7 +4,6 @@ import { Terrain } from '@/types/battle';
 
 /**
  * Checks if a point is within the bounds of a terrain object.
- * Pure function to avoid external dependency.
  */
 function isPointInTerrain(point: Position, terrain: Terrain): boolean {
     return (
@@ -38,7 +37,6 @@ function getCellCost(state: EngineBattleState, pos: Position): { walkable: boole
 
 /**
  * Finds the shortest path between two points using A*.
- * Deterministic implementation for Engine V2.
  */
 export function getShortestPath(
     state: EngineBattleState,
@@ -53,13 +51,12 @@ export function getShortestPath(
     const fScore = new Map<string, number>();
 
     const posKey = (p: Position) => `${p.x},${p.y}`;
-    const h = (p: Position) => Math.max(Math.abs(p.x - to.x), Math.abs(p.y - to.y)); // Chebyshev
+    const h = (p: Position) => Math.max(Math.abs(p.x - to.x), Math.abs(p.y - to.y));
 
     gScore.set(posKey(from), 0);
     fScore.set(posKey(from), h(from));
 
     while (openSet.length > 0) {
-        // Deterministic: Pick node with lowest fScore. If tied, pick by key to ensure parity.
         openSet.sort((a, b) => {
             const fa = fScore.get(posKey(a)) ?? Infinity;
             const fb = fScore.get(posKey(b)) ?? Infinity;
@@ -78,23 +75,18 @@ export function getShortestPath(
             return path;
         }
 
-        // Neighbors (8 directions)
         for (let dx = -1; dx <= 1; dx++) {
             for (let dy = -1; dy <= 1; dy++) {
                 if (dx === 0 && dy === 0) continue;
-                
                 const neighbor = { x: current.x + dx, y: current.y + dy };
                 const { walkable, cost } = getCellCost(state, neighbor);
-                
                 if (!walkable) continue;
 
                 const tentativeGScore = (gScore.get(posKey(current)) ?? Infinity) + cost;
-
                 if (tentativeGScore < (gScore.get(posKey(neighbor)) ?? Infinity)) {
                     cameFrom.set(posKey(neighbor), current);
                     gScore.set(posKey(neighbor), tentativeGScore);
                     fScore.set(posKey(neighbor), tentativeGScore + h(neighbor));
-                    
                     if (!openSet.some(p => p.x === neighbor.x && p.y === neighbor.y)) {
                         openSet.push(neighbor);
                     }
@@ -102,6 +94,49 @@ export function getShortestPath(
             }
         }
     }
+    return null;
+}
 
-    return null; // No path found
+/**
+ * Returns all walkable cells adjacent to a target position.
+ */
+export function getAdjacentWalkableCells(state: EngineBattleState, pos: Position, actorId: string): Position[] {
+    const neighbors: Position[] = [];
+    for (let dx = -1; dx <= 1; dx++) {
+        for (let dy = -1; dy <= 1; dy++) {
+            if (dx === 0 && dy === 0) continue;
+            const neighbor = { x: pos.x + dx, y: pos.y + dy };
+            const { walkable } = getCellCost(state, neighbor);
+            
+            if (walkable) {
+                const isOccupied = state.battle.participants.some(p => 
+                    p.id !== actorId && p.status !== 'casualty' && p.position.x === neighbor.x && p.position.y === neighbor.y
+                );
+                if (!isOccupied) neighbors.push(neighbor);
+            }
+        }
+    }
+    return neighbors;
+}
+
+/**
+ * Finds the best adjacent cell to a target to perform a Brawl.
+ */
+export function findOptimalBrawlPosition(
+    state: EngineBattleState,
+    actorPos: Position,
+    targetPos: Position,
+    actorId: string
+): Position | null {
+    const adjacents = getAdjacentWalkableCells(state, targetPos, actorId);
+    if (adjacents.length === 0) return null;
+
+    adjacents.sort((a, b) => {
+        const distA = Math.max(Math.abs(a.x - actorPos.x), Math.abs(a.y - actorPos.y));
+        const distB = Math.max(Math.abs(b.x - actorPos.x), Math.abs(b.y - actorPos.y));
+        if (distA !== distB) return distA - distB;
+        return `${a.x},${a.y}`.localeCompare(`${b.x},${b.y}`);
+    });
+
+    return adjacents[0];
 }

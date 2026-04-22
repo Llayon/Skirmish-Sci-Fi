@@ -52,7 +52,7 @@ export function generateGuardianAIPlan(
 
     // 3. Combat: Support Lead using the SAME method
     const enemies = state.battle.participants.filter(p => 
-        p.id !== actorId && p.id !== leadId && p.status !== 'casualty' && p.type === 'character'
+        p.side !== actor.side && p.id !== leadId && p.status !== 'casualty'
     );
     
     // Pick closest to Lead to support
