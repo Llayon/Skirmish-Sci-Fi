@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { useMultiplayerStore, useBattleStore } from '../stores';
 import { multiplayerService } from '../services/multiplayerService';
@@ -18,7 +17,7 @@ export const useMultiplayer = () => {
             setConnectionStatus('disconnected');
             setIsReconnecting(false);
             return;
-        };
+        }
 
         setConnectionStatus('connecting'); // Assume connecting when role is set
 
@@ -119,7 +118,7 @@ export const useMultiplayer = () => {
             }
         };
 
-        const handlePeerError = (err: any) => {
+        const handlePeerError = (err: { message?: string; type?: string }) => {
             if (err.message === 'connection-failed' || err.type === 'peer-unavailable') {
                 abortMultiplayerBattle();
             }

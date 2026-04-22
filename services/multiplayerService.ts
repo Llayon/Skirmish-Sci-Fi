@@ -1,35 +1,49 @@
 import Peer, { DataConnection } from 'peerjs';
-import type { PeerJSOption } from 'peerjs';
-import { MultiplayerMessage, Crew, Battle, PlayerAction, Position, CharacterStats, ActiveEffect, ParticipantStatus, CharacterWeapon, Injury, TaskType, Character, Enemy, BattleParticipant, Terrain, Mission, BattlePhase, ReactionRollResult, LogEntry } from '../types';
+import { MultiplayerMessage, Crew, Battle, PlayerAction, Position, CharacterStats, ActiveEffect, ParticipantStatus, CharacterWeapon, Injury, TaskType, Character, Enemy, BattleParticipant, Terrain, Mission, ReactionRollResult, LogEntry } from '../types';
 import type { BattleAction, EngineBattleState } from './engine/battle/types';
 import { logger } from './utils/logger';
 
 // --- START: DATA VALIDATION ---
-const isObject = (v: any): v is Record<string, any> => typeof v === 'object' && v !== null && !Array.isArray(v);
-const isString = (v: any): v is string => typeof v === 'string';
-const isNumber = (v: any): v is number => typeof v === 'number';
-const isBoolean = (v: any): v is boolean => typeof v === 'boolean';
-const isArray = (v: any): v is any[] => Array.isArray(v);
-const isStringOrUndefined = (v: any): v is string | undefined => isString(v) || v === undefined;
-const isNumberOrUndefined = (v: any): v is number | undefined => isNumber(v) || v === undefined;
-const isBooleanOrUndefined = (v: any): v is boolean | undefined => isBoolean(v) || v === undefined;
-const isArrayOf = <T>(v: any, check: (item: any) => item is T): v is T[] => isArray(v) && v.every(check);
+const isObject = (v: unknown): v is Record<string, unknown> => typeof v === 'object' && v !== null && !Array.isArray(v);
+const isString = (v: unknown): v is string => typeof v === 'string';
+const isNumber = (v: unknown): v is number => typeof v === 'number';
+const isBoolean = (v: unknown): v is boolean => typeof v === 'boolean';
+const isArray = (v: unknown): v is unknown[] => Array.isArray(v);
+const isStringOrUndefined = (v: unknown): v is string | undefined => isString(v) || v === undefined;
+const isNumberOrUndefined = (v: unknown): v is number | undefined => isNumber(v) || v === undefined;
+const isBooleanOrUndefined = (v: unknown): v is boolean | undefined => isBoolean(v) || v === undefined;
+const isArrayOf = <T>(v: unknown, check: (item: unknown) => item is T): v is T[] => isArray(v) && v.every(check);
 
-const isPosition = (obj: any): obj is Position => isObject(obj) && isNumber(obj.x) && isNumber(obj.y);
-const isPositionOrUndefined = (v: any): v is Position | undefined => isPosition(v) || v === undefined;
-const isCharacterStats = (obj: any): obj is CharacterStats => isObject(obj) && ['reactions', 'speed', 'combat', 'toughness', 'luck', 'savvy'].every(k => isNumber(obj[k]));
-const isCharacterStatsOrUndefined = (v: any): v is Partial<CharacterStats> | undefined => isObject(v) || v === undefined;
-const isActiveEffect = (obj: any): obj is ActiveEffect => isObject(obj) && isString(obj.sourceId) && isString(obj.sourceName) && isNumber(obj.duration) && isCharacterStatsOrUndefined(obj.statModifiers) && isPositionOrUndefined(obj.fleeFrom) && isNumberOrUndefined(obj.fleeDistance) && isBooleanOrUndefined(obj.preventMovement);
-const isCharacterWeapon = (obj: any): obj is CharacterWeapon => isObject(obj) && isString(obj.instanceId) && isString(obj.weaponId) && isStringOrUndefined(obj.modId) && isStringOrUndefined(obj.sightId);
-const isInjury = (obj: any): obj is Injury => isObject(obj) && isString(obj.id) && isString(obj.effect) && isNumber(obj.recoveryTurns);
+const isPosition = (obj: unknown): obj is Position => isObject(obj) && isNumber(obj.x) && isNumber(obj.y);
+const isPositionOrUndefined = (v: unknown): v is Position | undefined => isPosition(v) || v === undefined;
+const isCharacterStats = (obj: unknown): obj is CharacterStats => isObject(obj) && ['reactions', 'speed', 'combat', 'toughness', 'luck', 'savvy'].every(k => isNumber(obj[k]));
+const isCharacterStatsOrUndefined = (v: unknown): v is Partial<CharacterStats> | undefined => isObject(v) || v === undefined;
+
+const isActiveEffect = (obj: unknown): obj is ActiveEffect => 
+    isObject(obj) && 
+    isString(obj.sourceId) && 
+    isString(obj.sourceName) && 
+    isNumber(obj.duration) && 
+    isCharacterStatsOrUndefined(obj.statModifiers) && 
+    isPositionOrUndefined(obj.fleeFrom) && 
+    isNumberOrUndefined(obj.fleeDistance) && 
+    isBooleanOrUndefined(obj.preventMovement);
+
+const isCharacterWeapon = (obj: unknown): obj is CharacterWeapon => 
+    isObject(obj) && 
+    isString(obj.instanceId) && 
+    isString(obj.weaponId) && 
+    isStringOrUndefined(obj.modId) && 
+    isStringOrUndefined(obj.sightId);
+
+const isInjury = (obj: unknown): obj is Injury => isObject(obj) && isString(obj.id) && isString(obj.effect) && isNumber(obj.recoveryTurns);
 const participantStatusValues = ['active', 'stunned', 'casualty', 'dazed'];
-const isParticipantStatus = (v: any): v is ParticipantStatus => isString(v) && participantStatusValues.includes(v);
+const isParticipantStatus = (v: unknown): v is ParticipantStatus => isString(v) && participantStatusValues.includes(v);
 const taskTypeValues = ['idle', 'search_rumors', 'trade', 'train', 'heal', 'find_patron', 'recruit', 'explore', 'track_rival', 'repair', 'decoy_rival'];
-const isTaskType = (v: any): v is TaskType => isString(v) && taskTypeValues.includes(v);
+const isTaskType = (v: unknown): v is TaskType => isString(v) && taskTypeValues.includes(v);
 
-const isBaseParticipant = (obj: any): boolean => {
-    return isObject(obj) &&
-        isString(obj.id) &&
+const isBaseParticipant = (obj: Record<string, unknown>): boolean => {
+    return isString(obj.id) &&
         isCharacterStats(obj.stats) &&
         isArrayOf(obj.weapons, isCharacterWeapon) &&
         isStringOrUndefined(obj.armor) &&
@@ -45,12 +59,12 @@ const isBaseParticipant = (obj: any): boolean => {
         isArrayOf(obj.consumables, isString) &&
         isBooleanOrUndefined(obj.deflectorFieldUsedThisBattle) &&
         isArrayOf(obj.utilityDevices, isString) &&
-        isArrayOf(obj.utilityDevicesUsed ?? [], isString) &&
-        isArrayOf(obj.inoperableWeapons ?? [], isString) &&
+        isArrayOf((obj.utilityDevicesUsed as unknown[]) ?? [], isString) &&
+        isArrayOf((obj.inoperableWeapons as unknown[]) ?? [], isString) &&
         isStringOrUndefined(obj.lastTargetId);
 };
 
-const isCharacter = (obj: any): obj is Character => {
+const isCharacter = (obj: Record<string, unknown>): obj is Character => {
     return isBaseParticipant(obj) &&
         isString(obj.name) &&
         isString(obj.pronouns) &&
@@ -69,25 +83,25 @@ const isCharacter = (obj: any): obj is Character => {
         isBooleanOrUndefined(obj.nanoDocProtection);
 };
 
-const isEnemy = (obj: any): obj is Enemy => {
+const isEnemy = (obj: Record<string, unknown>): obj is Enemy => {
     return isBaseParticipant(obj) &&
         isString(obj.ai) &&
         isStringOrUndefined(obj.name) &&
         isStringOrUndefined(obj.guardedBy);
 };
 
-const isBattleParticipant = (obj: any): obj is BattleParticipant => {
+const isBattleParticipant = (obj: unknown): obj is BattleParticipant => {
     if (!isObject(obj) || !isString(obj.type)) return false;
     if (obj.type === 'character') return isCharacter(obj);
     if (obj.type === 'enemy') return isEnemy(obj);
     return false;
 };
 
-const isCrew = (obj: any): obj is Crew => {
-    return isObject(obj) && isString(obj.name) && isArrayOf(obj.members, isCharacter);
+const isCrew = (obj: unknown): obj is Crew => {
+    return isObject(obj) && isString(obj.name) && isArrayOf(obj.members, (m): m is Character => isObject(m) && isCharacter(m));
 };
 
-const isTerrain = (obj: any): obj is Terrain => {
+const isTerrain = (obj: unknown): obj is Terrain => {
     return isObject(obj) &&
         isString(obj.id) &&
         isString(obj.type) &&
@@ -102,11 +116,11 @@ const isTerrain = (obj: any): obj is Terrain => {
         isStringOrUndefined(obj.parentId);
 };
 
-const isLogEntryObject = (obj: any): obj is LogEntry => {
+const isLogEntryObject = (obj: unknown): obj is LogEntry => {
     return isObject(obj) && isString(obj.key) && (obj.params === undefined || isObject(obj.params)) && (obj.source === undefined || isString(obj.source));
 }
 
-const isMission = (obj: any): obj is Mission => {
+const isMission = (obj: unknown): obj is Mission => {
     return isObject(obj) &&
         isString(obj.type) &&
         isString(obj.titleKey) &&
@@ -114,9 +128,9 @@ const isMission = (obj: any): obj is Mission => {
         isString(obj.status);
 };
 
-const isReactionRollResult = (obj: any): obj is ReactionRollResult => isObject(obj) && isNumber(obj.roll) && isBoolean(obj.success);
+const isReactionRollResult = (obj: unknown): obj is ReactionRollResult => isObject(obj) && isNumber(obj.roll) && isBoolean(obj.success);
 
-const isBattle = (obj: any): obj is Battle => {
+const isBattle = (obj: unknown): obj is Battle => {
     const multiplayerRoleValues = ['host', 'guest'];
     return isObject(obj) &&
         isString(obj.id) &&
@@ -124,7 +138,7 @@ const isBattle = (obj: any): obj is Battle => {
         isObject(obj.gridSize) && isNumber(obj.gridSize.width) && isNumber(obj.gridSize.height) &&
         isArrayOf(obj.terrain, isTerrain) &&
         isMission(obj.mission) &&
-        isArray(obj.log) && obj.log.every((entry: any) => isString(entry) || isLogEntryObject(entry)) &&
+        isArray(obj.log) && obj.log.every((entry: unknown) => isString(entry) || isLogEntryObject(entry)) &&
         isNumber(obj.round) &&
         isString(obj.phase) &&
         isArrayOf(obj.quickActionOrder, isString) &&
@@ -139,7 +153,7 @@ const isBattle = (obj: any): obj is Battle => {
         (obj.activePlayerRole === undefined || obj.activePlayerRole === null || (isString(obj.activePlayerRole) && multiplayerRoleValues.includes(obj.activePlayerRole)));
 };
 
-const isPlayerActionPayload = (type: string, payload: any): boolean => {
+const isPlayerActionPayload = (type: string, payload: unknown): boolean => {
     if (!isObject(payload)) return false;
     switch(type) {
         case 'move':
@@ -164,19 +178,19 @@ const isPlayerActionPayload = (type: string, payload: any): boolean => {
     }
 }
 
-const isPlayerAction = (obj: any): obj is PlayerAction => {
+const isPlayerAction = (obj: unknown): obj is PlayerAction => {
     return isObject(obj) && isString(obj.type) && isPlayerActionPayload(obj.type, obj.payload);
 }
 
-const isBattleAction = (obj: any): obj is BattleAction => {
+const isBattleAction = (obj: unknown): obj is BattleAction => {
     return isObject(obj) && isString(obj.type);
 };
 
-const isEngineBattleState = (obj: any): obj is EngineBattleState => {
+const isEngineBattleState = (obj: unknown): obj is EngineBattleState => {
     return isObject(obj) && isNumber(obj.schemaVersion) && isBattle(obj.battle) && isObject(obj.rng);
 };
 
-const isMultiplayerMessage = (obj: any): obj is MultiplayerMessage => {
+const isMultiplayerMessage = (obj: unknown): obj is MultiplayerMessage => {
     if (!isObject(obj) || !isString(obj.type)) return false;
     switch (obj.type) {
         case 'CREW_SHARE': return isCrew(obj.payload);
@@ -222,8 +236,7 @@ const isMultiplayerMessage = (obj: any): obj is MultiplayerMessage => {
                    (obj.payload.snapshot === undefined || (isObject(obj.payload.snapshot) && isNumber(obj.payload.snapshot.seq) && isEngineBattleState(obj.payload.snapshot.snapshot) && isString(obj.payload.snapshot.hash)));
         default: return false;
         }
-        }
-
+}
 // --- END: DATA VALIDATION ---
 
 class RobustMultiplayerService {
@@ -232,7 +245,6 @@ class RobustMultiplayerService {
   private messageQueue: MultiplayerMessage[] = [];
   private maxQueueSize = 50;
   
-  // New members for rate limiting
   private sentMessagesTimestamps: number[] = [];
   private readonly rateLimit = 10; // messages per second
   private readonly rateLimitWindow = 1000; // 1 second in ms
@@ -248,14 +260,13 @@ class RobustMultiplayerService {
   private isReconnecting = false;
   private reconnectAttempts = 0;
   private maxReconnectAttempts = 5;
-  private reconnectTimer: any = null;
+  private reconnectTimer: ReturnType<typeof setTimeout> | null = null;
 
-  private heartbeatInterval: any = null;
-  private syncInterval: any = null;
+  private heartbeatInterval: ReturnType<typeof setInterval> | null = null;
+  private syncInterval: ReturnType<typeof setInterval> | null = null;
   private lastReceivedPong = 0;
   private lastSentPing = 0;
   
-  private peerId: string | null = null;
   private hostIdForGuest: string | null = null;
 
   constructor() {
@@ -269,9 +280,8 @@ class RobustMultiplayerService {
   private initializePeer(): Promise<string> {
     return new Promise((resolve, reject) => {
       if (this.peer && !this.peer.destroyed) {
-        if (this.peer.id) {
-          return resolve(this.peer.id);
-        }
+        const id = this.peer.id;
+        if (id) return resolve(id);
       } else if (this.peer) {
         this.peer.destroy();
       }
@@ -288,8 +298,7 @@ class RobustMultiplayerService {
       this.peer = newPeer;
       
       const onOpen = (id: string) => {
-        this.peerId = id;
-        (newPeer as any).removeListener('error', onError);
+        newPeer.off('error', onError);
 
         if (this.hostIdForGuest && this.isReconnecting) {
           logger.info("Reconnected to PeerJS server, now attempting to reconnect to host peer...");
@@ -297,13 +306,13 @@ class RobustMultiplayerService {
           this.setupConnection(connection);
         }
         
-        (newPeer as any).on('error', (err: any) => {
+        newPeer.on('error', (err: Error) => {
             logger.error('PeerJS runtime error:', err);
             this.onPeerErrorCallbacks.forEach(cb => cb(err));
             this.startReconnecting();
         });
         
-        (newPeer as any).on('disconnected', () => {
+        newPeer.on('disconnected', () => {
           this.onServerDisconnectCallbacks.forEach(cb => cb());
           this.startReconnecting();
         });
@@ -313,12 +322,12 @@ class RobustMultiplayerService {
       
       const onError = (err: Error) => {
         logger.error('PeerJS initialization error:', err);
-        (newPeer as any).removeListener('open', onOpen);
+        newPeer.off('open', onOpen);
         reject(err);
       };
 
-      (newPeer as any).once('open', onOpen);
-      (newPeer as any).once('error', onError);
+      newPeer.once('open', onOpen);
+      newPeer.once('error', onError);
     });
   }
 
@@ -340,7 +349,7 @@ class RobustMultiplayerService {
   }
 
   private stopHeartbeat() {
-      clearInterval(this.heartbeatInterval);
+      if (this.heartbeatInterval) clearInterval(this.heartbeatInterval);
       this.heartbeatInterval = null;
       this.lastSentPing = 0;
   }
@@ -357,7 +366,7 @@ class RobustMultiplayerService {
   }
 
   private stopSyncInterval() {
-    clearInterval(this.syncInterval);
+    if (this.syncInterval) clearInterval(this.syncInterval);
     this.syncInterval = null;
   }
 
@@ -402,14 +411,14 @@ class RobustMultiplayerService {
       logger.info("Reconnection successful.");
       this.isReconnecting = false;
       this.reconnectAttempts = 0;
-      clearTimeout(this.reconnectTimer);
+      if (this.reconnectTimer) clearTimeout(this.reconnectTimer);
       this.reconnectTimer = null;
   }
 
   private setupConnection(connection: DataConnection) {
     this.conn = connection;
 
-    (connection as any).on('open', () => {
+    connection.on('open', () => {
       this.onSuccessfulReconnect();
       
       if (this.messageQueue.length > 0) {
@@ -429,13 +438,13 @@ class RobustMultiplayerService {
       }
     });
 
-    (connection as any).on('data', (data: any) => {
+    connection.on('data', (data: unknown) => {
       if (!isMultiplayerMessage(data)) {
         logger.warn('Received invalid multiplayer message from peer, discarding:', data);
         return;
       }
 
-      const message = data as MultiplayerMessage;
+      const message = data;
 
       if (this.hostIdForGuest) { // Guest logic
         if (message.type === 'PING') {
@@ -455,12 +464,12 @@ class RobustMultiplayerService {
       this.onDataCallbacks.forEach(cb => cb(message));
     });
 
-    (connection as any).on('close', () => {
+    connection.on('close', () => {
       this.onDisconnectCallbacks.forEach(cb => cb());
       this.startReconnecting();
     });
 
-    (connection as any).on('error', (err: any) => {
+    connection.on('error', (err: Error) => {
       this.onPeerErrorCallbacks.forEach(cb => cb(err));
       this.startReconnecting();
     });
@@ -468,13 +477,15 @@ class RobustMultiplayerService {
 
   public async host(): Promise<string> {
     const peerId = await this.initializePeer();
-    (this.peer! as any).on('connection', (connection: DataConnection) => {
-      if (this.conn && this.conn.open) {
-        connection.close();
-        return;
-      }
-      this.setupConnection(connection);
-    });
+    if (this.peer) {
+        this.peer.on('connection', (connection: DataConnection) => {
+            if (this.conn && this.conn.open) {
+                connection.close();
+                return;
+            }
+            this.setupConnection(connection);
+        });
+    }
     return peerId;
   }
 
@@ -526,7 +537,7 @@ class RobustMultiplayerService {
   public disconnect() {
     this.stopHeartbeat();
     this.stopSyncInterval();
-    clearTimeout(this.reconnectTimer);
+    if (this.reconnectTimer) clearTimeout(this.reconnectTimer);
     this.conn?.close();
     this.peer?.destroy();
     this.peer = null;

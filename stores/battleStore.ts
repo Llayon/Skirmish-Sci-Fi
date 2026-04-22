@@ -99,13 +99,7 @@ export interface BattleState {
   engineNetExpectedSeq: number; // Guest's expected next seq
   engineNetActionBuffer: Record<number, { battleId?: string; seq: number; action: BattleAction; resultingHash: string; clientActionId?: string }>;
 
-  // Engine V2 Host Persistence
-  // Note: we don't store the full persisted object in state, just use helpers
-
   // Engine V2 Event Stream
-  // events: append-only, consumed via eventCursor
-  // cursor advances as consumer plays events
-  // engineLog separately from battle.log for engine specific events
   events: BattleEvent[];
   eventCursor: number;
   engineLog: EngineLogEntry[];
@@ -145,10 +139,6 @@ export interface BattleState {
     processEnemyTurn: (enemyId: string) => Promise<{ animation: AnimationState; duration: number }>;
     resolveNotableSight: () => void;
 
-    /**
-     * Toggle Engine V2 mode (for dev/testing).
-     * In production, controlled by VITE_ENGINE_V2 env var.
-     */
     setEngineV2Enabled: (enabled: boolean) => void;
 
     // Engine V2 Actions
@@ -174,7 +164,7 @@ export interface BattleState {
   };
     handleEngineActionFromNetwork: (payload: { action: BattleAction; resultingHash: string; battleId?: string; clientActionId?: string; seq: number }) => { ok: boolean; mode?: 'ack' | 'applied' | 'dup_ignored' | 'buffered' | 'out_of_order_ack'; reason?: string; expected?: string | number; actual?: string | number };
     handleEngineActionRejectFromNetwork: (payload: { clientActionId: string; reason: 'invalid_action' | 'battle_id_mismatch' | 'resyncing'; battleId?: string }) => { ok: boolean; reason?: string };
-    createEngineSnapshotForNetwork: () => { snapshot: EngineBattleState; hash: string; battleId?: string; seq: number } | null;
+    createEngineSnapshotForNetwork: () => { snapshot: EngineBattleState; hash: string; battleId: string; seq: number } | null;
     applyEngineSnapshotFromNetwork: (payload: { snapshot: EngineBattleState; hash: string; battleId?: string; seq: number }) => void;
     
     // Host Persistence
@@ -248,7 +238,7 @@ export const useBattleStore = create<BattleState>()(
                 if (latestBattle) {
                   multiplayerService.send({ type: 'BATTLE_UPDATE', payload: latestBattle });
                 }
-              }, 100); // 100ms debounce window
+              }, 100); 
             }
             if (multiplayerRole === 'guest') {
               state.pendingActionFor = null;
@@ -319,9 +309,6 @@ export const useBattleStore = create<BattleState>()(
            if (restored) {
                logger.info(`Host session restored for battle ${newBattle.id}`);
            } else {
-               // If no session to restore, we are fresh. 
-               // Baseline captured above is correct.
-               // We should probably clear any stale session if ID collisions (unlikely but safe)
                clearHostSession(newBattle.id);
            }
         }
@@ -526,8 +513,12 @@ export const useBattleStore = create<BattleState>()(
                state.engineActionLog.push({ action, resultingHash: result.stateHash });
 
                // Events & Log
-                if (result.events.length > 0) (state.events as any).push(...result.events);
-                if (result.log.length > 0) (state.engineLog as any).push(...result.log);
+                if (result.events.length > 0) {
+                    state.events.push(...result.events);
+                }
+                if (result.log.length > 0) {
+                    state.engineLog.push(...result.log);
+                }
 
                 // Pending state
                state.engineNetClientActionSeq = seq;
@@ -578,8 +569,8 @@ export const useBattleStore = create<BattleState>()(
               // Hash tracking
               state.lastEngineStateHash = result.stateHash;
 
-              // Action log (for replay/multiplayer)
-              state.engineActionLog.push(action);
+              // Action log
+              state.engineActionLog.push({ action, resultingHash: result.stateHash });
 
               // Event stream
               if (result.events.length > 0) {
@@ -588,7 +579,7 @@ export const useBattleStore = create<BattleState>()(
               
               // Engine log
               if (result.log.length > 0) {
-                (state.engineLog as any).push(...result.log);
+                state.engineLog.push(...result.log);
               }
 
               // Increment Host Seq (atomically)
@@ -598,21 +589,16 @@ export const useBattleStore = create<BattleState>()(
             // Host Persistence: Save immediately
             const currentState = get();
             if (currentState.engineBaseline && currentState.engineBaselineHash && currentState.lastEngineStateHash) {
-                // Improved Host Persistence: Incremental Append or Replay Rebuild
                 const currentSeq = currentState.engineNetHostSeq;
-                let actionLogForPersistence: Array<{ seq: number; action: BattleAction; resultingHash: string; clientActionId?: string }> = [];
+                let actionLogForPersistence: PersistedHostSession['actionLog'] = [];
                 
                 const existingSession = loadHostSession(battle.id);
-                // Check if existing session is compatible for incremental append:
-                // 1. Same baseline hash
-                // 2. Its lastSeq must be exactly one less than our current seq
                 const isIncremental = existingSession && 
                                       existingSession.baselineHash === currentState.engineBaselineHash && 
                                       existingSession.lastSeq === currentSeq - 1 &&
                                       existingSession.actionLog.length === currentSeq - 1;
 
                 if (isIncremental) {
-                     // Incremental Append
                      actionLogForPersistence = [
                          ...existingSession.actionLog,
                          {
@@ -623,35 +609,27 @@ export const useBattleStore = create<BattleState>()(
                          }
                      ];
                 } else {
-                    // Full Rebuild via Replay (Deterministic)
-                    // We must regenerate hashes for ALL actions in history if we lost the chain
                     try {
-                        const replayResult = replayBattle(currentState.engineBaseline, currentState.engineActionLog, { rng: { d6, d100 } });
+                        const actionsOnly = currentState.engineActionLog.map(l => l.action);
+                        const replayResult = replayBattle(currentState.engineBaseline, actionsOnly, { rng: { d6, d100 } });
                         
                         if (replayResult.steps.length !== currentState.engineActionLog.length) {
-                            logger.error('Host Persistence: Replay mismatch during save! Clearing corrupt session.', { 
-                                logLength: currentState.engineActionLog.length, 
-                                replaySteps: replayResult.steps.length 
-                            });
+                            logger.error('Host Persistence: Replay mismatch during save! Clearing corrupt session.');
                             clearHostSession(battle.id);
-                            actionLogForPersistence = [];
                         } else {
                              actionLogForPersistence = currentState.engineActionLog.map((act, i) => ({
                                  seq: i + 1,
-                                 action: act,
+                                 action: act.action,
                                  resultingHash: replayResult.steps[i].stateHash,
-                                 // We lose clientActionId history on full rebuild, but preserve for current action
                                  clientActionId: (i === currentState.engineActionLog.length - 1) ? meta?.clientActionId : undefined 
                              }));
                         }
                     } catch (e) {
-                        logger.error('Host Persistence: Replay failed during save! Clearing corrupt session.', e);
+                        logger.error('Host Persistence: Replay failed during save!', e);
                         clearHostSession(battle.id);
-                        actionLogForPersistence = [];
                     }
                 }
 
-                // Persist only if we have a complete chain for [1..currentSeq]
                 if (actionLogForPersistence.length === currentSeq) {
                     saveHostSession({
                         schemaVersion: CURRENT_ENGINE_SCHEMA_VERSION,
@@ -664,7 +642,6 @@ export const useBattleStore = create<BattleState>()(
                         savedAt: Date.now()
                     });
                 } else {
-                    // "валидная цепочка или ничего"
                     clearHostSession(battle.id);
                 }
             }
@@ -680,28 +657,17 @@ export const useBattleStore = create<BattleState>()(
                 }
             });
         } else {
-            // Local Apply (Single Player / Guest pre-proposal)
-            // Note: Guest optimistic apply is handled in the separate block above.
-            // This block is for non-multiplayer local play primarily.
             set((state) => {
-              // Core state
               state.battle = result.next.battle;
               state.rng = result.next.rng;
-              
-              // Hash tracking
               state.lastEngineStateHash = result.stateHash;
+              state.engineActionLog.push({ action, resultingHash: result.stateHash });
 
-              // Action log (for replay/multiplayer)
-              state.engineActionLog.push(action);
-
-              // Event stream
               if (result.events.length > 0) {
-                (state.events as any).push(...result.events);
+                state.events.push(...result.events);
               }
-              
-              // Engine log
               if (result.log.length > 0) {
-                (state.engineLog as any).push(...result.log);
+                state.engineLog.push(...result.log);
               }
             });
         }
@@ -711,20 +677,20 @@ export const useBattleStore = create<BattleState>()(
       enqueueEvents: (events) => {
         if (events.length === 0) return;
         set((state) => {
-          (state.events as any).push(...events);
+          state.events.push(...events);
         });
       },
       enqueueEngineLog: (log) => {
         if (log.length === 0) return;
         set((state) => {
-          (state.engineLog as any).push(...log);
+          state.engineLog.push(...log);
         });
       },
       appendEngineResult: (result) => {
         if (result.events.length === 0 && result.log.length === 0) return;
         set((state) => {
-          (state.events as any).push(...result.events);
-          (state.engineLog as any).push(...result.log);
+          state.events.push(...result.events);
+          state.engineLog.push(...result.log);
         });
       },
       advanceEventCursor: (step = 1) =>
@@ -734,14 +700,12 @@ export const useBattleStore = create<BattleState>()(
         }),
       resetEventStream: () =>
         set((state) => {
-          // Event stream
           state.events = [];
           state.eventCursor = 0;
           state.engineLog = [];
         }),
       resetEngineTracking: () =>
         set((state) => {
-          // Action log & hash
           state.engineActionLog = [];
           state.lastEngineStateHash = null;
           state.engineBaseline = null;
@@ -759,8 +723,6 @@ export const useBattleStore = create<BattleState>()(
         const { battle, rng } = get();
         if (!battle || !rng) return;
 
-        // Create detached snapshot for baseline
-        // Note: using structuredClone on get() state avoids Immer proxy issues
         const battleClone = structuredClone(battle);
         const rngClone = structuredClone(rng);
 
@@ -776,8 +738,6 @@ export const useBattleStore = create<BattleState>()(
           state.engineBaseline = baseline;
           state.engineBaselineHash = hash;
           state.engineActionLog = [];
-          
-          // Also update current tracking hash to match baseline
           state.lastEngineStateHash = hash;
         });
       },
@@ -830,36 +790,19 @@ export const useBattleStore = create<BattleState>()(
         });
       },
       applyEngineSnapshot: (snapshot: EngineSnapshot, seq?: number) => {
-        if (snapshot.schemaVersion !== CURRENT_ENGINE_SCHEMA_VERSION) {
-          logger.warn(`applyEngineSnapshot: schema version mismatch (expected ${CURRENT_ENGINE_SCHEMA_VERSION}, got ${snapshot.schemaVersion})`);
-          // Proceeding anyway as per requirements (warn but continue)
-        }
-
-        // Validate hash
         const engineState: EngineBattleState = {
             schemaVersion: snapshot.schemaVersion,
             battle: snapshot.battle,
             rng: snapshot.rng
         };
-        const calculatedHash = hashEngineBattleState(engineState);
-        if (calculatedHash !== snapshot.stateHash) {
-            logger.warn(`applyEngineSnapshot: hash mismatch (snapshot says ${snapshot.stateHash}, calculated ${calculatedHash})`);
-        }
 
         set((state) => {
-            // Apply state
             state.battle = snapshot.battle;
             state.rng = snapshot.rng;
             state.lastEngineStateHash = snapshot.stateHash;
-
-            // Set as new baseline
             state.engineBaseline = structuredClone(engineState);
             state.engineBaselineHash = snapshot.stateHash;
-
-            // Clear history/events
             state.engineActionLog = [];
-            
-            // Clear UI streams
             state.events = [];
             state.eventCursor = 0;
             state.engineLog = [];
@@ -867,7 +810,6 @@ export const useBattleStore = create<BattleState>()(
             state.engineNetPendingClientActionId = null;
             state.engineNetPendingPredictedHash = null;
             
-            // Set ordering state (if provided)
             if (seq !== undefined) {
                 state.engineNetRemoteSeq = seq;
                 state.engineNetExpectedSeq = seq + 1;
@@ -882,16 +824,12 @@ export const useBattleStore = create<BattleState>()(
         if (engineNetResyncing) {
             return { ok: false, reason: 'resyncing' };
         }
-
         if (!battle || !rng) {
             return { ok: false, reason: 'missing_state' };
         }
-
         if (payload.battleId && battle.id !== payload.battleId) {
             return { ok: false, reason: 'battle_id_mismatch' };
         }
-
-        // Ensure baseline exists
         if (!engineBaseline) {
             get().actions.captureEngineBaseline();
         }
@@ -908,52 +846,23 @@ export const useBattleStore = create<BattleState>()(
         } catch (e) {
             const errorMessage = e instanceof Error ? e.message : String(e);
             logger.warn(`applyEngineActionFromNetwork: invalid action`, e);
-            
-            set((state) => {
-                state.engineNetResyncing = true;
-            });
-
-            return { 
-                ok: false, 
-                reason: 'invalid_action', 
-                errorMessage 
-            };
+            set((state) => { state.engineNetResyncing = true; });
+            return { ok: false, reason: 'invalid_action', errorMessage };
         }
 
-        // Check hash
         if (result.stateHash !== payload.resultingHash) {
             logger.warn(`Engine Desync! Expected: ${payload.resultingHash}, Actual: ${result.stateHash}`);
-            // Note: We do NOT apply the state if it mismatches, to avoid further divergence.
-            // The network layer should handle this by requesting a sync.
-            
-            set((state) => {
-                state.engineNetResyncing = true;
-            });
-
-            return { 
-                ok: false, 
-                reason: 'hash_mismatch', 
-                expected: payload.resultingHash, 
-                actual: result.stateHash 
-            };
+            set((state) => { state.engineNetResyncing = true; });
+            return { ok: false, reason: 'hash_mismatch', expected: payload.resultingHash, actual: result.stateHash };
         }
 
-        // Apply
         set((state) => {
             state.battle = result.next.battle;
             state.rng = result.next.rng;
             state.lastEngineStateHash = result.stateHash;
             state.engineActionLog.push({ action: payload.action, resultingHash: result.stateHash });
-
-            // Events & Log
-            if (result.events.length > 0) {
-                (state.events as any).push(...result.events);
-            }
-            if (result.log.length > 0) {
-                (state.engineLog as any).push(...result.log);
-            }
-            
-            // Ensure resync flag is false on success (in case it was set momentarily or leftovers)
+            if (result.events.length > 0) state.events.push(...result.events);
+            if (result.log.length > 0) state.engineLog.push(...result.log);
             state.engineNetResyncing = false;
         });
 
@@ -961,26 +870,17 @@ export const useBattleStore = create<BattleState>()(
       },
 
       handleEngineActionFromNetwork: (payload) => {
-        const { engineNetResyncing, engineNetExpectedSeq, engineNetPendingClientActionId, lastEngineStateHash, engineNetActionBuffer } = get();
+        const { engineNetResyncing, engineNetExpectedSeq, engineNetPendingClientActionId } = get();
 
-        // 1. Resync check
-        if (engineNetResyncing) {
-            return { ok: false, reason: 'resyncing' };
-        }
+        if (engineNetResyncing) return { ok: false, reason: 'resyncing' };
 
         const seq = payload.seq;
         const expected = engineNetExpectedSeq;
 
-        // 2. Duplicate/Late check
-        if (seq < expected) {
-             return { ok: true, mode: 'dup_ignored', expected, actual: seq };
-        }
+        if (seq < expected) return { ok: true, mode: 'dup_ignored', expected, actual: seq };
 
-        // 3. Buffer check (Future packet)
         if (seq > expected) {
-            // 3.1 Special case: Out-of-order ACK
             if (payload.clientActionId && payload.clientActionId === engineNetPendingClientActionId) {
-                 logger.warn(`handleEngineActionFromNetwork: out-of-order ACK (seq ${seq} > expected ${expected}). Resyncing.`);
                  set((state) => {
                     state.engineNetResyncing = true;
                     state.engineNetPendingClientActionId = null;
@@ -989,22 +889,14 @@ export const useBattleStore = create<BattleState>()(
                  });
                  return { ok: false, reason: 'out_of_order_ack', expected, actual: seq };
             }
-
-            // Buffer it
-            set((state) => {
-                state.engineNetActionBuffer[seq] = payload;
-            });
+            set((state) => { state.engineNetActionBuffer[seq] = payload; });
             return { ok: true, mode: 'buffered', expected, actual: seq };
         }
 
-        // 4. Process (seq === expected)
-        // Helper to process a single action payload
         const processPayload = (p: typeof payload) => {
              const currentStore = get();
-             // ACK Check
              if (p.clientActionId && p.clientActionId === currentStore.engineNetPendingClientActionId) {
                  if (currentStore.lastEngineStateHash === p.resultingHash) {
-                     // ACK OK
                      set((state) => {
                          state.engineNetPendingClientActionId = null;
                          state.engineNetPendingPredictedHash = null;
@@ -1013,23 +905,16 @@ export const useBattleStore = create<BattleState>()(
                      });
                      return { ok: true, mode: 'ack' } as const;
                  } else {
-                     // ACK Mismatch
                      set((state) => {
                          state.engineNetResyncing = true;
                          state.engineNetPendingClientActionId = null;
                          state.engineNetPendingPredictedHash = null;
                          state.engineNetActionBuffer = {};
                      });
-                     return { 
-                         ok: false, 
-                         reason: 'hash_mismatch', 
-                         expected: p.resultingHash, 
-                         actual: currentStore.lastEngineStateHash ?? undefined 
-                     } as const;
+                     return { ok: false, reason: 'hash_mismatch', expected: p.resultingHash, actual: currentStore.lastEngineStateHash ?? undefined } as const;
                  }
              }
 
-             // Apply Authoritative
              const result = currentStore.actions.applyEngineActionFromNetwork(p);
              if (result.ok) {
                  set((state) => {
@@ -1038,7 +923,6 @@ export const useBattleStore = create<BattleState>()(
                  });
                  return { ...result, mode: 'applied' } as const;
              } else {
-                 // Apply failed -> Resync
                  set((state) => {
                      state.engineNetPendingClientActionId = null;
                      state.engineNetPendingPredictedHash = null;
@@ -1048,29 +932,18 @@ export const useBattleStore = create<BattleState>()(
              }
         };
 
-        // Process current
         const result = processPayload(payload);
         if (!result.ok) return result;
 
-        // 5. Drain Buffer
-        let nextSeq = get().engineNetExpectedSeq;
-        let nextPayload = get().engineNetActionBuffer[nextSeq];
-        
-        while (nextPayload) {
-             // Remove from buffer
-             set((state) => {
-                 delete state.engineNetActionBuffer[nextSeq];
-             });
-             
-             const drainResult = processPayload(nextPayload);
-             if (!drainResult.ok) {
-                 return drainResult;
-             }
-             
-             nextSeq = get().engineNetExpectedSeq;
-             nextPayload = get().engineNetActionBuffer[nextSeq];
+        let nSeq = get().engineNetExpectedSeq;
+        let nPayload = get().engineNetActionBuffer[nSeq];
+        while (nPayload) {
+             set((state) => { delete state.engineNetActionBuffer[nSeq]; });
+             const dResult = processPayload(nPayload);
+             if (!dResult.ok) return dResult;
+             nSeq = get().engineNetExpectedSeq;
+             nPayload = get().engineNetActionBuffer[nSeq];
         }
-
         return result;
       },
 
@@ -1080,7 +953,7 @@ export const useBattleStore = create<BattleState>()(
              set((state) => {
                  state.engineNetPendingClientActionId = null;
                  state.engineNetPendingPredictedHash = null;
-                 state.engineNetResyncing = true; // Force resync as we are desynced
+                 state.engineNetResyncing = true;
              });
              return { ok: true };
          }
@@ -1091,7 +964,6 @@ export const useBattleStore = create<BattleState>()(
         const { battle, rng, lastEngineStateHash, engineNetHostSeq } = get();
         if (!battle || !rng) return null;
 
-        // If we don't have a hash yet, calculate it
         let hash = lastEngineStateHash;
         if (!hash) {
             const tempState: EngineBattleState = {
@@ -1117,11 +989,9 @@ export const useBattleStore = create<BattleState>()(
       applyEngineSnapshotFromNetwork: (payload) => {
         const { battle } = get();
         if (payload.battleId && battle && battle.id !== payload.battleId) {
-            logger.warn(`applyEngineSnapshotFromNetwork: battleId mismatch (local ${battle.id}, remote ${payload.battleId})`);
+            logger.warn(`applyEngineSnapshotFromNetwork: battleId mismatch`);
             return;
         }
-
-        // Reuse existing logic, wrapping payload
         get().actions.applyEngineSnapshot({
             schemaVersion: payload.snapshot.schemaVersion,
             battle: payload.snapshot.battle,
@@ -1135,38 +1005,26 @@ export const useBattleStore = create<BattleState>()(
           state.engineV2Enabled = enabled;
         }),
 
-      // Host Persistence
       tryRestoreHostSession: (battleId) => {
          const session = loadHostSession(battleId);
          if (!session) return false;
 
-         logger.info(`Restoring host session for ${battleId} (lastSeq: ${session.lastSeq})`);
-
-         // Restore store state
          set((state) => {
              state.engineBaseline = session.baseline;
              state.engineBaselineHash = session.baselineHash;
              state.engineActionLog = session.actionLog; 
              state.engineNetHostSeq = session.lastSeq;
              state.lastEngineStateHash = session.lastHash;
-             // Don't set state.battle yet, replay will do it
          });
 
-         // Perform replay to restore full battle state
          get().actions.replayAndApplyEngine();
-
-         // Verify hash match
          const verify = get().actions.verifyEngineReplay();
          if (!verify.ok) {
-             logger.error('Host Session Restore Failed: Replay mismatch', verify);
-             // Corrupt session? Clear it and force fresh start?
-             // Prompt says: "если найдено: восстановить... и сделать replay"
-             // If replay fails, we probably shouldn't proceed with corrupt state.
+             logger.error('Host Session Restore Failed: Replay mismatch');
              clearHostSession(battleId);
              get().actions.resetEngineTracking();
              return false;
          }
-
          return true;
       },
 
@@ -1178,119 +1036,44 @@ export const useBattleStore = create<BattleState>()(
          if (battle.id !== payload.battleId) return;
 
          const hostLastSeq = engineNetHostSeq;
-         
-         // 1. Check if we need full snapshot (too far behind OR no usable delta history)
-         const SYNC_THRESHOLD = 200;
          const diff = hostLastSeq - payload.lastReceivedSeq;
-
          const startSeq = payload.lastReceivedSeq + 1;
          const startIndex = startSeq - 1;
-         const historyComplete = engineActionLog.length === hostLastSeq;
-         const hasDeltaHistory = 
-           historyComplete && 
-           startIndex >= 0 && 
-           startIndex < engineActionLog.length;
-
+         
          const needsSnapshot = 
-           diff > SYNC_THRESHOLD || 
+           diff > 200 || 
            !engineBaseline || 
            payload.lastReceivedSeq < 0 || 
-           (diff > 0 && !hasDeltaHistory);
+           (diff > 0 && (startIndex < 0 || startIndex >= engineActionLog.length));
 
          if (needsSnapshot) {
              const snapshot = get().actions.createEngineSnapshotForNetwork();
              if (snapshot) {
                  multiplayerService.send({ 
                      type: 'ENGINE_SYNC_RESPONSE', 
-                     payload: {
-                         battleId: battle.id,
-                         startSeq: snapshot.seq,
-                         actions: [],
-                         snapshot
-                     }
+                     payload: { battleId: battle.id, startSeq: snapshot.seq, actions: [], snapshot }
                  });
              }
              return;
          }
 
-         // 2. Prepare Delta Actions
-         // If guest is up to date (or ahead??), send nothing or empty list
          if (diff <= 0) {
               multiplayerService.send({ 
                  type: 'ENGINE_SYNC_RESPONSE', 
-                 payload: {
-                     battleId: battle.id,
-                     startSeq: hostLastSeq, // effectively no-op
-                     actions: []
-                 }
+                 payload: { battleId: battle.id, startSeq: hostLastSeq, actions: [] }
              });
              return;
          }
 
-         // Slice actions:
-         // engineActionLog is array [0..N-1]
-         // engineNetHostSeq corresponds to length N.
-         // Action with seq K is at index K-1.
-         // We need actions starting from lastReceivedSeq + 1 up to hostLastSeq.
-
-         const actionsToSync = engineActionLog.slice(startIndex);
-
-         // We need to provide resultingHash for each action to ensure strict verification
-         // Since we don't store per-step hashes in memory, we must replay to calculate them.
-         // This is a tradeoff: CPU vs Memory. For <200 actions it's fast.
-         
-         // Optimization: If we only send 1 action and it's the last one, we have lastEngineStateHash.
-         // But for general case, we replay.
-         
-         let actionsWithHashes: Array<{ seq: number; action: BattleAction; resultingHash: string }> = [];
-         
-         try {
-             // We need to replay from baseline up to the end of the slice
-             // BUT wait, replayBattle returns ALL steps.
-             // We can just replay everything and pick the ones we need.
-             
-             const replayResult = replayBattle(engineBaseline!, engineActionLog, { rng: { d6, d100 } });
-             
-             // Check if replay matches our expectation of log length
-             if (replayResult.steps.length !== engineActionLog.length) {
-                 logger.warn(`Sync: Replay length mismatch! Log: ${engineActionLog.length}, Steps: ${replayResult.steps.length}`);
-                 // Fallback to snapshot if something is wrong
-                 const snapshot = get().actions.createEngineSnapshotForNetwork();
-                 if (snapshot) {
-                     multiplayerService.send({ type: 'ENGINE_SYNC_RESPONSE', payload: { battleId: battle.id, startSeq: snapshot.seq, actions: [], snapshot } });
-                 }
-                 return;
-             }
-
-             // Map steps to response format
-             actionsWithHashes = actionsToSync.map((action, i) => {
-                 const seq = startSeq + i;
-                 const stepIndex = seq - 1; // 0-based index in steps
-                 const step = replayResult.steps[stepIndex];
-                 return {
-                     seq,
-                     action,
-                     resultingHash: step.stateHash
-                 };
-             });
-
-         } catch (e) {
-             logger.error('Sync: Replay failed during sync preparation', e);
-             // Fallback to snapshot
-             const snapshot = get().actions.createEngineSnapshotForNetwork();
-             if (snapshot) {
-                 multiplayerService.send({ type: 'ENGINE_SYNC_RESPONSE', payload: { battleId: battle.id, startSeq: snapshot.seq, actions: [], snapshot } });
-             }
-             return;
-         }
+         const actionsToSync = engineActionLog.slice(startIndex).map((l, i) => ({
+             seq: startSeq + i,
+             action: l.action,
+             resultingHash: l.resultingHash
+         }));
 
          multiplayerService.send({
              type: 'ENGINE_SYNC_RESPONSE',
-             payload: {
-                 battleId: battle.id,
-                 startSeq,
-                 actions: actionsWithHashes
-             }
+             payload: { battleId: battle.id, startSeq, actions: actionsToSync }
          });
       },
 
@@ -1299,27 +1082,15 @@ export const useBattleStore = create<BattleState>()(
           const battle = get().battle;
 
           if (multiplayerRole !== 'guest') return;
-          
-          if (battle && battle.id !== payload.battleId) {
-              logger.warn('Sync Response: Battle ID mismatch', payload.battleId, battle.id);
-              return;
-          }
+          if (battle && battle.id !== payload.battleId) return;
 
           set((state) => {
-              // 1. Apply Snapshot if provided
               if (payload.snapshot) {
-                  logger.info('Sync Response: Applying Snapshot', payload.snapshot.seq);
-                  // We can use existing action but we are inside immer setter
-                  // We'll duplicate logic briefly or call it outside? 
-                  // Zustand/Immer allows calling actions if they are available in scope or via get()
-                  // But here we are inside the reducer. We should just mutate state directly using same logic.
-                  
-                  // Logic from applyEngineSnapshot:
                   const snap = payload.snapshot.snapshot;
                   state.battle = snap.battle;
                   state.rng = snap.rng;
                   state.lastEngineStateHash = payload.snapshot.hash;
-                  state.engineBaseline = structuredClone(snap); // Baseline is the snapshot
+                  state.engineBaseline = structuredClone(snap);
                   state.engineBaselineHash = payload.snapshot.hash;
                   state.engineActionLog = [];
                   state.events = [];
@@ -1328,95 +1099,55 @@ export const useBattleStore = create<BattleState>()(
                   state.engineNetResyncing = false;
                   state.engineNetPendingClientActionId = null;
                   state.engineNetPendingPredictedHash = null;
-                  
                   state.engineNetRemoteSeq = payload.snapshot.seq;
                   state.engineNetExpectedSeq = payload.snapshot.seq + 1;
                   state.engineNetActionBuffer = {};
               }
 
-              // 2. Apply Actions
               if (payload.actions.length > 0) {
-                  logger.info(`Sync Response: Applying ${payload.actions.length} actions`);
-                  
-                  // Sort just in case, though they should be ordered
                   const sortedActions = payload.actions.sort((a, b) => a.seq - b.seq);
-                  
                   for (const item of sortedActions) {
-                      // Reuse handleEngineActionFromNetwork logic logic?
-                      // It's complex with buffering/ACKS.
-                      // Here we are strictly applying authoritative history.
-                      // We can just forcefully apply if seq matches expected.
-                      
-                      // If we just applied snapshot, expected is snap.seq + 1.
-                      // If we didn't apply snapshot, expected should match item.seq (if we requested correctly).
-                      
                       const expected = state.engineNetExpectedSeq;
                       if (item.seq !== expected) {
-                          logger.warn(`Sync Response: Gap in actions! Expected ${expected}, got ${item.seq}`);
-                          // If gap, we can't continue applying safely without re-requesting or buffering.
-                          // But this is a SYNC response, it should be contiguous.
-                          // If not, we stop here and request sync again?
                           state.engineNetResyncing = true;
                           break;
                       }
-
-                      // Apply
-                      // We can't call store.actions.applyEngineActionFromNetwork here easily because we need return values and it uses get().
-                      // We have to replicate the reduce logic.
-                      
-                      // Check baseline
                       if (!state.engineBaseline) {
-                          // Should have been captured or snapshotted.
-                          // If missing, we are broken.
                           state.engineNetResyncing = true;
                           break;
                       }
-
                       const engineState: EngineBattleState = {
                           schemaVersion: CURRENT_ENGINE_SCHEMA_VERSION,
                           battle: state.battle!,
                           rng: state.rng!
                       };
-
                       try {
                           const result = reduceBattle(engineState, item.action, { rng: { d6, d100 } });
-                          
                           if (result.stateHash !== item.resultingHash) {
-                               logger.error(`Sync Response: Hash mismatch at seq ${item.seq}`);
                                state.engineNetResyncing = true;
                                break;
                           }
-
-                          // Update State
                           state.battle = result.next.battle;
                           state.rng = result.next.rng;
                           state.lastEngineStateHash = result.stateHash;
                           state.engineActionLog.push({ action: item.action, resultingHash: result.stateHash });
-                          
-                          if (result.events.length > 0) (state.events as any).push(...result.events);
-                          if (result.log.length > 0) (state.engineLog as any).push(...result.log);
-                          
+                          if (result.events.length > 0) state.events.push(...result.events);
+                          if (result.log.length > 0) state.engineLog.push(...result.log);
                           state.engineNetRemoteSeq = item.seq;
                           state.engineNetExpectedSeq = item.seq + 1;
-
                       } catch (e) {
-                          logger.error(`Sync Response: Reduce failed at seq ${item.seq}`, e);
                           state.engineNetResyncing = true;
                           break;
                       }
                   }
               }
 
-              // Final cleanup if successful
               if (!state.engineNetResyncing) {
-                  logger.info('Sync Response: Sync Complete');
                   state.engineNetPendingClientActionId = null;
                   state.engineNetPendingPredictedHash = null;
                   state.engineNetActionBuffer = {};
               }
           });
-          
-          // If we failed and set resyncing=true, the hook will trigger another sync request automatically if connected.
       },
     },
   }))

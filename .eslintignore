@@ -1,9 +1,21 @@
-# Temporary: lint only Engine V2 code
+# Focus on Engine V2 and updated subsystems
 **/*
 
 !services/
+!services/*.ts
 !services/engine/
 !services/engine/**
+
+!stores/
+!stores/**
+
+!hooks/
+!hooks/**
+
+!types/
+!types/**
+
+!src/hooks/battle/**
 
 !.eslintrc.cjs
 !.eslintignore

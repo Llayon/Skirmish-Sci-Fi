@@ -64,6 +64,13 @@ The engine supports 7 distinct behavioral profiles from the rulebook:
 #### Integration Logic
 AI turns are processed atomically via the `PROCESS_AI_TURN` action, which generates a plan and executes it sequentially. The results are broadcast as an **Event Stream** consumed by the UI to trigger animations.
 
+### Multiplayer Synchronization (Stage 6E)
+The engine utilizes a **Delta Sync** mechanism to maintain consistency across peers with minimal network overhead.
+- **Action Log with Hashes**: `engineActionLog` stores each action along with the resulting state hash, allowing instant verification.
+- **Delta Catch-up**: Guests can request missing actions via `ENGINE_SYNC_REQUEST`. The Host provides a delta if the gap is small (<200 actions) and hashes match.
+- **Full Fallback**: If a hash mismatch or a large gap is detected, the system falls back to an atomic `ENGINE_SNAPSHOT` sync.
+- **Deterministic Replay**: Peers use the pure `reduceBattle` logic to reconstruct state from actions, ensuring identical results on all clients.
+
 ## Engine V2 Hard Constraints & Development Patterns
 
 <hard_constraints>
