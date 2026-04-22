@@ -42,7 +42,7 @@ export type BattleAction =
     | { type: 'INTERACT_OBJECTIVE'; participantId: string; objectiveId: string }
     | { type: 'MISSION_SETUP' }
     | { type: 'USE_CONSUMABLE'; participantId: string; consumableId: string }
-    | { type: 'THROW_GRENADE'; attackerId: string; targetPos: Position; weapon: { id: string; damage: number; radius: number } };
+    | { type: 'THROW_GRENADE'; attackerId: string; targetPos: Position; weapon: { id: string; range: number; damage: number; radius: number } };
 
 /**
  * Events emitted by the engine for UI/Animation consumption.
