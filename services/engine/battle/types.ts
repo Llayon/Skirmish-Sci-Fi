@@ -38,7 +38,11 @@ export type BattleAction =
     | { type: 'SHOOT_ATTACK'; attackerId: string; targetId: string; weapon: { id: string; range: number; shots: number; damage: number; traits: string[] } }
     | { type: 'BRAWL_ATTACK'; attackerId: string; targetId: string; weapon?: { id: string; damage: number; traits: string[] } }
     | { type: 'ADVANCE_PHASE' }
-    | { type: 'END_TURN'; participantId?: string };
+    | { type: 'END_TURN'; participantId?: string }
+    | { type: 'INTERACT_OBJECTIVE'; participantId: string; objectiveId: string }
+    | { type: 'MISSION_SETUP' }
+    | { type: 'USE_CONSUMABLE'; participantId: string; consumableId: string }
+    | { type: 'THROW_GRENADE'; attackerId: string; targetPos: Position; weapon: { id: string; damage: number; radius: number } };
 
 /**
  * Events emitted by the engine for UI/Animation consumption.
@@ -55,7 +59,10 @@ export type BattleEvent =
     | { type: 'PHASE_CHANGED'; from: BattlePhase; to: BattlePhase }
     | { type: 'ACTIVE_PARTICIPANT_SET'; participantId: string | null }
     | { type: 'TURN_INDEX_SET'; index: number }
-    | { type: 'ROUND_INCREMENTED'; round: number };
+    | { type: 'ROUND_INCREMENTED'; round: number }
+    | { type: 'CONSUMABLE_USED'; participantId: string; targetId?: string; consumableId: string }
+    | { type: 'AOE_IMPACT_DECLARED'; attackerId: string; targetPos: Position; radius: number; weaponId: string }
+    | { type: 'AOE_PARTICIPANT_HIT'; targetId: string; damage: number; roll: number; killed: boolean };
 
 /**
  * Dependencies injected into the reducer.
@@ -79,18 +86,5 @@ export interface BattleEngineResult {
     next: EngineBattleState;
     events: BattleEvent[];
     log: EngineLogEntry[];
-    stateHash: string;
-}
-
-export type EngineVerifyResult =
-  | { ok: true; stepsCount: number; replayedHash: string }
-  | { ok: false; reason: 'no_baseline' }
-  | { ok: false; reason: 'no_expected_hash' }
-  | { ok: false; reason: 'hash_mismatch'; expectedHash: string; replayedHash: string; stepsCount: number };
-
-export interface EngineSnapshot {
-    schemaVersion: typeof CURRENT_ENGINE_SCHEMA_VERSION;
-    battle: Battle;
-    rng: RngState;
     stateHash: string;
 }

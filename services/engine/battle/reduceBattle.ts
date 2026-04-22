@@ -9,6 +9,7 @@ import { advancePhase } from './actions/advancePhase';
 import { interactObjective } from './actions/interactObjective';
 import { missionSetup } from './actions/missionSetup';
 import { resolveConsumable } from './actions/resolveConsumable';
+import { throwGrenade } from './actions/throwGrenade';
 
 function assertNever(x: never): never {
     throw new Error(`reduceBattle: unhandled action ${JSON.stringify(x)}`);
@@ -38,6 +39,8 @@ function dispatchAction(
             return missionSetup(state, deps);
         case 'USE_CONSUMABLE':
             return resolveConsumable(state, action);
+        case 'THROW_GRENADE':
+            return throwGrenade(state, action, deps);
         default:
             assertNever(action);
     }
