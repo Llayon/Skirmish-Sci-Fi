@@ -11,7 +11,7 @@ export function throwGrenade(
     action: Extract<BattleAction, { type: 'THROW_GRENADE' }>,
     deps: EngineDeps
 ): { next: EngineBattleState; events: BattleEvent[]; log: EngineLogEntry[] } {
-    const { battle, rng } = state;
+    const { rng } = state;
     const { attackerId, targetPos, weapon } = action;
     
     const events: BattleEvent[] = [];
@@ -32,7 +32,7 @@ export function throwGrenade(
     const targets = getParticipantsInRadius(state, targetPos, weapon.radius);
 
     const next = produce(state, draft => {
-        const attacker = draft.battle.participants.find((p: any) => p.id === attackerId);
+        const attacker = draft.battle.participants.find(p => p.id === attackerId);
         if (attacker) {
             attacker.actionsRemaining--;
             attacker.actionsTaken.combat = true;
@@ -40,7 +40,7 @@ export function throwGrenade(
 
         // 3. Process each target in the blast
         for (const target of targets) {
-            const draftTarget = draft.battle.participants.find((p: any) => p.id === target.id);
+            const draftTarget = draft.battle.participants.find(p => p.id === target.id);
             if (!draftTarget) continue;
 
             // Damage Roll
