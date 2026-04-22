@@ -14,4 +14,11 @@ export type MultiplayerMessage =
   | { type: 'ENGINE_ACTION'; payload: { battleId?: string; seq: number; action: BattleAction; resultingHash: string; clientActionId?: string } }
   | { type: 'ENGINE_SNAPSHOT'; payload: { battleId?: string; seq: number; snapshot: EngineBattleState; hash: string } }
   | { type: 'ENGINE_PROPOSE_ACTION'; payload: { battleId?: string; clientActionId: string; action: BattleAction; predictedHash?: string } }
-  | { type: 'ENGINE_ACTION_REJECT'; payload: { battleId?: string; clientActionId: string; reason: 'invalid_action' | 'battle_id_mismatch' | 'resyncing' } };
+  | { type: 'ENGINE_ACTION_REJECT'; payload: { battleId?: string; clientActionId: string; reason: 'invalid_action' | 'battle_id_mismatch' | 'resyncing' } }
+  | { type: 'ENGINE_SYNC_REQUEST'; payload: { battleId: string; lastReceivedSeq: number } }
+  | { type: 'ENGINE_SYNC_RESPONSE'; payload: { 
+      battleId: string; 
+      startSeq: number; 
+      actions: Array<{ seq: number; action: BattleAction; resultingHash: string }>; 
+      snapshot?: { seq: number; snapshot: EngineBattleState; hash: string };
+    } };

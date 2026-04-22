@@ -210,9 +210,20 @@ const isMultiplayerMessage = (obj: any): obj is MultiplayerMessage => {
                    isString(obj.payload.clientActionId) &&
                    isString(obj.payload.reason) && ['invalid_action', 'battle_id_mismatch', 'resyncing'].includes(obj.payload.reason) &&
                    (obj.payload.battleId === undefined || isString(obj.payload.battleId));
+        case 'ENGINE_SYNC_REQUEST':
+            return isObject(obj.payload) &&
+                   isString(obj.payload.battleId) &&
+                   isNumber(obj.payload.lastReceivedSeq);
+        case 'ENGINE_SYNC_RESPONSE':
+            return isObject(obj.payload) &&
+                   isString(obj.payload.battleId) &&
+                   isNumber(obj.payload.startSeq) &&
+                   isArray(obj.payload.actions) &&
+                   (obj.payload.snapshot === undefined || (isObject(obj.payload.snapshot) && isNumber(obj.payload.snapshot.seq) && isEngineBattleState(obj.payload.snapshot.snapshot) && isString(obj.payload.snapshot.hash)));
         default: return false;
-    }
-}
+        }
+        }
+
 // --- END: DATA VALIDATION ---
 
 class RobustMultiplayerService {

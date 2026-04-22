@@ -30,7 +30,13 @@ export const useMultiplayer = () => {
                 if (message.type === 'ENGINE_ACTION' && multiplayerRole === 'guest') {
                     const result = useBattleStore.getState().actions.handleEngineActionFromNetwork(message.payload);
                     if (!result.ok && (result.reason === 'hash_mismatch' || result.reason === 'invalid_action' || result.reason === 'out_of_order_ack')) {
-                        multiplayerService.send({ type: 'REQUEST_SYNC' });
+                        const state = useBattleStore.getState();
+                        if (state.battle) {
+                            multiplayerService.send({ 
+                                type: 'ENGINE_SYNC_REQUEST', 
+                                payload: { battleId: state.battle.id, lastReceivedSeq: state.engineNetRemoteSeq } 
+                            });
+                        }
                     }
                     return;
                 }
@@ -40,9 +46,25 @@ export const useMultiplayer = () => {
                     return;
                 }
 
+                if (message.type === 'ENGINE_SYNC_REQUEST' && multiplayerRole === 'host') {
+                    useBattleStore.getState().actions.handleEngineSyncRequestFromNetwork(message.payload);
+                    return;
+                }
+
+                if (message.type === 'ENGINE_SYNC_RESPONSE' && multiplayerRole === 'guest') {
+                    useBattleStore.getState().actions.handleEngineSyncResponseFromNetwork(message.payload);
+                    return;
+                }
+
                 if (message.type === 'ENGINE_ACTION_REJECT' && multiplayerRole === 'guest') {
                     useBattleStore.getState().actions.handleEngineActionRejectFromNetwork(message.payload);
-                    multiplayerService.send({ type: 'REQUEST_SYNC' });
+                    const state = useBattleStore.getState();
+                    if (state.battle) {
+                        multiplayerService.send({ 
+                            type: 'ENGINE_SYNC_REQUEST', 
+                            payload: { battleId: state.battle.id, lastReceivedSeq: state.engineNetRemoteSeq } 
+                        });
+                    }
                     return;
                 }
 
@@ -107,14 +129,23 @@ export const useMultiplayer = () => {
         const unsubSyncRequest = multiplayerService.onSyncRequest(() => {
             if (multiplayerRole !== 'host') return;
 
-            const engineV2Enabled = useBattleStore.getState().engineV2Enabled;
+            const store = useBattleStore.getState();
+            const engineV2Enabled = store.engineV2Enabled;
             if (engineV2Enabled) {
-                const snapshot = useBattleStore.getState().actions.createEngineSnapshotForNetwork();
-                if (snapshot) {
-                    multiplayerService.send({ type: 'ENGINE_SNAPSHOT', payload: snapshot });
+                const snapshot = store.actions.createEngineSnapshotForNetwork();
+                if (snapshot && store.battle) {
+                    multiplayerService.send({ 
+                        type: 'ENGINE_SYNC_RESPONSE', 
+                        payload: {
+                            battleId: store.battle.id,
+                            startSeq: snapshot.seq,
+                            actions: [],
+                            snapshot
+                        } 
+                    });
                 }
             } else {
-                useBattleStore.getState().actions.sendFullBattleSync();
+                store.actions.sendFullBattleSync();
             }
         });
 

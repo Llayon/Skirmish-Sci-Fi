@@ -85,7 +85,7 @@ export interface BattleState {
 
   // Engine V2 State Tracking
   lastEngineStateHash: string | null;
-  engineActionLog: BattleAction[];
+  engineActionLog: Array<{ action: BattleAction; resultingHash: string }>;
   engineBaseline: EngineBattleState | null;
   engineBaselineHash: string | null;
   engineNetResyncing: boolean;
@@ -523,7 +523,7 @@ export const useBattleStore = create<BattleState>()(
                state.battle = result.next.battle;
                state.rng = result.next.rng;
                state.lastEngineStateHash = result.stateHash;
-               state.engineActionLog.push(action);
+               state.engineActionLog.push({ action, resultingHash: result.stateHash });
 
                // Events & Log
                 if (result.events.length > 0) (state.events as any).push(...result.events);
@@ -791,7 +791,8 @@ export const useBattleStore = create<BattleState>()(
           return { ok: false, reason: 'no_expected_hash' };
         }
 
-        const result = replayBattle(engineBaseline, engineActionLog, { rng: { d6, d100 } });
+        const actions = engineActionLog.map(l => l.action);
+        const result = replayBattle(engineBaseline, actions, { rng: { d6, d100 } });
         
         const finalHash = result.steps.length > 0 
             ? result.steps[result.steps.length - 1].stateHash 
@@ -816,7 +817,8 @@ export const useBattleStore = create<BattleState>()(
           return;
         }
 
-        const result = replayBattle(engineBaseline, engineActionLog, { rng: { d6, d100 } });
+        const actions = engineActionLog.map(l => l.action);
+        const result = replayBattle(engineBaseline, actions, { rng: { d6, d100 } });
         const finalHash = result.steps.length > 0 
             ? result.steps[result.steps.length - 1].stateHash 
             : hashEngineBattleState(result.final);
@@ -941,8 +943,9 @@ export const useBattleStore = create<BattleState>()(
             state.battle = result.next.battle;
             state.rng = result.next.rng;
             state.lastEngineStateHash = result.stateHash;
-            state.engineActionLog.push(payload.action);
+            state.engineActionLog.push({ action: payload.action, resultingHash: result.stateHash });
 
+            // Events & Log
             if (result.events.length > 0) {
                 (state.events as any).push(...result.events);
             }
@@ -1143,7 +1146,7 @@ export const useBattleStore = create<BattleState>()(
          set((state) => {
              state.engineBaseline = session.baseline;
              state.engineBaselineHash = session.baselineHash;
-             state.engineActionLog = session.actionLog.map(a => a.action); // Restore actions
+             state.engineActionLog = session.actionLog; 
              state.engineNetHostSeq = session.lastSeq;
              state.lastEngineStateHash = session.lastHash;
              // Don't set state.battle yet, replay will do it
@@ -1388,7 +1391,7 @@ export const useBattleStore = create<BattleState>()(
                           state.battle = result.next.battle;
                           state.rng = result.next.rng;
                           state.lastEngineStateHash = result.stateHash;
-                          state.engineActionLog.push(item.action);
+                          state.engineActionLog.push({ action: item.action, resultingHash: result.stateHash });
                           
                           if (result.events.length > 0) (state.events as any).push(...result.events);
                           if (result.log.length > 0) (state.engineLog as any).push(...result.log);
