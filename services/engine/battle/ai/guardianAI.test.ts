@@ -63,4 +63,20 @@ describe('guardianAI: generateGuardianAIPlan', () => {
         expect(actions).toHaveLength(1);
         expect(actions[0]).toMatchObject({ type: 'SHOOT_ATTACK', targetId: 'Player' });
     });
+
+    it('Scenario 3: Guardian mimics lead combat method (Brawl)', () => {
+        const lead = createParticipant('Master', { x: 5, y: 5 });
+        // Set lead state to "just brawled"
+        lead.actionsTaken.combat = true;
+        lead.actionsTaken.move = false;
+
+        const actor = createParticipant('Drone', { x: 5, y: 6 }); // Adjacent to lead
+        const player = createParticipant('Player', { x: 5, y: 7 }); // Adjacent to drone
+        const state = createState([lead, actor, player]);
+
+        const { actions } = generateGuardianAIPlan(state, actor.id, deps, lead.id);
+
+        // Expected: Drone should Brawl because Master is brawling and Player is adjacent
+        expect(actions.some(a => a.type === 'BRAWL_ATTACK')).toBe(true);
+    });
 });

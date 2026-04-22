@@ -36,20 +36,21 @@ export function generateGuardianAIPlan(
         return generateAggressiveAIPlan(state, actorId, deps);
     }
 
-    // 2. Cohesion: Stay within 3" of Lead
+    // 2. Cohesion & Pace: Stay within 3" of Lead, but move only if lead moved or we are too far
     const distToLead = Math.max(Math.abs(actor.position.x - lead.position.x), Math.abs(actor.position.y - lead.position.y));
     const speed = actor.stats.speed;
+    
+    const leadMoved = lead.actionsTaken.move || lead.actionsTaken.dash;
 
-    if (distToLead > 3) {
-        // Move towards Lead
+    if (distToLead > 3 || (leadMoved && distToLead > 1)) {
+        // Move towards Lead to maintain the 3" tether
         const { bestCell } = evaluateMovementOptions(state, actorId, lead.id, speed, GUARDIAN_WEIGHTS);
         if (bestCell.x !== actor.position.x || bestCell.y !== actor.position.y) {
             plan.push({ type: 'MOVE_PARTICIPANT', participantId: actorId, to: bestCell });
         }
     }
 
-    // 3. Combat: Support Lead
-    // Identify target - simplified: nearest visible opponent or Lead's target
+    // 3. Combat: Support Lead using the SAME method
     const enemies = state.battle.participants.filter(p => 
         p.id !== actorId && p.id !== leadId && p.status !== 'casualty' && p.type === 'character'
     );
@@ -63,7 +64,21 @@ export function generateGuardianAIPlan(
 
     if (target) {
         const weapon = actor.weapons[0] as ShootingWeapon;
-        plan.push({ type: 'SHOOT_ATTACK', attackerId: actorId, targetId: target.id, weapon });
+        
+        // Rule: "attack... using the same methods (firing / Brawling)"
+        if (lead.actionsTaken.combat && !lead.actionsTaken.move) {
+            // If lead is in brawl or adjacent, try to brawl
+            const distToTarget = Math.max(Math.abs(actor.position.x - target.position.x), Math.abs(actor.position.y - target.position.y));
+            
+            if (distToTarget <= 1) {
+                plan.push({ type: 'BRAWL_ATTACK', attackerId: actorId, targetId: target.id, weapon });
+            } else {
+                plan.push({ type: 'SHOOT_ATTACK', attackerId: actorId, targetId: target.id, weapon });
+            }
+        } else {
+            // Default to shooting if lead just moved or we aren't sure
+            plan.push({ type: 'SHOOT_ATTACK', attackerId: actorId, targetId: target.id, weapon });
+        }
     }
 
     return { actions: plan, nextRng: currentRng };
