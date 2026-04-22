@@ -10,6 +10,7 @@ import { interactObjective } from './actions/interactObjective';
 import { missionSetup } from './actions/missionSetup';
 import { resolveConsumable } from './actions/resolveConsumable';
 import { throwGrenade } from './actions/throwGrenade';
+import { generateAIPlan } from './ai/aiDispatcher';
 
 function assertNever(x: never): never {
     throw new Error(`reduceBattle: unhandled action ${JSON.stringify(x)}`);
@@ -41,6 +42,21 @@ function dispatchAction(
             return resolveConsumable(state, action);
         case 'THROW_GRENADE':
             return throwGrenade(state, action, deps);
+        case 'PROCESS_AI_TURN': {
+            const { actions: plan, nextRng } = generateAIPlan(state, action.participantId, deps);
+            let currentState = { ...state, rng: nextRng };
+            const allEvents: BattleEvent[] = [];
+            const allLog: EngineLogEntry[] = [];
+
+            for (const subAction of plan) {
+                const result = dispatchAction(currentState, subAction, deps);
+                currentState = result.next;
+                allEvents.push(...result.events);
+                allLog.push(...result.log);
+            }
+
+            return { next: currentState, events: allEvents, log: allLog };
+        }
         default:
             assertNever(action);
     }
