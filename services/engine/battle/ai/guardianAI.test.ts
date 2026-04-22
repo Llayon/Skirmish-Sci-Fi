@@ -5,20 +5,24 @@ import { Battle, BattleParticipant } from '@/types';
 import { ShootingWeapon } from '../rules/shootingRules';
 
 describe('guardianAI: generateGuardianAIPlan', () => {
-    const createParticipant = (id: string, pos: { x: number, y: number }): BattleParticipant => ({
+    const createParticipant = (id: string, pos: { x: number, y: number }, side: 'player' | 'enemy' = 'enemy'): BattleParticipant => ({
         id,
         name: id,
         position: pos,
         status: 'active',
-        stats: { speed: 4, reactions: 3, combat: 3, toughness: 3, savvy: 3, aim: 0 },
-        type: 'character',
+        stats: { speed: 4, reactions: 3, combat: 3, toughness: 3, savvy: 3, aim: 0, luck: 0 },
+        type: side === 'player' ? 'character' : 'enemy',
+        side,
         weapons: [{ id: 'pistol', range: 12, shots: 1, damage: 1, traits: [] } as ShootingWeapon],
         activeEffects: [],
         consumables: [],
         stunTokens: 0,
         actionsRemaining: 2,
-        actionsTaken: { move: false, combat: false, dash: false, interact: false }
-    } as BattleParticipant);
+        actionsTaken: { move: false, combat: false, dash: false, interact: false },
+        currentLuck: 0,
+        consumablesUsedThisTurn: 0,
+        utilityDevices: []
+    } as unknown as BattleParticipant);
 
     const createState = (participants: BattleParticipant[]): EngineBattleState => ({
         schemaVersion: 1,
@@ -38,9 +42,9 @@ describe('guardianAI: generateGuardianAIPlan', () => {
     } as EngineDeps;
 
     it('Scenario 1: Guardian follows Lead when out of tether range', () => {
-        const lead = createParticipant('Master', { x: 0, y: 0 });
-        const actor = createParticipant('Drone', { x: 10, y: 0 });
-        const player = createParticipant('Player', { x: 0, y: 5 });
+        const lead = createParticipant('Master', { x: 0, y: 0 }, 'enemy');
+        const actor = createParticipant('Drone', { x: 10, y: 0 }, 'enemy');
+        const player = createParticipant('Player', { x: 0, y: 5 }, 'player');
         const state = createState([lead, actor, player]);
 
         const { actions } = generateGuardianAIPlan(state, actor.id, deps, lead.id);
@@ -53,9 +57,9 @@ describe('guardianAI: generateGuardianAIPlan', () => {
     });
 
     it('Scenario 2: Guardian shoots at target near Lead', () => {
-        const lead = createParticipant('Master', { x: 0, y: 0 });
-        const actor = createParticipant('Drone', { x: 1, y: 1 });
-        const player = createParticipant('Player', { x: 0, y: 5 });
+        const lead = createParticipant('Master', { x: 0, y: 0 }, 'enemy');
+        const actor = createParticipant('Drone', { x: 1, y: 1 }, 'enemy'); // Already close
+        const player = createParticipant('Player', { x: 0, y: 5 }, 'player');
         const state = createState([lead, actor, player]);
 
         const { actions } = generateGuardianAIPlan(state, actor.id, deps, lead.id);
@@ -65,18 +69,16 @@ describe('guardianAI: generateGuardianAIPlan', () => {
     });
 
     it('Scenario 3: Guardian mimics lead combat method (Brawl)', () => {
-        const lead = createParticipant('Master', { x: 5, y: 5 });
-        // Set lead state to "just brawled"
+        const lead = createParticipant('Master', { x: 5, y: 5 }, 'enemy');
         lead.actionsTaken.combat = true;
         lead.actionsTaken.move = false;
 
-        const actor = createParticipant('Drone', { x: 5, y: 6 }); // Adjacent to lead
-        const player = createParticipant('Player', { x: 5, y: 7 }); // Adjacent to drone
+        const actor = createParticipant('Drone', { x: 5, y: 6 }, 'enemy'); // Adjacent to lead
+        const player = createParticipant('Player', { x: 5, y: 7 }, 'player'); // Adjacent to drone
         const state = createState([lead, actor, player]);
 
         const { actions } = generateGuardianAIPlan(state, actor.id, deps, lead.id);
 
-        // Expected: Drone should Brawl because Master is brawling and Player is adjacent
         expect(actions.some(a => a.type === 'BRAWL_ATTACK')).toBe(true);
     });
 });

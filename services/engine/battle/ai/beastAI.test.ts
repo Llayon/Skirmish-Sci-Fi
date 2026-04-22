@@ -5,20 +5,24 @@ import { Battle, BattleParticipant, Terrain } from '@/types';
 import { ShootingWeapon } from '../rules/shootingRules';
 
 describe('beastAI: generateBeastAIPlan', () => {
-    const createParticipant = (id: string, pos: { x: number, y: number }): BattleParticipant => ({
+    const createParticipant = (id: string, pos: { x: number, y: number }, side: 'player' | 'enemy' = 'enemy'): BattleParticipant => ({
         id,
         name: id,
         position: pos,
         status: 'active',
-        stats: { speed: 4, reactions: 3, combat: 3, toughness: 3, savvy: 3, aim: 0 },
-        type: 'character',
+        stats: { speed: 4, reactions: 3, combat: 3, toughness: 3, savvy: 3, aim: 0, luck: 0 },
+        type: side === 'player' ? 'character' : 'enemy',
+        side,
         weapons: [{ id: 'claws', range: 1, shots: 1, damage: 1, traits: [] } as ShootingWeapon],
         activeEffects: [],
         consumables: [],
         stunTokens: 0,
         actionsRemaining: 2,
-        actionsTaken: { move: false, combat: false, dash: false, interact: false }
-    } as BattleParticipant);
+        actionsTaken: { move: false, combat: false, dash: false, interact: false },
+        currentLuck: 0,
+        consumablesUsedThisTurn: 0,
+        utilityDevices: []
+    } as unknown as BattleParticipant);
 
     const createState = (participants: BattleParticipant[], terrain: Terrain[] = []): EngineBattleState => ({
         schemaVersion: 1,
@@ -38,8 +42,8 @@ describe('beastAI: generateBeastAIPlan', () => {
     } as EngineDeps;
 
     it('Scenario 1: Beast stalking from distance (prefer cover)', () => {
-        const actor = createParticipant('Beast', { x: 0, y: 0 });
-        const player = createParticipant('Player', { x: 15, y: 0 });
+        const actor = createParticipant('Beast', { x: 0, y: 0 }, 'enemy');
+        const player = createParticipant('Player', { x: 15, y: 0 }, 'player');
         const terrain: Terrain[] = [{ 
             id: 'c1', name: 'Cover', type: 'Obstacle', position: { x: 2, y: 1 }, size: { width: 1, height: 1 }, 
             providesCover: true, blocksLineOfSight: false, isDifficult: false, isImpassable: false
@@ -53,14 +57,15 @@ describe('beastAI: generateBeastAIPlan', () => {
     });
 
     it('Scenario 2: Beast pounces when within move distance', () => {
-        const actor = createParticipant('Beast', { x: 0, y: 0 });
-        const player = createParticipant('Player', { x: 4, y: 0 });
+        const actor = createParticipant('Beast', { x: 0, y: 0 }, 'enemy');
+        const player = createParticipant('Player', { x: 4, y: 0 }, 'player');
         const state = createState([actor, player]);
 
         const { actions } = generateBeastAIPlan(state, actor.id, deps);
 
         expect(actions).toHaveLength(2);
         expect(actions[0].type).toBe('MOVE_PARTICIPANT');
+        expect(actions[0]).toMatchObject({ to: { x: 3, y: 0 } });
         expect(actions[1].type).toBe('BRAWL_ATTACK');
     });
 });

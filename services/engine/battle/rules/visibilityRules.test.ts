@@ -1,9 +1,28 @@
 import { describe, it, expect } from 'vitest';
 import { calculateCover, hasLineOfSight } from './visibilityRules';
 import { EngineBattleState } from '../types';
-import { Battle, Terrain } from '@/types/battle';
+import { Battle, Terrain, BattleParticipant } from '@/types/battle';
 
 describe('visibilityRules: calculateCover', () => {
+    const createParticipant = (id: string, pos: { x: number, y: number }, side: 'player' | 'enemy' = 'player'): BattleParticipant => ({
+        id,
+        name: id,
+        position: pos,
+        status: 'active',
+        stats: { speed: 4, reactions: 3, combat: 3, toughness: 3, savvy: 3, aim: 0, luck: 0 },
+        type: side === 'player' ? 'character' : 'enemy',
+        side,
+        consumables: [],
+        activeEffects: [],
+        stunTokens: 0,
+        actionsRemaining: 2,
+        actionsTaken: { move: false, combat: false, dash: false, interact: false },
+        weapons: [],
+        currentLuck: 0,
+        consumablesUsedThisTurn: 0,
+        utilityDevices: []
+    } as unknown as BattleParticipant);
+
     const createState = (terrain: Terrain[] = []): EngineBattleState => ({
         schemaVersion: 1,
         battle: {
@@ -38,7 +57,6 @@ describe('visibilityRules: calculateCover', () => {
         const wall = mockTerrain('wall', 'Wall', { x: 5, y: 5 }, true, true);
         const state = createState([wall]);
         
-        // No LoS
         expect(hasLineOfSight(state, { x: 2, y: 5 }, { x: 8, y: 5 })).toBe(false);
         
         const res = calculateCover(state, { x: 2, y: 5 }, { x: 8, y: 5 });

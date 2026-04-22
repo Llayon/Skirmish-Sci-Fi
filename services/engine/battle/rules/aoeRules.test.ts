@@ -4,15 +4,24 @@ import { EngineBattleState } from '../types';
 import { Battle, BattleParticipant } from '@/types';
 
 describe('aoeRules: getParticipantsInRadius', () => {
-    const createParticipant = (id: string, pos: { x: number, y: number }, status: any = 'active'): BattleParticipant => ({
+    const createParticipant = (id: string, pos: { x: number, y: number }, side: 'player' | 'enemy' = 'player', status: any = 'active'): BattleParticipant => ({
         id,
         name: id,
         position: pos,
         status,
-        stats: { speed: 4, reactions: 3, combat: 3, toughness: 3, savvy: 3, aim: 0 },
-        type: 'character',
-        weapons: []
-    } as any);
+        stats: { speed: 4, reactions: 3, combat: 3, toughness: 3, savvy: 3, aim: 0, luck: 0 },
+        type: side === 'player' ? 'character' : 'enemy',
+        side,
+        weapons: [],
+        activeEffects: [],
+        consumables: [],
+        stunTokens: 0,
+        actionsRemaining: 2,
+        actionsTaken: { move: false, combat: false, dash: false, interact: false },
+        currentLuck: 0,
+        consumablesUsedThisTurn: 0,
+        utilityDevices: []
+    } as unknown as BattleParticipant);
 
     const createState = (participants: BattleParticipant[]): EngineBattleState => ({
         schemaVersion: 1,
@@ -37,7 +46,7 @@ describe('aoeRules: getParticipantsInRadius', () => {
     });
 
     it('Scenario 2: Excludes casualties', () => {
-        const p1 = createParticipant('p1', { x: 5, y: 5 }, 'casualty');
+        const p1 = createParticipant('p1', { x: 5, y: 5 }, 'player', 'casualty');
         const state = createState([p1]);
 
         const res = getParticipantsInRadius(state, { x: 5, y: 5 }, 2);
