@@ -58,7 +58,7 @@ describe('beastAI: generateBeastAIPlan', () => {
 
     it('Scenario 2: Beast pounces when within move distance', () => {
         const actor = createParticipant('Beast', { x: 0, y: 0 }, 'enemy');
-        const player = createParticipant('Player', { x: 4, y: 0 }, 'player');
+        const player = createParticipant('Player', { x: 4, y: 0 }, 'player'); // dist 4, speed 4
         const state = createState([actor, player]);
 
         const { actions } = generateBeastAIPlan(state, actor.id, deps);
@@ -66,6 +66,21 @@ describe('beastAI: generateBeastAIPlan', () => {
         expect(actions).toHaveLength(2);
         expect(actions[0].type).toBe('MOVE_PARTICIPANT');
         expect(actions[0]).toMatchObject({ to: { x: 3, y: 0 } });
-        expect(actions[1].type).toBe('BRAWL_ATTACK');
+        expect(actions[1]).toMatchObject({ type: 'BRAWL_ATTACK' });
+    });
+
+    it('Regression: Stalking Beast shoots if it has ranged weapon and is out of pounce range', () => {
+        const actor = createParticipant('Beast', { x: 0, y: 0 }, 'enemy');
+        // Give beast a ranged weapon
+        actor.weapons = [{ id: 'needle_rifle', range: 18, shots: 1, damage: 1, traits: [] } as ShootingWeapon];
+        
+        const player = createParticipant('Player', { x: 15, y: 0 }, 'player'); // 15 away, speed 4.
+        const state = createState([actor, player]);
+
+        const { actions } = generateBeastAIPlan(state, actor.id, deps);
+
+        // Expected: Move towards target and SHOOT
+        expect(actions.some(a => a.type === 'MOVE_PARTICIPANT')).toBe(true);
+        expect(actions.some(a => a.type === 'SHOOT_ATTACK')).toBe(true);
     });
 });

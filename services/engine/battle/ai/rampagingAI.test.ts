@@ -13,7 +13,7 @@ describe('rampagingAI: generateRampagingAIPlan', () => {
         stats: { speed: 4, reactions: 3, combat: 3, toughness: 3, savvy: 3, luck: 0 },
         type: side === 'player' ? 'character' : 'enemy',
         side,
-        weapons: [{ id: 'teeth', range: 1, shots: 1, damage: 1, traits: [] } as ShootingWeapon],
+        weapons: [{ id: 'teeth', range: 6, shots: 1, damage: 1, traits: [] } as ShootingWeapon],
         activeEffects: [],
         consumables: [],
         stunTokens: 0,
@@ -39,7 +39,7 @@ describe('rampagingAI: generateRampagingAIPlan', () => {
             d6: (s) => ({ value: 1, next: s }),
             d100: (s) => ({ value: 50, next: s })
         }
-    };
+    } as EngineDeps;
 
     it('Rampaging enemy charges closest target regardless of combat skill', () => {
         const actor = createParticipant('Beast', { x: 0, y: 0 }, 'enemy');
@@ -51,5 +51,18 @@ describe('rampagingAI: generateRampagingAIPlan', () => {
         expect(actions).toHaveLength(2);
         expect(actions[0]).toMatchObject({ type: 'MOVE_PARTICIPANT', to: { x: 1, y: 0 } });
         expect(actions[1]).toMatchObject({ type: 'BRAWL_ATTACK', targetId: 'Player' });
+    });
+
+    it('Regression: Rampaging enemy shoots if cannot reach brawl after move', () => {
+        const actor = createParticipant('Beast', { x: 0, y: 0 }, 'enemy');
+        const player = createParticipant('Player', { x: 6, y: 0 }, 'player'); // 6 away, speed 4
+        const state = createState([actor, player]);
+
+        const { actions } = generateRampagingAIPlan(state, actor.id, deps);
+
+        // Expected: Move to (4,0) then SHOOT (since target at (6,0) is not adjacent)
+        expect(actions).toHaveLength(2);
+        expect(actions[0]).toMatchObject({ type: 'MOVE_PARTICIPANT', to: { x: 4, y: 0 } });
+        expect(actions[1]).toMatchObject({ type: 'SHOOT_ATTACK', targetId: 'Player' });
     });
 });

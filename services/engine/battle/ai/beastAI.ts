@@ -3,6 +3,7 @@ import { findBestTarget } from '../rules/targetingRules';
 import { evaluateMovementOptions, AIWeights } from './complexAIUtils';
 import { RngState } from '../../rng/rng';
 import { ShootingWeapon } from '../rules/shootingRules';
+import { hasLineOfSight } from '../rules/visibilityRules';
 
 const BEAST_STALKING_WEIGHTS: AIWeights = {
     cover: 500,
@@ -68,6 +69,12 @@ export function generateBeastAIPlan(
         
         if (bestCell.x !== actor.position.x || bestCell.y !== actor.position.y) {
             plan.push({ type: 'MOVE_PARTICIPANT', participantId: actorId, to: bestCell });
+        }
+
+        // Regression fix: Shoot if LoS exists from new cell and we have a weapon
+        const weapon = actor.weapons[0] as ShootingWeapon;
+        if (weapon && weapon.range > 1 && hasLineOfSight(state, bestCell, target.position)) {
+            plan.push({ type: 'SHOOT_ATTACK', attackerId: actorId, targetId: target.id, weapon });
         }
     }
 

@@ -53,9 +53,22 @@ describe('AI: Aggressive behavior', () => {
         expect(actions[1]).toMatchObject({ type: 'BRAWL_ATTACK', targetId: 'Player' });
     });
 
+    it('Regression: Aggressive enemy shoots after moving if target is still out of brawl range', () => {
+        const actor = createParticipant('Enemy', { x: 0, y: 0 }, 'enemy', 3);
+        const player = createParticipant('Player', { x: 6, y: 0 }, 'player', 3); 
+        const state = createState([actor, player]);
+
+        const { actions } = generateAggressiveAIPlan(state, actor.id, deps);
+
+        // Expected: Move to (4,0) then SHOOT
+        expect(actions).toHaveLength(2);
+        expect(actions[0]).toMatchObject({ type: 'MOVE_PARTICIPANT', to: { x: 4, y: 0 } });
+        expect(actions[1]).toMatchObject({ type: 'SHOOT_ATTACK', targetId: 'Player' });
+    });
+
     it('Scenario: Aggressive enemy with distant target moves tactical advance', () => {
         const actor = createParticipant('Enemy', { x: 0, y: 0 }, 'enemy', 3);
-        const player = createParticipant('Player', { x: 15, y: 0 }, 'player', 3); // Beyond 12"
+        const player = createParticipant('Player', { x: 15, y: 0 }, 'player', 3); 
         const state = createState([actor, player]);
 
         const { actions } = generateAggressiveAIPlan(state, actor.id, deps);
