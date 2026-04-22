@@ -42,7 +42,7 @@ describe('targetingRules: findBestTarget', () => {
 
         const result = findBestTarget(state, actor.id, [targetA, targetB], {
             rng: { d100: (s) => ({ value: 50, next: s }) }
-        } as any);
+        } as EngineDeps);
 
         expect(result.targetId).toBe('Near');
     });
@@ -55,7 +55,7 @@ describe('targetingRules: findBestTarget', () => {
 
         const result = findBestTarget(state, actor.id, [targetA, targetB], {
             rng: { d100: (s) => ({ value: 50, next: s }) }
-        } as any);
+        } as EngineDeps);
 
         expect(result.targetId).toBe('Near');
     });
@@ -68,7 +68,7 @@ describe('targetingRules: findBestTarget', () => {
 
         const result = findBestTarget(state, actor.id, [targetA, targetB], {
             rng: { d100: (s) => ({ value: 75, next: { ...s, cursor: 1 } }) }
-        } as any);
+        } as EngineDeps);
 
         expect(result.targetId).toBe('Beta');
         expect(result.nextRng.cursor).toBe(1);

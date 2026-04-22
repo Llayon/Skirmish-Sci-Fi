@@ -4,7 +4,7 @@ import { EngineBattleState } from '../types';
 import { Battle, BattleParticipant } from '@/types';
 
 describe('aoeRules: getParticipantsInRadius', () => {
-    const createParticipant = (id: string, pos: { x: number, y: number }, side: 'player' | 'enemy' = 'player', status: any = 'active'): BattleParticipant => ({
+    const createParticipant = (id: string, pos: { x: number, y: number }, side: 'player' | 'enemy' = 'player', status: BattleParticipant['status'] = 'active'): BattleParticipant => ({
         id,
         name: id,
         position: pos,
@@ -27,7 +27,8 @@ describe('aoeRules: getParticipantsInRadius', () => {
         schemaVersion: 1,
         battle: {
             participants,
-            gridSize: { width: 20, height: 20 }
+            gridSize: { width: 20, height: 20 },
+            terrain: []
         } as unknown as Battle,
         rng: { cursor: 0, seed: 123 }
     });
