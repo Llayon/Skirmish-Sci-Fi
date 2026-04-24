@@ -1,11 +1,41 @@
-import { Battle, Crew, PlayerAction, MultiplayerRole, AIActionPlan, AnimationState, MissionType, MissionModifiers, Difficulty, Campaign, NotableSightResult, LogEntry, BattleParticipant, TerrainTheme, Mission, DeploymentCondition, Enemy, Character } from '../../types';
+import { Battle, Crew, PlayerAction, MultiplayerRole, AIActionPlan, AnimationState, MissionType, MissionModifiers, Difficulty, Campaign, NotableSightResult, LogEntry, BattleParticipant, TerrainTheme, Mission, DeploymentCondition, Enemy, Character, Terrain, WorldTrait } from '../../types';
 import { UNIQUE_INDIVIDUALS_TABLE, ENEMY_ENCOUNTER_CATEGORY_TABLE, CRIMINAL_ELEMENTS_SUBTABLE, HIRED_MUSCLE_SUBTABLE, INTERESTED_PARTIES_SUBTABLE, ROVING_THREATS_SUBTABLE, RulebookEnemyTemplate, EnemyEncounterCategory } from '../../constants/enemyEncounters';
 import { MISSION_DEFINITIONS } from '../../constants/missions';
 import { isPointInTerrain, findNearestWalkable } from '../gridUtils';
-import { generateTerrain } from '../terrainGenerator';
-import { createRng } from '../engine/rng/rng';
+import { createRng, d6 as engineD6, d100 as engineD100 } from '../engine/rng/rng';
+import { reduceBattle } from '../engine/battle/reduceBattle';
+import { CURRENT_ENGINE_SCHEMA_VERSION, EngineBattleState } from '../engine/battle/types';
 import { DEPLOYMENT_CONDITIONS_TABLE, DeploymentConditionEntry } from '../../constants/deployment';
 import { rollD100, rollD6, rollD10 } from '../utils/rolls';
+
+/**
+ * Build a tiny EngineBattleState skeleton and drive the GENERATE_TERRAIN
+ * action through reduceBattle. Only terrain/gridSize/rng are consumed by
+ * the reducer; the rest of the Battle shape is filled in by the caller.
+ */
+function runTerrainAction(
+    theme: TerrainTheme,
+    gridSize: { width: number; height: number },
+    worldTraits: WorldTrait[] | undefined,
+    seed: number,
+): Terrain[] {
+    const seededRng = createRng(seed);
+    const skeletonBattle = {
+        terrain: [],
+        gridSize,
+    } as unknown as Battle;
+    const initialState: EngineBattleState = {
+        schemaVersion: CURRENT_ENGINE_SCHEMA_VERSION,
+        battle: skeletonBattle,
+        rng: seededRng,
+    };
+    const result = reduceBattle(
+        initialState,
+        { type: 'GENERATE_TERRAIN', theme, gridSize, worldTraits },
+        { rng: { d6: engineD6, d100: engineD100 } },
+    );
+    return result.next.battle.terrain;
+}
 import { resolveTable } from '../utils/tables';
 import { BASIC_ENEMY_WEAPON_TABLE, OPPORTUNITY_MISSION_TABLE, PATRON_MISSION_TABLE, QUEST_MISSION_TABLE, RIVAL_ATTACK_TABLE, SPECIALIST_WEAPON_TABLE } from '../../constants/battleSetup';
 
@@ -44,11 +74,17 @@ export const setupBattle = async (
     PORTRAITS.sort(() => Math.random() - 0.5);
     portraitIndex = 0;
 
-    // Seed the terrain generator with a per-battle RNG so layouts are deterministic
-    // given the seed. The seed itself is still drawn from wall-clock time here; a
-    // future step will wire this into the Engine V2 seed propagated to all peers.
+    // Terrain now flows through the Engine V2 reducer so multiplayer peers can
+    // replay the same GENERATE_TERRAIN action to reach an identical layout.
+    // Seed is still wall-clock here; future step will carry a battle-level seed
+    // that the host broadcasts to guests.
     const terrainSeed = (Date.now() & 0x7fffffff) | 0;
-    const { terrain } = generateTerrain(options.forceTerrainTheme || 'Industrial', BATTLE_GRID_SIZE, campaign?.currentWorld?.traits, createRng(terrainSeed));
+    const terrain = runTerrainAction(
+        options.forceTerrainTheme || 'Industrial',
+        BATTLE_GRID_SIZE,
+        campaign?.currentWorld?.traits,
+        terrainSeed,
+    );
     
     // --- MISSION & DEPLOYMENT ---
     let finalMissionType = missionType;
@@ -462,7 +498,7 @@ export const setupMultiplayerBattle = async (
     let participants: BattleParticipant[] = [];
 
     const mpTerrainSeed = (Date.now() & 0x7fffffff) | 0;
-    const { terrain } = generateTerrain('Industrial', BATTLE_GRID_SIZE, [], createRng(mpTerrainSeed));
+    const terrain = runTerrainAction('Industrial', BATTLE_GRID_SIZE, [], mpTerrainSeed);
 
     const missionTemplate = MISSION_DEFINITIONS.find(m => m.type === 'FightOff')!;
     const mission: Mission = {
