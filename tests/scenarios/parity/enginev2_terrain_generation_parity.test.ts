@@ -58,6 +58,31 @@ describe('Parity: Terrain Generation (V1 Baseline for V2 Migration)', () => {
             }
         });
 
+        it('every terrain piece has a defined elevation', () => {
+            const { terrain } = generateTerrain('Industrial', gridSize, [], createRng(7777));
+
+            for (const t of terrain) {
+                expect(typeof t.elevation).toBe('number');
+                expect(t.elevation).toBeGreaterThanOrEqual(0);
+            }
+        });
+
+        it('elevations match rulebook heights per terrain kind', () => {
+            // Industrial covers Walls, Containers, Doors, Interiors.
+            const { terrain } = generateTerrain('Industrial', gridSize, [], createRng(7777));
+
+            const walls = terrain.filter((t) => t.name === 'Wall');
+            const containers = terrain.filter((t) => t.name === 'Container');
+            const doors = terrain.filter((t) => t.name === 'Door');
+            const interiors = terrain.filter((t) => t.type === 'Interior');
+
+            expect(walls.length).toBeGreaterThan(0);
+            walls.forEach((w) => expect(w.elevation).toBe(2));
+            containers.forEach((c) => expect(c.elevation).toBe(1));
+            doors.forEach((d) => expect(d.elevation).toBe(0));
+            interiors.forEach((i) => expect(i.elevation).toBe(0));
+        });
+
         it('world trait "crystals" adds Crystal terrain pieces', () => {
             const { terrain } = generateTerrain('Wilderness', gridSize, [
                 { id: 'crystals', name: 'Crystals', description: '' } as unknown as Parameters<typeof generateTerrain>[2][number],

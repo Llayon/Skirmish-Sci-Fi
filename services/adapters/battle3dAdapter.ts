@@ -50,7 +50,11 @@ function mapParticipantTo3D(
 
 function mapTerrainTo3D(t: Terrain): Terrain3D {
   const type = getTerrain3DType(t);
-  const height = getTerrainHeight(type);
+  // Prefer the authoritative elevation baked into terrain data (populated
+  // by the Engine V2 generator per rulebook); fall back to the legacy
+  // name/flag-derived height for older test fixtures that pre-date the
+  // elevation field.
+  const height = t.elevation ?? getTerrainHeight(type);
 
   return {
     id: t.id,

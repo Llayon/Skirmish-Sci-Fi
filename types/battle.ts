@@ -30,6 +30,15 @@ export interface Terrain {
   isImpassable: boolean;
   isInteractive?: boolean;
   parentId?: string;
+  /**
+   * Vertical height of the feature in grid units (1 unit = 1" = one human
+   * figure height, per Five Parsecs rulebook "Moving Up and Down"). Examples:
+   * a 2" waist-high wall is `elevation: 2`; a roof/hill is `elevation: 1`;
+   * a floor interior or doorway is `elevation: 0`. Undefined means the
+   * consumer should fall back to a legacy heuristic (currently the 3D
+   * adapter infers from terrain name/flags).
+   */
+  elevation?: number;
 }
 
 export type TerrainTheme = 'Industrial' | 'Wilderness' | 'AlienRuin' | 'CrashSite';

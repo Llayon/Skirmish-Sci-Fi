@@ -71,7 +71,7 @@ function createTerrain(
     type: Terrain['type'],
     pos: Position,
     size: {width: number, height: number},
-    options: Partial<Pick<Terrain, 'isDifficult' | 'providesCover' | 'blocksLineOfSight' | 'isImpassable' | 'isInteractive' | 'parentId'>> = {}
+    options: Partial<Pick<Terrain, 'isDifficult' | 'providesCover' | 'blocksLineOfSight' | 'isImpassable' | 'isInteractive' | 'parentId' | 'elevation'>> = {}
 ): Terrain {
     return {
         id: `terrain_${terrainIdCounter++}`,
@@ -85,6 +85,7 @@ function createTerrain(
         isImpassable: options.isImpassable ?? false,
         isInteractive: options.isInteractive ?? false,
         parentId: options.parentId,
+        elevation: options.elevation ?? 0,
     };
 }
 
@@ -99,11 +100,13 @@ function createBuilding(
 
     // Buildings must be at least 3x3 to have an interior
     if (size.width < 3 || size.height < 3) {
-        return [createTerrain(name, 'Block', pos, size, { providesCover: true, blocksLineOfSight: true, isImpassable: true })];
+        // Solid block too small for an interior — treat as a 2-unit wall mass.
+        return [createTerrain(name, 'Block', pos, size, { providesCover: true, blocksLineOfSight: true, isImpassable: true, elevation: 2 })];
     }
 
-    // Create walls as individual impassable blocks
-    const wallOptions = { providesCover: true, blocksLineOfSight: true, isImpassable: true, parentId: buildingId };
+    // Create walls as individual impassable blocks. Walls are 2 units tall
+    // (rulebook: waist-to-shoulder height, blocks LoS for standing figures).
+    const wallOptions = { providesCover: true, blocksLineOfSight: true, isImpassable: true, parentId: buildingId, elevation: 2 };
     for (let y = pos.y; y < pos.y + size.height; y++) {
         for (let x = pos.x; x < pos.x + size.width; x++) {
             if (x === pos.x || x === pos.x + size.width - 1 || y === pos.y || y === pos.y + size.height - 1) {
@@ -112,12 +115,12 @@ function createBuilding(
         }
     }
 
-    // Create Interior - does not block LOS for units inside the same building
+    // Interior floor sits at ground level — figures inside stand on it at elevation 0.
     buildingTerrain.push(createTerrain(
         `${name} Interior`, 'Interior',
         { x: pos.x + 1, y: pos.y + 1 },
         { width: size.width - 2, height: size.height - 2 },
-        { blocksLineOfSight: false, parentId: buildingId }
+        { blocksLineOfSight: false, parentId: buildingId, elevation: 0 }
     ));
 
     // Create a door
@@ -145,10 +148,10 @@ function createBuilding(
         buildingTerrain.splice(wallIndex, 1);
     }
 
-    // A door is passable, provides cover, and blocks LOS unless you are next to it.
+    // A door is passable at ground level — elevation 0 so figures walk through it.
     buildingTerrain.push(createTerrain(
         'Door', 'Door', doorPos, { width: 1, height: 1 },
-        { isImpassable: false, providesCover: true, blocksLineOfSight: true, isInteractive: true, parentId: buildingId }
+        { isImpassable: false, providesCover: true, blocksLineOfSight: true, isInteractive: true, parentId: buildingId, elevation: 0 }
     ));
 
     return buildingTerrain;
@@ -164,14 +167,14 @@ const featureGenerators: Record<FeatureType, FeatureGenerator> = (() => {
             const terrain: Terrain[] = [];
             const size = { width: 1, height: 1 };
             const pos = findFreeSpot(rect, size, existing, rng);
-            if (pos) terrain.push(createTerrain('Scatter', 'Individual', pos, size, { providesCover: true, blocksLineOfSight: false }));
+            if (pos) terrain.push(createTerrain('Scatter', 'Individual', pos, size, { providesCover: true, blocksLineOfSight: false, elevation: 1 }));
             return terrain;
         },
         hill: (rect, existing, rng) => {
             const size = { width: rng.d6() + 4, height: rng.d6() + 4 };
             const pos = findFreeSpot(rect, size, existing, rng);
             if (!pos) return [];
-            return [createTerrain('Hill', 'Area', pos, size, { providesCover: true, isDifficult: true, blocksLineOfSight: false })];
+            return [createTerrain('Hill', 'Area', pos, size, { providesCover: true, isDifficult: true, blocksLineOfSight: false, elevation: 1 })];
         },
         // --- Industrial ---
         large_structure: (rect, existing, rng) => {
@@ -195,7 +198,7 @@ const featureGenerators: Record<FeatureType, FeatureGenerator> = (() => {
                     const eqSize = { width: 1, height: 1 };
                     const eqPos = findFreeSpot(rect, eqSize, [...existing, ...terrain], rng);
                     if (eqPos) {
-                         terrain.push(createTerrain('Equipment', 'Individual', eqPos, eqSize, { providesCover: true, blocksLineOfSight: false }));
+                         terrain.push(createTerrain('Equipment', 'Individual', eqPos, eqSize, { providesCover: true, blocksLineOfSight: false, elevation: 1 }));
                     }
                 }
             }
@@ -207,7 +210,8 @@ const featureGenerators: Record<FeatureType, FeatureGenerator> = (() => {
             const areaPos = findFreeSpot(rect, areaSize, existing, rng);
             if (!areaPos) return [];
             // Create linear fence pieces. They provide cover and block LOS, but are not impassable.
-            const fenceOptions = { providesCover: true, blocksLineOfSight: true, isImpassable: false };
+            // Fences are waist-high (1 unit) — a standing figure sees over but ducking behind gets cover.
+            const fenceOptions = { providesCover: true, blocksLineOfSight: true, isImpassable: false, elevation: 1 };
             terrain.push(createTerrain('Fence Post', 'Linear', { x: areaPos.x, y: areaPos.y }, { width: areaSize.width, height: 1 }, fenceOptions));
             terrain.push(createTerrain('Fence Post', 'Linear', { x: areaPos.x, y: areaPos.y + areaSize.height - 1 }, { width: areaSize.width, height: 1 }, fenceOptions));
             terrain.push(createTerrain('Fence Post', 'Linear', { x: areaPos.x, y: areaPos.y }, { width: 1, height: areaSize.height }, fenceOptions));
@@ -218,7 +222,7 @@ const featureGenerators: Record<FeatureType, FeatureGenerator> = (() => {
             const size = { width: 10, height: 10 };
             const pos = findFreeSpot(rect, size, existing, rng);
             if(!pos) return [];
-            return [createTerrain('Landing Pad', 'Area', pos, size, { providesCover: false, blocksLineOfSight: false })];
+            return [createTerrain('Landing Pad', 'Area', pos, size, { providesCover: false, blocksLineOfSight: false, elevation: 0 })];
         },
         cargo_area: (rect, existing, rng) => {
             const terrain: Terrain[] = [];
@@ -226,7 +230,7 @@ const featureGenerators: Record<FeatureType, FeatureGenerator> = (() => {
             for (let i = 0; i < count; i++) {
                 const size = { width: rng.d6() + 1, height: rng.d6() };
                 const pos = findFreeSpot(rect, size, [...existing, ...terrain], rng);
-                if (pos) terrain.push(createTerrain('Container', 'Block', pos, size, { providesCover: true, blocksLineOfSight: true, isImpassable: true }));
+                if (pos) terrain.push(createTerrain('Container', 'Block', pos, size, { providesCover: true, blocksLineOfSight: true, isImpassable: true, elevation: 1 }));
             }
             return terrain;
         },
@@ -250,7 +254,7 @@ const featureGenerators: Record<FeatureType, FeatureGenerator> = (() => {
             const size = rng.float() > 0.5 ? { width: len, height: 1 } : { width: 1, height: len };
             const pos = findFreeSpot(rect, size, existing, rng);
             if (!pos) return [];
-            return [createTerrain('Barricade', 'Linear', pos, size, { providesCover: true, blocksLineOfSight: true, isImpassable: false })];
+            return [createTerrain('Barricade', 'Linear', pos, size, { providesCover: true, blocksLineOfSight: true, isImpassable: false, elevation: 1 })];
         },
         building: (rect, existing, rng) => {
             const size = { width: rng.d6() + 3, height: rng.d6() + 3 };
@@ -262,7 +266,7 @@ const featureGenerators: Record<FeatureType, FeatureGenerator> = (() => {
             const size = { width: rng.d6() + 3, height: rng.d6() + 3 };
             const pos = findFreeSpot(rect, size, existing, rng);
             if (!pos) return [];
-            return [createTerrain('Rubble', 'Area', pos, size, { isDifficult: true, providesCover: true, blocksLineOfSight: false })];
+            return [createTerrain('Rubble', 'Area', pos, size, { isDifficult: true, providesCover: true, blocksLineOfSight: false, elevation: 1 })];
         },
         spread_scatter: (rect, existing, rng) => {
             const terrain: Terrain[] = [];
@@ -270,7 +274,7 @@ const featureGenerators: Record<FeatureType, FeatureGenerator> = (() => {
             for (let i = 0; i < count; i++) {
                 const size = { width: rng.d6() > 3 ? 2 : 1, height: rng.d6() > 3 ? 2 : 1 };
                 const pos = findFreeSpot(rect, size, [...existing, ...terrain], rng);
-                if (pos) terrain.push(createTerrain('Barrel', 'Individual', pos, size, { providesCover: true, blocksLineOfSight: false }));
+                if (pos) terrain.push(createTerrain('Barrel', 'Individual', pos, size, { providesCover: true, blocksLineOfSight: false, elevation: 1 }));
             }
             return terrain;
         },
@@ -278,13 +282,13 @@ const featureGenerators: Record<FeatureType, FeatureGenerator> = (() => {
             const size = { width: 2, height: 2 };
             const pos = findFreeSpot(rect, size, existing, rng);
             if (!pos) return [];
-            return [createTerrain('Statue', 'Individual', pos, size, { providesCover: true, blocksLineOfSight: false })];
+            return [createTerrain('Statue', 'Individual', pos, size, { providesCover: true, blocksLineOfSight: false, elevation: 2 })];
         },
         industrial_urban_scatter: (rect, existing, rng) => {
             const size = { width: 4, height: 2 };
             const pos = findFreeSpot(rect, size, existing, rng);
             if (!pos) return [];
-            return [createTerrain('Vehicle', 'Block', pos, size, { providesCover: true, blocksLineOfSight: true, isImpassable: true })];
+            return [createTerrain('Vehicle', 'Block', pos, size, { providesCover: true, blocksLineOfSight: true, isImpassable: true, elevation: 1 })];
         },
         // --- Wilderness ---
         large_swamp: (rect, existing, rng) => {
@@ -292,14 +296,14 @@ const featureGenerators: Record<FeatureType, FeatureGenerator> = (() => {
             const pos = findFreeSpot(rect, size, existing, rng);
             if (!pos) return [];
             // A swamp is a Field that is difficult, but doesn't provide cover or block LOS
-            return [createTerrain('Swamp', 'Field', pos, size, { isDifficult: true, providesCover: false, blocksLineOfSight: false })];
+            return [createTerrain('Swamp', 'Field', pos, size, { isDifficult: true, providesCover: false, blocksLineOfSight: false, elevation: 0 })];
         },
         natural_linear: (rect, existing, rng) => {
             const len = rng.d6() + 4;
             const size = rng.float() > 0.5 ? { width: len, height: 1 } : { width: 1, height: len };
             const pos = findFreeSpot(rect, size, existing, rng);
             if (!pos) return [];
-            return [createTerrain('Rock Ridge', 'Linear', pos, size, { providesCover: true, blocksLineOfSight: true, isImpassable: false })];
+            return [createTerrain('Rock Ridge', 'Linear', pos, size, { providesCover: true, blocksLineOfSight: true, isImpassable: false, elevation: 1 })];
         },
         // --- Alien Ruin ---
         ruined_wall: (rect, existing, rng) => {
@@ -307,7 +311,7 @@ const featureGenerators: Record<FeatureType, FeatureGenerator> = (() => {
             const size = rng.float() > 0.5 ? { width: len, height: 1 } : { width: 1, height: len };
             const pos = findFreeSpot(rect, size, existing, rng);
             if (!pos) return [];
-            return [createTerrain('Ruined Wall', 'Linear', pos, size, { providesCover: true, blocksLineOfSight: true, isImpassable: false })];
+            return [createTerrain('Ruined Wall', 'Linear', pos, size, { providesCover: true, blocksLineOfSight: true, isImpassable: false, elevation: 2 })];
         },
         // --- Crash Site ---
         wreckage_line: (rect, existing, rng) => {
@@ -315,7 +319,7 @@ const featureGenerators: Record<FeatureType, FeatureGenerator> = (() => {
             const size = rng.float() > 0.5 ? { width: len, height: 1 } : { width: 1, height: len };
             const pos = findFreeSpot(rect, size, existing, rng);
             if (!pos) return [];
-            return [createTerrain('Wreckage Line', 'Linear', pos, size, { providesCover: true, blocksLineOfSight: true, isImpassable: false })];
+            return [createTerrain('Wreckage Line', 'Linear', pos, size, { providesCover: true, blocksLineOfSight: true, isImpassable: false, elevation: 1 })];
         },
     };
 
@@ -330,7 +334,7 @@ const featureGenerators: Record<FeatureType, FeatureGenerator> = (() => {
                  if (['building', 'structure', 'ruin'].some(keyword => name.toLowerCase().includes(keyword))) {
                     return createBuilding(name, pos, size, rng);
                  }
-                 return [createTerrain(name, 'Individual', pos, size, { providesCover: true, blocksLineOfSight: false })];
+                 return [createTerrain(name, 'Individual', pos, size, { providesCover: true, blocksLineOfSight: false, elevation: 1 })];
             }
         }
     }
@@ -407,7 +411,7 @@ export const generateTerrain = (
             const size = { width: 1, height: 1 };
             const pos = findFreeSpot(rect, size, terrain, rng);
             if (pos) {
-                terrain.push(createTerrain('Crystal', 'Individual', pos, size, { providesCover: true, blocksLineOfSight: false }));
+                terrain.push(createTerrain('Crystal', 'Individual', pos, size, { providesCover: true, blocksLineOfSight: false, elevation: 1 }));
             }
         }
     }
