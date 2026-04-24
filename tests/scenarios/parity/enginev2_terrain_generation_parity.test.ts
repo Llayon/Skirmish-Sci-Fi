@@ -1,38 +1,7 @@
-import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
+import { describe, it, expect } from 'vitest';
 import { Terrain, TerrainTheme } from '@/types';
-
-// Mock the rolls module before importing the generator so the spy binds cleanly.
-vi.mock('@/services/utils/rolls', () => ({
-    rollD6: vi.fn(),
-    rollD10: vi.fn(),
-    rollD100: vi.fn(),
-}));
-
-import { rollD6 } from '@/services/utils/rolls';
 import { generateTerrain } from '@/services/terrainGenerator';
-
-// Mulberry32-equivalent float source, matching services/engine/rng/rng.ts::nextFloat.
-// Using the same algorithm here means a future V2 generator fed `createScriptedRngState`
-// (or a seeded RNG) derived from the same seed will emit an identical float sequence,
-// and therefore produce the same terrain layout — that is the parity bridge.
-function createSeededFloatSource(seed: number): () => number {
-    let cursor = 0;
-    return () => {
-        const input = ((seed ^ 0xdeadbeef) + Math.imul(cursor, 0x9e3779b9)) | 0;
-        cursor += 1;
-        let t = (input + 0x6d2b79f5) | 0;
-        t = Math.imul(t ^ (t >>> 15), t | 1);
-        t ^= t + Math.imul(t ^ (t >>> 7), t | 61);
-        return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
-    };
-}
-
-function installDeterministicRng(seed: number): () => number {
-    const floatSource = createSeededFloatSource(seed);
-    vi.mocked(rollD6).mockImplementation(() => Math.floor(floatSource() * 6) + 1);
-    vi.spyOn(Math, 'random').mockImplementation(() => floatSource());
-    return floatSource;
-}
+import { createRng } from '@/services/engine/rng/rng';
 
 // Strip runtime-assigned ids so structural comparisons are stable across runs.
 function stripIds(terrain: Terrain[]): Omit<Terrain, 'id' | 'parentId'>[] {
@@ -45,38 +14,30 @@ function stripIds(terrain: Terrain[]): Omit<Terrain, 'id' | 'parentId'>[] {
 }
 
 describe('Parity: Terrain Generation (V1 Baseline for V2 Migration)', () => {
-    beforeEach(() => {
-        vi.restoreAllMocks();
-    });
-
-    afterEach(() => {
-        vi.restoreAllMocks();
-    });
-
     describe('Determinism — same seed produces identical terrain', () => {
         const themes: TerrainTheme[] = ['Industrial', 'Wilderness', 'AlienRuin', 'CrashSite'];
         const gridSize = { width: 32, height: 32 };
 
         themes.forEach((theme) => {
             it(`[${theme}] two runs with seed=12345 produce the same layout`, () => {
-                installDeterministicRng(12345);
-                const first = generateTerrain(theme, gridSize, []);
-
-                installDeterministicRng(12345);
-                const second = generateTerrain(theme, gridSize, []);
+                const { terrain: first } = generateTerrain(theme, gridSize, [], createRng(12345));
+                const { terrain: second } = generateTerrain(theme, gridSize, [], createRng(12345));
 
                 expect(stripIds(first)).toEqual(stripIds(second));
             });
         });
 
         it('different seeds produce different layouts', () => {
-            installDeterministicRng(1);
-            const a = generateTerrain('Industrial', gridSize, []);
-
-            installDeterministicRng(2);
-            const b = generateTerrain('Industrial', gridSize, []);
+            const { terrain: a } = generateTerrain('Industrial', gridSize, [], createRng(1));
+            const { terrain: b } = generateTerrain('Industrial', gridSize, [], createRng(2));
 
             expect(stripIds(a)).not.toEqual(stripIds(b));
+        });
+
+        it('returns an advanced RNG state whose cursor reflects rolls consumed', () => {
+            const { rng } = generateTerrain('Industrial', gridSize, [], createRng(12345));
+            expect(rng.cursor).toBeGreaterThan(0);
+            expect(rng.seed).toBe(12345);
         });
     });
 
@@ -84,8 +45,7 @@ describe('Parity: Terrain Generation (V1 Baseline for V2 Migration)', () => {
         const gridSize = { width: 32, height: 32 };
 
         it('every terrain piece is fully inside the grid', () => {
-            installDeterministicRng(7777);
-            const terrain = generateTerrain('Industrial', gridSize, []);
+            const { terrain } = generateTerrain('Industrial', gridSize, [], createRng(7777));
 
             expect(terrain.length).toBeGreaterThan(0);
             for (const t of terrain) {
@@ -99,11 +59,10 @@ describe('Parity: Terrain Generation (V1 Baseline for V2 Migration)', () => {
         });
 
         it('world trait "crystals" adds Crystal terrain pieces', () => {
-            installDeterministicRng(4242);
-            const withTrait = generateTerrain('Wilderness', gridSize, [
+            const { terrain } = generateTerrain('Wilderness', gridSize, [
                 { id: 'crystals', name: 'Crystals', description: '' } as unknown as Parameters<typeof generateTerrain>[2][number],
-            ]);
-            const crystalCount = withTrait.filter((t) => t.name === 'Crystal').length;
+            ], createRng(4242));
+            const crystalCount = terrain.filter((t) => t.name === 'Crystal').length;
             expect(crystalCount).toBeGreaterThan(0);
         });
     });
@@ -111,15 +70,15 @@ describe('Parity: Terrain Generation (V1 Baseline for V2 Migration)', () => {
     describe('Golden baseline — captures current V1 output for future V2 parity', () => {
         const gridSize = { width: 32, height: 32 };
 
-        // These snapshots freeze V1 behavior for a known RNG seed. When the V2
-        // terrain-generation action lands, it must reproduce exactly the same
-        // layout when seeded equivalently — these assertions become the parity gate.
+        // These snapshots were first captured with a V1 generator driven by a
+        // Mulberry32-equivalent float source. The V2 generator here uses
+        // services/engine/rng/rng directly with the same seed and must reproduce
+        // the exact same layout — these assertions are the parity gate.
         const themes: TerrainTheme[] = ['Industrial', 'Wilderness', 'AlienRuin', 'CrashSite'];
 
         themes.forEach((theme) => {
             it(`[${theme}] terrain signature at seed=12345 matches snapshot`, () => {
-                installDeterministicRng(12345);
-                const terrain = generateTerrain(theme, gridSize, []);
+                const { terrain } = generateTerrain(theme, gridSize, [], createRng(12345));
 
                 const signature = {
                     count: terrain.length,

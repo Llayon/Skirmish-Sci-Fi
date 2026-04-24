@@ -57,7 +57,7 @@ function mulberry32(a: number): number {
  * @param state Current RNG state
  * @returns Tuple of [randomFloat, nextState]
  */
-function nextFloat(state: SeededRngState): { value: number; next: SeededRngState } {
+export function nextFloat(state: SeededRngState): { value: number; next: SeededRngState } {
     // Combine seed and cursor to get a unique input for the hash function
     // We mix them to avoid simple linear correlations
     const input = (state.seed ^ 0xDEADBEEF) + Math.imul(state.cursor, 0x9E3779B9); 

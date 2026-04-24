@@ -3,6 +3,7 @@ import { UNIQUE_INDIVIDUALS_TABLE, ENEMY_ENCOUNTER_CATEGORY_TABLE, CRIMINAL_ELEM
 import { MISSION_DEFINITIONS } from '../../constants/missions';
 import { isPointInTerrain, findNearestWalkable } from '../gridUtils';
 import { generateTerrain } from '../terrainGenerator';
+import { createRng } from '../engine/rng/rng';
 import { DEPLOYMENT_CONDITIONS_TABLE, DeploymentConditionEntry } from '../../constants/deployment';
 import { rollD100, rollD6, rollD10 } from '../utils/rolls';
 import { resolveTable } from '../utils/tables';
@@ -43,7 +44,11 @@ export const setupBattle = async (
     PORTRAITS.sort(() => Math.random() - 0.5);
     portraitIndex = 0;
 
-    const terrain = generateTerrain(options.forceTerrainTheme || 'Industrial', BATTLE_GRID_SIZE, campaign?.currentWorld?.traits);
+    // Seed the terrain generator with a per-battle RNG so layouts are deterministic
+    // given the seed. The seed itself is still drawn from wall-clock time here; a
+    // future step will wire this into the Engine V2 seed propagated to all peers.
+    const terrainSeed = (Date.now() & 0x7fffffff) | 0;
+    const { terrain } = generateTerrain(options.forceTerrainTheme || 'Industrial', BATTLE_GRID_SIZE, campaign?.currentWorld?.traits, createRng(terrainSeed));
     
     // --- MISSION & DEPLOYMENT ---
     let finalMissionType = missionType;
@@ -456,7 +461,8 @@ export const setupMultiplayerBattle = async (
 ): Promise<Battle> => {
     let participants: BattleParticipant[] = [];
 
-    const terrain = generateTerrain('Industrial', BATTLE_GRID_SIZE);
+    const mpTerrainSeed = (Date.now() & 0x7fffffff) | 0;
+    const { terrain } = generateTerrain('Industrial', BATTLE_GRID_SIZE, [], createRng(mpTerrainSeed));
 
     const missionTemplate = MISSION_DEFINITIONS.find(m => m.type === 'FightOff')!;
     const mission: Mission = {

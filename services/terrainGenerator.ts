@@ -1,9 +1,38 @@
 
 import { Terrain, Position, TerrainTheme, FeatureType, WorldTrait } from '../types';
 import { TERRAIN_THEME_GENERATORS } from '../constants/terrain';
-import { rollD6 } from './utils/rolls';
+import { SeededRngState, d6, nextFloat } from './engine/rng/rng';
 
 type Rect = { x: number; y: number; width: number; height: number };
+
+/**
+ * Mutable cursor over an immutable seeded RNG state. Used inside the
+ * generator for ergonomic point-of-use RNG consumption without threading
+ * the state through every helper. Call `getState()` at the end to recover
+ * the final immutable state for the caller.
+ */
+type RngCursor = {
+    d6: () => 1 | 2 | 3 | 4 | 5 | 6;
+    float: () => number;
+    getState: () => SeededRngState;
+};
+
+function createRngCursor(initial: SeededRngState): RngCursor {
+    let state: SeededRngState = initial;
+    return {
+        d6: () => {
+            const r = d6(state);
+            state = r.next as SeededRngState;
+            return r.value;
+        },
+        float: () => {
+            const r = nextFloat(state);
+            state = r.next;
+            return r.value;
+        },
+        getState: () => state,
+    };
+}
 
 let terrainIdCounter = 0;
 
@@ -23,12 +52,12 @@ function isAreaOccupied(pos: Position, size: { width: number; height: number }, 
   return false;
 }
 
-function findFreeSpot(rect: Rect, itemSize: { width: number; height: number }, existingTerrain: Terrain[]): Position | null {
+function findFreeSpot(rect: Rect, itemSize: { width: number; height: number }, existingTerrain: Terrain[], rng: RngCursor): Position | null {
     for (let i = 0; i < 50; i++) { // Try 50 times to find a spot
         if (rect.width < itemSize.width || rect.height < itemSize.height) return null;
         const pos = {
-            x: rect.x + Math.floor(Math.random() * (rect.width - itemSize.width + 1)),
-            y: rect.y + Math.floor(Math.random() * (rect.height - itemSize.height + 1)),
+            x: rect.x + Math.floor(rng.float() * (rect.width - itemSize.width + 1)),
+            y: rect.y + Math.floor(rng.float() * (rect.height - itemSize.height + 1)),
         };
         if (!isAreaOccupied(pos, itemSize, existingTerrain)) {
             return pos;
@@ -62,7 +91,8 @@ function createTerrain(
 function createBuilding(
     name: string,
     pos: Position,
-    size: {width: number, height: number}
+    size: {width: number, height: number},
+    rng: RngCursor
 ): Terrain[] {
     const buildingTerrain: Terrain[] = [];
     const buildingId = `building_${terrainIdCounter++}`;
@@ -71,7 +101,7 @@ function createBuilding(
     if (size.width < 3 || size.height < 3) {
         return [createTerrain(name, 'Block', pos, size, { providesCover: true, blocksLineOfSight: true, isImpassable: true })];
     }
-    
+
     // Create walls as individual impassable blocks
     const wallOptions = { providesCover: true, blocksLineOfSight: true, isImpassable: true, parentId: buildingId };
     for (let y = pos.y; y < pos.y + size.height; y++) {
@@ -91,21 +121,21 @@ function createBuilding(
     ));
 
     // Create a door
-    const side = Math.floor(Math.random() * 4); // 0: top, 1: bottom, 2: left, 3: right
+    const side = Math.floor(rng.float() * 4); // 0: top, 1: bottom, 2: left, 3: right
     let doorPos: Position;
     switch (side) {
         case 0: // top
-            doorPos = { x: pos.x + 1 + Math.floor(Math.random() * (size.width - 2)), y: pos.y };
+            doorPos = { x: pos.x + 1 + Math.floor(rng.float() * (size.width - 2)), y: pos.y };
             break;
         case 1: // bottom
-            doorPos = { x: pos.x + 1 + Math.floor(Math.random() * (size.width - 2)), y: pos.y + size.height - 1 };
+            doorPos = { x: pos.x + 1 + Math.floor(rng.float() * (size.width - 2)), y: pos.y + size.height - 1 };
             break;
         case 2: // left
-            doorPos = { x: pos.x, y: pos.y + 1 + Math.floor(Math.random() * (size.height - 2)) };
+            doorPos = { x: pos.x, y: pos.y + 1 + Math.floor(rng.float() * (size.height - 2)) };
             break;
         case 3: // right
         default:
-            doorPos = { x: pos.x + size.width - 1, y: pos.y + 1 + Math.floor(Math.random() * (size.height - 2)) };
+            doorPos = { x: pos.x + size.width - 1, y: pos.y + 1 + Math.floor(rng.float() * (size.height - 2)) };
             break;
     }
 
@@ -114,7 +144,7 @@ function createBuilding(
     if (wallIndex !== -1) {
         buildingTerrain.splice(wallIndex, 1);
     }
-    
+
     // A door is passable, provides cover, and blocks LOS unless you are next to it.
     buildingTerrain.push(createTerrain(
         'Door', 'Door', doorPos, { width: 1, height: 1 },
@@ -125,43 +155,45 @@ function createBuilding(
 }
 
 
-const featureGenerators: Record<FeatureType, (rect: Rect, existing: Terrain[]) => Terrain[]> = (() => {
-    const generators: Partial<Record<FeatureType, (rect: Rect, existing: Terrain[]) => Terrain[]>> = {
+type FeatureGenerator = (rect: Rect, existing: Terrain[], rng: RngCursor) => Terrain[];
+
+const featureGenerators: Record<FeatureType, FeatureGenerator> = (() => {
+    const generators: Partial<Record<FeatureType, FeatureGenerator>> = {
         // --- Shared ---
-        scatter: (rect, existing) => {
+        scatter: (rect, existing, rng) => {
             const terrain: Terrain[] = [];
             const size = { width: 1, height: 1 };
-            const pos = findFreeSpot(rect, size, existing);
+            const pos = findFreeSpot(rect, size, existing, rng);
             if (pos) terrain.push(createTerrain('Scatter', 'Individual', pos, size, { providesCover: true, blocksLineOfSight: false }));
             return terrain;
         },
-        hill: (rect, existing) => {
-            const size = { width: rollD6() + 4, height: rollD6() + 4 };
-            const pos = findFreeSpot(rect, size, existing);
+        hill: (rect, existing, rng) => {
+            const size = { width: rng.d6() + 4, height: rng.d6() + 4 };
+            const pos = findFreeSpot(rect, size, existing, rng);
             if (!pos) return [];
             return [createTerrain('Hill', 'Area', pos, size, { providesCover: true, isDifficult: true, blocksLineOfSight: false })];
         },
         // --- Industrial ---
-        large_structure: (rect, existing) => {
-            const size = { width: rollD6() + 4, height: rollD6() + 4 };
-            const pos = findFreeSpot(rect, size, existing);
+        large_structure: (rect, existing, rng) => {
+            const size = { width: rng.d6() + 4, height: rng.d6() + 4 };
+            const pos = findFreeSpot(rect, size, existing, rng);
             if (!pos) return [];
-            return createBuilding('Large Structure', pos, size);
+            return createBuilding('Large Structure', pos, size, rng);
         },
-        industrial_cluster: (rect, existing) => {
+        industrial_cluster: (rect, existing, rng) => {
             const terrain: Terrain[] = [];
-            const towerSize = { width: rollD6() + 1, height: rollD6() + 1 };
-            const towerPos = findFreeSpot(rect, towerSize, existing);
-            
+            const towerSize = { width: rng.d6() + 1, height: rng.d6() + 1 };
+            const towerPos = findFreeSpot(rect, towerSize, existing, rng);
+
             if (towerPos) {
                 // Create the central block
-                terrain.push(...createBuilding('Control Tower', towerPos, towerSize));
+                terrain.push(...createBuilding('Control Tower', towerPos, towerSize, rng));
 
                 // Create surrounding individual equipment pieces
-                const equipmentCount = rollD6();
+                const equipmentCount = rng.d6();
                 for (let i = 0; i < equipmentCount; i++) {
                     const eqSize = { width: 1, height: 1 };
-                    const eqPos = findFreeSpot(rect, eqSize, [...existing, ...terrain]);
+                    const eqPos = findFreeSpot(rect, eqSize, [...existing, ...terrain], rng);
                     if (eqPos) {
                          terrain.push(createTerrain('Equipment', 'Individual', eqPos, eqSize, { providesCover: true, blocksLineOfSight: false }));
                     }
@@ -169,10 +201,10 @@ const featureGenerators: Record<FeatureType, (rect: Rect, existing: Terrain[]) =
             }
             return terrain;
         },
-        fenced_area: (rect, existing) => {
+        fenced_area: (rect, existing, rng) => {
             const terrain: Terrain[] = [];
             const areaSize = { width: Math.min(12, rect.width - 2), height: Math.min(12, rect.height - 2) };
-            const areaPos = findFreeSpot(rect, areaSize, existing);
+            const areaPos = findFreeSpot(rect, areaSize, existing, rng);
             if (!areaPos) return [];
             // Create linear fence pieces. They provide cover and block LOS, but are not impassable.
             const fenceOptions = { providesCover: true, blocksLineOfSight: true, isImpassable: false };
@@ -182,106 +214,106 @@ const featureGenerators: Record<FeatureType, (rect: Rect, existing: Terrain[]) =
             terrain.push(createTerrain('Fence Post', 'Linear', { x: areaPos.x + areaSize.width - 1, y: areaPos.y }, { width: 1, height: areaSize.height }, fenceOptions));
             return terrain;
         },
-        landing_pad: (rect, existing) => {
+        landing_pad: (rect, existing, rng) => {
             const size = { width: 10, height: 10 };
-            const pos = findFreeSpot(rect, size, existing);
+            const pos = findFreeSpot(rect, size, existing, rng);
             if(!pos) return [];
             return [createTerrain('Landing Pad', 'Area', pos, size, { providesCover: false, blocksLineOfSight: false })];
         },
-        cargo_area: (rect, existing) => {
+        cargo_area: (rect, existing, rng) => {
             const terrain: Terrain[] = [];
-            const count = rollD6() + 2;
+            const count = rng.d6() + 2;
             for (let i = 0; i < count; i++) {
-                const size = { width: rollD6() + 1, height: rollD6() };
-                const pos = findFreeSpot(rect, size, [...existing, ...terrain]);
+                const size = { width: rng.d6() + 1, height: rng.d6() };
+                const pos = findFreeSpot(rect, size, [...existing, ...terrain], rng);
                 if (pos) terrain.push(createTerrain('Container', 'Block', pos, size, { providesCover: true, blocksLineOfSight: true, isImpassable: true }));
             }
             return terrain;
         },
-        two_structures: (rect, existing) => {
+        two_structures: (rect, existing, rng) => {
             const t: Terrain[] = [];
-            const size1 = { width: rollD6() + 2, height: rollD6() + 2 };
-            const pos1 = findFreeSpot(rect, size1, existing);
+            const size1 = { width: rng.d6() + 2, height: rng.d6() + 2 };
+            const pos1 = findFreeSpot(rect, size1, existing, rng);
             if (pos1) {
-                t.push(...createBuilding('Building A', pos1, size1));
+                t.push(...createBuilding('Building A', pos1, size1, rng));
             }
-            
-            const size2 = { width: rollD6() + 2, height: rollD6() + 2 };
-            const pos2 = findFreeSpot(rect, size2, [...existing, ...t]);
+
+            const size2 = { width: rng.d6() + 2, height: rng.d6() + 2 };
+            const pos2 = findFreeSpot(rect, size2, [...existing, ...t], rng);
             if (pos2) {
-                t.push(...createBuilding('Building B', pos2, size2));
+                t.push(...createBuilding('Building B', pos2, size2, rng));
             }
             return t;
         },
-        linear_obstacle: (rect, existing) => {
-            const len = rollD6() + 4;
-            const size = Math.random() > 0.5 ? { width: len, height: 1 } : { width: 1, height: len };
-            const pos = findFreeSpot(rect, size, existing);
+        linear_obstacle: (rect, existing, rng) => {
+            const len = rng.d6() + 4;
+            const size = rng.float() > 0.5 ? { width: len, height: 1 } : { width: 1, height: len };
+            const pos = findFreeSpot(rect, size, existing, rng);
             if (!pos) return [];
             return [createTerrain('Barricade', 'Linear', pos, size, { providesCover: true, blocksLineOfSight: true, isImpassable: false })];
         },
-        building: (rect, existing) => {
-            const size = { width: rollD6() + 3, height: rollD6() + 3 };
-            const pos = findFreeSpot(rect, size, existing);
+        building: (rect, existing, rng) => {
+            const size = { width: rng.d6() + 3, height: rng.d6() + 3 };
+            const pos = findFreeSpot(rect, size, existing, rng);
             if (!pos) return [];
-            return createBuilding('Building', pos, size);
+            return createBuilding('Building', pos, size, rng);
         },
-        industrial_rubble: (rect, existing) => {
-            const size = { width: rollD6() + 3, height: rollD6() + 3 };
-            const pos = findFreeSpot(rect, size, existing);
+        industrial_rubble: (rect, existing, rng) => {
+            const size = { width: rng.d6() + 3, height: rng.d6() + 3 };
+            const pos = findFreeSpot(rect, size, existing, rng);
             if (!pos) return [];
             return [createTerrain('Rubble', 'Area', pos, size, { isDifficult: true, providesCover: true, blocksLineOfSight: false })];
         },
-        spread_scatter: (rect, existing) => {
+        spread_scatter: (rect, existing, rng) => {
             const terrain: Terrain[] = [];
-            const count = rollD6() + 2;
+            const count = rng.d6() + 2;
             for (let i = 0; i < count; i++) {
-                const size = { width: rollD6() > 3 ? 2 : 1, height: rollD6() > 3 ? 2 : 1 };
-                const pos = findFreeSpot(rect, size, [...existing, ...terrain]);
+                const size = { width: rng.d6() > 3 ? 2 : 1, height: rng.d6() > 3 ? 2 : 1 };
+                const pos = findFreeSpot(rect, size, [...existing, ...terrain], rng);
                 if (pos) terrain.push(createTerrain('Barrel', 'Individual', pos, size, { providesCover: true, blocksLineOfSight: false }));
             }
             return terrain;
         },
-        open_ground_central: (rect, existing) => {
+        open_ground_central: (rect, existing, rng) => {
             const size = { width: 2, height: 2 };
-            const pos = findFreeSpot(rect, size, existing);
+            const pos = findFreeSpot(rect, size, existing, rng);
             if (!pos) return [];
             return [createTerrain('Statue', 'Individual', pos, size, { providesCover: true, blocksLineOfSight: false })];
         },
-        industrial_urban_scatter: (rect, existing) => {
+        industrial_urban_scatter: (rect, existing, rng) => {
             const size = { width: 4, height: 2 };
-            const pos = findFreeSpot(rect, size, existing);
+            const pos = findFreeSpot(rect, size, existing, rng);
             if (!pos) return [];
             return [createTerrain('Vehicle', 'Block', pos, size, { providesCover: true, blocksLineOfSight: true, isImpassable: true })];
         },
         // --- Wilderness ---
-        large_swamp: (rect, existing) => {
-            const size = { width: rollD6() + 6, height: rollD6() + 6 };
-            const pos = findFreeSpot(rect, size, existing);
+        large_swamp: (rect, existing, rng) => {
+            const size = { width: rng.d6() + 6, height: rng.d6() + 6 };
+            const pos = findFreeSpot(rect, size, existing, rng);
             if (!pos) return [];
             // A swamp is a Field that is difficult, but doesn't provide cover or block LOS
             return [createTerrain('Swamp', 'Field', pos, size, { isDifficult: true, providesCover: false, blocksLineOfSight: false })];
         },
-        natural_linear: (rect, existing) => {
-            const len = rollD6() + 4;
-            const size = Math.random() > 0.5 ? { width: len, height: 1 } : { width: 1, height: len };
-            const pos = findFreeSpot(rect, size, existing);
+        natural_linear: (rect, existing, rng) => {
+            const len = rng.d6() + 4;
+            const size = rng.float() > 0.5 ? { width: len, height: 1 } : { width: 1, height: len };
+            const pos = findFreeSpot(rect, size, existing, rng);
             if (!pos) return [];
             return [createTerrain('Rock Ridge', 'Linear', pos, size, { providesCover: true, blocksLineOfSight: true, isImpassable: false })];
         },
         // --- Alien Ruin ---
-        ruined_wall: (rect, existing) => {
-            const len = rollD6() + 6;
-            const size = Math.random() > 0.5 ? { width: len, height: 1 } : { width: 1, height: len };
-            const pos = findFreeSpot(rect, size, existing);
+        ruined_wall: (rect, existing, rng) => {
+            const len = rng.d6() + 6;
+            const size = rng.float() > 0.5 ? { width: len, height: 1 } : { width: 1, height: len };
+            const pos = findFreeSpot(rect, size, existing, rng);
             if (!pos) return [];
             return [createTerrain('Ruined Wall', 'Linear', pos, size, { providesCover: true, blocksLineOfSight: true, isImpassable: false })];
         },
         // --- Crash Site ---
-        wreckage_line: (rect, existing) => {
-            const len = rollD6() + 6;
-            const size = Math.random() > 0.5 ? { width: len, height: 1 } : { width: 1, height: len };
-            const pos = findFreeSpot(rect, size, existing);
+        wreckage_line: (rect, existing, rng) => {
+            const len = rng.d6() + 6;
+            const size = rng.float() > 0.5 ? { width: len, height: 1 } : { width: 1, height: len };
+            const pos = findFreeSpot(rect, size, existing, rng);
             if (!pos) return [];
             return [createTerrain('Wreckage Line', 'Linear', pos, size, { providesCover: true, blocksLineOfSight: true, isImpassable: false })];
         },
@@ -290,24 +322,30 @@ const featureGenerators: Record<FeatureType, (rect: Rect, existing: Terrain[]) =
     const allFeatures: FeatureType[] = Object.values(TERRAIN_THEME_GENERATORS).flatMap(g => [...g.notableFeatures, ...g.regularFeatures]);
     for (const feature of allFeatures) {
         if (!generators[feature]) {
-            generators[feature] = (rect, existing) => {
-                 const size = { width: rollD6() + 1, height: rollD6() + 1 };
-                 const pos = findFreeSpot(rect, size, existing);
+            generators[feature] = (rect, existing, rng) => {
+                 const size = { width: rng.d6() + 1, height: rng.d6() + 1 };
+                 const pos = findFreeSpot(rect, size, existing, rng);
                  if (!pos) return [];
                  const name = feature.split('_').map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(' ');
                  if (['building', 'structure', 'ruin'].some(keyword => name.toLowerCase().includes(keyword))) {
-                    return createBuilding(name, pos, size);
+                    return createBuilding(name, pos, size, rng);
                  }
                  return [createTerrain(name, 'Individual', pos, size, { providesCover: true, blocksLineOfSight: false })];
             }
         }
     }
-    return generators as Record<FeatureType, (rect: Rect, existing: Terrain[]) => Terrain[]>;
+    return generators as Record<FeatureType, FeatureGenerator>;
 })();
 
 
-export const generateTerrain = (theme: TerrainTheme, gridSize: { width: number; height: number }, worldTraits: WorldTrait[] = []): Terrain[] => {
+export const generateTerrain = (
+    theme: TerrainTheme,
+    gridSize: { width: number; height: number },
+    worldTraits: WorldTrait[] = [],
+    rngState: SeededRngState,
+): { terrain: Terrain[]; rng: SeededRngState } => {
     terrainIdCounter = 0;
+    const rng = createRngCursor(rngState);
     let terrain: Terrain[] = [];
     const themeGenerator = TERRAIN_THEME_GENERATORS[theme];
 
@@ -323,18 +361,18 @@ export const generateTerrain = (theme: TerrainTheme, gridSize: { width: number; 
     const centerRect: Rect = { x: halfW - 4, y: halfH - 4, width: 8, height: 8 };
 
     // Step 2: The Center Notable Feature
-    const notableRoll = rollD6();
+    const notableRoll = rng.d6();
     const notableFeatureType = themeGenerator.notableFeatures[notableRoll - 1];
     const notableGen = featureGenerators[notableFeatureType];
     if (notableGen) {
-        terrain.push(...notableGen(centerRect, terrain));
+        terrain.push(...notableGen(centerRect, terrain, rng));
     }
-    
+
     // Step 3 & 4: Quarters and Scatter
     for (const quarter of quarters) {
         // Regular Features
-        const featuresToPlace = [rollD6(), rollD6(), rollD6(), rollD6()].map(roll => themeGenerator.regularFeatures[roll - 1]);
-        
+        const featuresToPlace = [rng.d6(), rng.d6(), rng.d6(), rng.d6()].map(roll => themeGenerator.regularFeatures[roll - 1]);
+
         const sectorW = Math.floor(quarter.width / 2);
         const sectorH = Math.floor(quarter.height / 2);
         const sectors = [
@@ -348,31 +386,31 @@ export const generateTerrain = (theme: TerrainTheme, gridSize: { width: number; 
             const generator = featureGenerators[featureType];
             if(generator) {
                 // Place feature somewhere in the quarter, trying to put it in its sector
-                const newPieces = generator(sectors[i], terrain);
+                const newPieces = generator(sectors[i], terrain, rng);
                 terrain.push(...newPieces);
             }
         });
 
         // Scatter
-        const scatterCount = rollD6();
+        const scatterCount = rng.d6();
         for (let i = 0; i < scatterCount; i++) {
-            const scatterPieces = featureGenerators.scatter(quarter, terrain);
+            const scatterPieces = featureGenerators.scatter(quarter, terrain, rng);
             terrain.push(...scatterPieces);
         }
     }
 
     // Add Crystals for world trait
     if (worldTraits.some(t => t.id === 'crystals')) {
-        const crystalCount = rollD6() + rollD6();
+        const crystalCount = rng.d6() + rng.d6();
         const rect = { x: 0, y: 0, width: gridSize.width, height: gridSize.height };
         for (let i = 0; i < crystalCount; i++) {
             const size = { width: 1, height: 1 };
-            const pos = findFreeSpot(rect, size, terrain);
+            const pos = findFreeSpot(rect, size, terrain, rng);
             if (pos) {
                 terrain.push(createTerrain('Crystal', 'Individual', pos, size, { providesCover: true, blocksLineOfSight: false }));
             }
         }
     }
 
-    return terrain;
+    return { terrain, rng: rng.getState() };
 }
