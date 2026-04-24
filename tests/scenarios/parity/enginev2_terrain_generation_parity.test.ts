@@ -13,7 +13,11 @@ function stripIds(terrain: Terrain[]): Omit<Terrain, 'id' | 'parentId'>[] {
     });
 }
 
-describe('Parity: Terrain Generation (V1 Baseline for V2 Migration)', () => {
+// Originally captured as V1 → V2 parity baseline (Block A, commit 5f379b3).
+// Since Block B2 the generator emits building roofs and will evolve further,
+// so the baseline now serves as a V2 structural-regression guard rather
+// than a V1 parity contract. V1 parity is preserved in git history.
+describe('Terrain Generation (V2 Structural Baseline)', () => {
     describe('Determinism — same seed produces identical terrain', () => {
         const themes: TerrainTheme[] = ['Industrial', 'Wilderness', 'AlienRuin', 'CrashSite'];
         const gridSize = { width: 32, height: 32 };
@@ -83,6 +87,29 @@ describe('Parity: Terrain Generation (V1 Baseline for V2 Migration)', () => {
             interiors.forEach((i) => expect(i.elevation).toBe(0));
         });
 
+        it('every building with an interior also emits a roof at elevation 2', () => {
+            // Each building gets Walls (elevation 2) + Interior (0) + Roof (2) + Door (0).
+            // The roof footprint must match the interior footprint: same parentId,
+            // same position, same size.
+            const { terrain } = generateTerrain('Industrial', gridSize, [], createRng(7777));
+
+            const interiors = terrain.filter((t) => t.type === 'Interior');
+            const roofs = terrain.filter((t) => t.name.endsWith(' Roof'));
+
+            expect(interiors.length).toBeGreaterThan(0);
+            expect(roofs.length).toBe(interiors.length);
+
+            for (const roof of roofs) {
+                expect(roof.elevation).toBe(2);
+                expect(roof.isImpassable).toBe(false);
+                expect(roof.blocksLineOfSight).toBe(false);
+                const matchingInterior = interiors.find((i) => i.parentId === roof.parentId);
+                expect(matchingInterior).toBeDefined();
+                expect(roof.position).toEqual(matchingInterior!.position);
+                expect(roof.size).toEqual(matchingInterior!.size);
+            }
+        });
+
         it('world trait "crystals" adds Crystal terrain pieces', () => {
             const { terrain } = generateTerrain('Wilderness', gridSize, [
                 { id: 'crystals', name: 'Crystals', description: '' } as unknown as Parameters<typeof generateTerrain>[2][number],
@@ -92,7 +119,7 @@ describe('Parity: Terrain Generation (V1 Baseline for V2 Migration)', () => {
         });
     });
 
-    describe('Golden baseline — captures current V1 output for future V2 parity', () => {
+    describe('Golden baseline — V2 structural signature', () => {
         const gridSize = { width: 32, height: 32 };
 
         // These snapshots were first captured with a V1 generator driven by a

@@ -123,6 +123,17 @@ function createBuilding(
         { blocksLineOfSight: false, parentId: buildingId, elevation: 0 }
     ));
 
+    // Roof covers the interior footprint at elevation 2 — reachable by
+    // climbing an adjacent wall (rulebook: Moving Up and Down). A figure
+    // on the roof stands above surrounding waist-high cover and gains
+    // Height Advantage for Good Shot purposes against ground-level targets.
+    buildingTerrain.push(createTerrain(
+        `${name} Roof`, 'Area',
+        { x: pos.x + 1, y: pos.y + 1 },
+        { width: size.width - 2, height: size.height - 2 },
+        { blocksLineOfSight: false, providesCover: false, isImpassable: false, parentId: buildingId, elevation: 2 }
+    ));
+
     // Create a door
     const side = Math.floor(rng.float() * 4); // 0: top, 1: bottom, 2: left, 3: right
     let doorPos: Position;

@@ -1,8 +1,8 @@
 // Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
 
-exports[`Parity: Terrain Generation (V1 Baseline for V2 Migration) > Golden baseline — captures current V1 output for future V2 parity > [AlienRuin] terrain signature at seed=12345 matches snapshot 1`] = `
+exports[`Terrain Generation (V2 Structural Baseline) > Golden baseline — V2 structural signature > [AlienRuin] terrain signature at seed=12345 matches snapshot 1`] = `
 {
-  "count": 103,
+  "count": 108,
   "pieces": [
     {
       "blocksLineOfSight": false,
@@ -209,6 +209,18 @@ exports[`Parity: Terrain Generation (V1 Baseline for V2 Migration) > Golden base
       "y": 1,
     },
     {
+      "blocksLineOfSight": false,
+      "h": 1,
+      "isDifficult": false,
+      "isImpassable": false,
+      "name": "Partial Ruin Roof",
+      "providesCover": false,
+      "type": "Area",
+      "w": 5,
+      "x": 2,
+      "y": 1,
+    },
+    {
       "blocksLineOfSight": true,
       "h": 1,
       "isDifficult": false,
@@ -401,6 +413,18 @@ exports[`Parity: Terrain Generation (V1 Baseline for V2 Migration) > Golden base
       "y": 11,
     },
     {
+      "blocksLineOfSight": false,
+      "h": 4,
+      "isDifficult": false,
+      "isImpassable": false,
+      "name": "Partial Ruin Roof",
+      "providesCover": false,
+      "type": "Area",
+      "w": 1,
+      "x": 6,
+      "y": 11,
+    },
+    {
       "blocksLineOfSight": true,
       "h": 1,
       "isDifficult": false,
@@ -528,6 +552,18 @@ exports[`Parity: Terrain Generation (V1 Baseline for V2 Migration) > Golden base
       "name": "Ruined Building Interior",
       "providesCover": false,
       "type": "Interior",
+      "w": 2,
+      "x": 10,
+      "y": 9,
+    },
+    {
+      "blocksLineOfSight": false,
+      "h": 1,
+      "isDifficult": false,
+      "isImpassable": false,
+      "name": "Ruined Building Roof",
+      "providesCover": false,
+      "type": "Area",
       "w": 2,
       "x": 10,
       "y": 9,
@@ -833,6 +869,18 @@ exports[`Parity: Terrain Generation (V1 Baseline for V2 Migration) > Golden base
       "y": 9,
     },
     {
+      "blocksLineOfSight": false,
+      "h": 5,
+      "isDifficult": false,
+      "isImpassable": false,
+      "name": "Partial Ruin Roof",
+      "providesCover": false,
+      "type": "Area",
+      "w": 3,
+      "x": 17,
+      "y": 9,
+    },
+    {
       "blocksLineOfSight": true,
       "h": 1,
       "isDifficult": false,
@@ -1061,6 +1109,18 @@ exports[`Parity: Terrain Generation (V1 Baseline for V2 Migration) > Golden base
       "y": 18,
     },
     {
+      "blocksLineOfSight": false,
+      "h": 1,
+      "isDifficult": false,
+      "isImpassable": false,
+      "name": "Ruined Building Roof",
+      "providesCover": false,
+      "type": "Area",
+      "w": 3,
+      "x": 1,
+      "y": 18,
+    },
+    {
       "blocksLineOfSight": true,
       "h": 1,
       "isDifficult": false,
@@ -1244,7 +1304,7 @@ exports[`Parity: Terrain Generation (V1 Baseline for V2 Migration) > Golden base
 }
 `;
 
-exports[`Parity: Terrain Generation (V1 Baseline for V2 Migration) > Golden baseline — captures current V1 output for future V2 parity > [CrashSite] terrain signature at seed=12345 matches snapshot 1`] = `
+exports[`Terrain Generation (V2 Structural Baseline) > Golden baseline — V2 structural signature > [CrashSite] terrain signature at seed=12345 matches snapshot 1`] = `
 {
   "count": 27,
   "pieces": [
@@ -1576,9 +1636,9 @@ exports[`Parity: Terrain Generation (V1 Baseline for V2 Migration) > Golden base
 }
 `;
 
-exports[`Parity: Terrain Generation (V1 Baseline for V2 Migration) > Golden baseline — captures current V1 output for future V2 parity > [Industrial] terrain signature at seed=12345 matches snapshot 1`] = `
+exports[`Terrain Generation (V2 Structural Baseline) > Golden baseline — V2 structural signature > [Industrial] terrain signature at seed=12345 matches snapshot 1`] = `
 {
-  "count": 64,
+  "count": 66,
   "pieces": [
     {
       "blocksLineOfSight": true,
@@ -1888,6 +1948,18 @@ exports[`Parity: Terrain Generation (V1 Baseline for V2 Migration) > Golden base
       "name": "Building Interior",
       "providesCover": false,
       "type": "Interior",
+      "w": 5,
+      "x": 9,
+      "y": 1,
+    },
+    {
+      "blocksLineOfSight": false,
+      "h": 4,
+      "isDifficult": false,
+      "isImpassable": false,
+      "name": "Building Roof",
+      "providesCover": false,
+      "type": "Area",
       "w": 5,
       "x": 9,
       "y": 1,
@@ -2253,6 +2325,18 @@ exports[`Parity: Terrain Generation (V1 Baseline for V2 Migration) > Golden base
       "y": 19,
     },
     {
+      "blocksLineOfSight": false,
+      "h": 2,
+      "isDifficult": false,
+      "isImpassable": false,
+      "name": "Building Roof",
+      "providesCover": false,
+      "type": "Area",
+      "w": 6,
+      "x": 1,
+      "y": 19,
+    },
+    {
       "blocksLineOfSight": true,
       "h": 1,
       "isDifficult": false,
@@ -2352,7 +2436,7 @@ exports[`Parity: Terrain Generation (V1 Baseline for V2 Migration) > Golden base
 }
 `;
 
-exports[`Parity: Terrain Generation (V1 Baseline for V2 Migration) > Golden baseline — captures current V1 output for future V2 parity > [Wilderness] terrain signature at seed=12345 matches snapshot 1`] = `
+exports[`Terrain Generation (V2 Structural Baseline) > Golden baseline — V2 structural signature > [Wilderness] terrain signature at seed=12345 matches snapshot 1`] = `
 {
   "count": 29,
   "pieces": [
