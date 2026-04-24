@@ -346,7 +346,7 @@ export const generateTerrain = (
 ): { terrain: Terrain[]; rng: SeededRngState } => {
     terrainIdCounter = 0;
     const rng = createRngCursor(rngState);
-    let terrain: Terrain[] = [];
+    const terrain: Terrain[] = [];
     const themeGenerator = TERRAIN_THEME_GENERATORS[theme];
 
     // Step 1: Define Quarters
