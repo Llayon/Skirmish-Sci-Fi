@@ -1,4 +1,5 @@
-import type { Battle, BattlePhase } from '@/types/battle';
+import type { Battle, BattlePhase, GridSize, TerrainTheme } from '@/types/battle';
+import type { WorldTrait } from '@/types/campaign';
 import type { RngState } from '../rng/rng';
 import type { Position } from '@/types/character';
 import type { JsonValue } from '../types';
@@ -43,7 +44,8 @@ export type BattleAction =
     | { type: 'MISSION_SETUP' }
     | { type: 'USE_CONSUMABLE'; participantId: string; consumableId: string }
     | { type: 'THROW_GRENADE'; attackerId: string; targetPos: Position; weapon: { id: string; range: number; damage: number; radius: number } }
-    | { type: 'PROCESS_AI_TURN'; participantId: string };
+    | { type: 'PROCESS_AI_TURN'; participantId: string }
+    | { type: 'GENERATE_TERRAIN'; theme: TerrainTheme; gridSize: GridSize; worldTraits?: WorldTrait[] };
 
 /**
  * Events emitted by the engine for UI/Animation consumption.
@@ -63,7 +65,8 @@ export type BattleEvent =
     | { type: 'ROUND_INCREMENTED'; round: number }
     | { type: 'CONSUMABLE_USED'; participantId: string; targetId?: string; consumableId: string }
     | { type: 'AOE_IMPACT_DECLARED'; attackerId: string; targetPos: Position; radius: number; weaponId: string }
-    | { type: 'AOE_PARTICIPANT_HIT'; targetId: string; damage: number; roll: number; killed: boolean };
+    | { type: 'AOE_PARTICIPANT_HIT'; targetId: string; damage: number; roll: number; killed: boolean }
+    | { type: 'TERRAIN_GENERATED'; theme: TerrainTheme; pieceCount: number };
 
 /**
  * Dependencies injected into the reducer.

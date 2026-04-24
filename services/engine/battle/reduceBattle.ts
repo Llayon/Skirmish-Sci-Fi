@@ -10,6 +10,7 @@ import { interactObjective } from './actions/interactObjective';
 import { missionSetup } from './actions/missionSetup';
 import { resolveConsumable } from './actions/resolveConsumable';
 import { throwGrenade } from './actions/throwGrenade';
+import { generateTerrain } from './actions/generateTerrain';
 import { generateAIPlan } from './ai/aiDispatcher';
 
 function assertNever(x: never): never {
@@ -42,6 +43,8 @@ function dispatchAction(
             return resolveConsumable(state, action);
         case 'THROW_GRENADE':
             return throwGrenade(state, action, deps);
+        case 'GENERATE_TERRAIN':
+            return generateTerrain(state, action);
         case 'PROCESS_AI_TURN': {
             const { actions: plan, nextRng } = generateAIPlan(state, action.participantId, deps);
             let currentState = { ...state, rng: nextRng };
