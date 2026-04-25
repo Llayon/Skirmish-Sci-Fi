@@ -5,7 +5,11 @@ export type Terrain3DType = 'Wall' | 'Barrel' | 'Container' | 'Obstacle' | 'Floo
 export interface Terrain3D {
   id: string;
   type: Terrain3DType;
+  /** Top-left grid cell of the footprint (matches Terrain.position). */
   position: Position;
+  /** Footprint in grid cells. Renderers should center geometry over the
+   *  middle of this rectangle, not over the position cell. */
+  size: { width: number; height: number };
   /**
    * World-space y-coordinate of the bottom of this piece (0 = ground).
    * Non-zero for pieces like roofs that sit above the ground (e.g. a

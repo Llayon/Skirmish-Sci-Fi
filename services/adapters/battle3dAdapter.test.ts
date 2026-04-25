@@ -92,4 +92,24 @@ describe('battle3dAdapter — height/baseElevation source of truth', () => {
         const view = mapBattleTo3D(battle, null, null, [], null);
         expect(view.terrain[0].type).toBe('Floor');
     });
+
+    it('passes the terrain footprint size through unchanged', () => {
+        // Renderers need the full size to draw multi-cell pieces (roofs,
+        // interiors, landing pads) at the correct dimensions.
+        const battle = makeBattle([
+            makeTerrain({
+                id: 'roof',
+                name: 'Building Roof',
+                type: 'Area',
+                isImpassable: false,
+                blocksLineOfSight: false,
+                size: { width: 5, height: 3 },
+                baseElevation: 2,
+                objectHeight: 0,
+            }),
+        ]);
+
+        const view = mapBattleTo3D(battle, null, null, [], null);
+        expect(view.terrain[0].size).toEqual({ width: 5, height: 3 });
+    });
 });

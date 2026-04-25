@@ -61,6 +61,7 @@ function mapTerrainTo3D(t: Terrain): Terrain3D {
     id: t.id,
     type,
     position: t.position,
+    size: t.size,
     baseElevation,
     height,
   };

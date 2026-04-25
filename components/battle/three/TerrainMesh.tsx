@@ -28,7 +28,12 @@ export const TerrainMesh = ({ terrain, gridSize }: TerrainMeshProps) => {
   // so this slab is purely cosmetic.
   const visualHeight = terrain.height > 0 ? terrain.height : 0.05;
   const centerY = terrain.baseElevation + visualHeight / 2;
-  const position = gridToWorld(terrain.position, gridSize, centerY);
+  // terrain.position is the footprint's top-left cell; the mesh must be
+  // centered over the middle of the footprint, otherwise multi-cell pieces
+  // (like a roof or interior over a 5x3 building) appear shifted.
+  const centerCellX = terrain.position.x + (terrain.size.width - 1) / 2;
+  const centerCellY = terrain.position.y + (terrain.size.height - 1) / 2;
+  const position = gridToWorld({ x: centerCellX, y: centerCellY }, gridSize, centerY);
 
   return (
     <mesh
@@ -46,6 +51,12 @@ export const TerrainMesh = ({ terrain, gridSize }: TerrainMeshProps) => {
 };
 
 function getTerrainGeometry(terrain: Terrain3D, visualHeight: number) {
+  // Floor pieces (interiors, roofs, landing pads) cover their full footprint —
+  // their geometry must scale with terrain.size. Other shapes keep their
+  // original hardcoded silhouettes; their footprints are typically 1×1 or
+  // 1×2 in the generator, so the mismatch stays small.
+  const fw = terrain.size.width * TILE_SIZE;
+  const fh = terrain.size.height * TILE_SIZE;
   switch (terrain.type) {
     case 'Wall':
       return <boxGeometry args={[TILE_SIZE, visualHeight, TILE_SIZE * 0.2]} />;
@@ -54,7 +65,7 @@ function getTerrainGeometry(terrain: Terrain3D, visualHeight: number) {
     case 'Container':
       return <boxGeometry args={[TILE_SIZE * 2, visualHeight, TILE_SIZE]} />;
     case 'Floor':
-      return <boxGeometry args={[TILE_SIZE, visualHeight, TILE_SIZE]} />;
+      return <boxGeometry args={[fw, visualHeight, fh]} />;
     case 'Obstacle':
     default:
       return <boxGeometry args={[TILE_SIZE * 0.8, visualHeight, TILE_SIZE * 0.8]} />;
