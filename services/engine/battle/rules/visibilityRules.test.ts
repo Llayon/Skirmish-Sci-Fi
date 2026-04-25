@@ -51,3 +51,134 @@ describe('visibilityRules: calculateCover', () => {
         expect(res).toBe(false);
     });
 });
+
+describe('visibilityRules: hasLineOfSight — height-aware (rulebook: shooting across linear obstacles)', () => {
+    const createState = (terrain: Terrain[] = []): EngineBattleState => ({
+        schemaVersion: 1,
+        battle: {
+            terrain,
+            participants: [],
+            gridSize: { width: 16, height: 16 },
+            log: []
+        } as unknown as Battle,
+        rng: { cursor: 0, seed: 123 }
+    });
+
+    const wallAt = (x: number, y: number, objectHeight = 2): Terrain => ({
+        id: `wall_${x}_${y}`,
+        name: 'Wall',
+        type: 'Block',
+        position: { x, y },
+        size: { width: 1, height: 1 },
+        isDifficult: false,
+        providesCover: true,
+        blocksLineOfSight: true,
+        isImpassable: true,
+        baseElevation: 0,
+        objectHeight,
+    });
+
+    const roofAt = (x: number, y: number, w: number, h: number): Terrain => ({
+        id: `roof_${x}_${y}`,
+        name: 'Building Roof',
+        type: 'Area',
+        position: { x, y },
+        size: { width: w, height: h },
+        isDifficult: false,
+        providesCover: false,
+        blocksLineOfSight: false,
+        isImpassable: false,
+        baseElevation: 2,
+        objectHeight: 0,
+    });
+
+    it('a 2-tall wall between two ground-level figures blocks LoS', () => {
+        const state = createState([wallAt(5, 5)]);
+        expect(hasLineOfSight(state, { x: 2, y: 5 }, { x: 8, y: 5 })).toBe(false);
+    });
+
+    it('shooter on a roof (figureZ=2) sees over a 2-tall wall', () => {
+        const state = createState([
+            roofAt(0, 4, 4, 4),       // roof spans (0..3, 4..7) at elevation 2
+            wallAt(5, 5),
+        ]);
+        // Shooter standing inside the roof footprint → figureZ = 2 ≥ wall.top (2)
+        expect(hasLineOfSight(state, { x: 2, y: 5 }, { x: 8, y: 5 })).toBe(true);
+    });
+
+    it('symmetry: target on a roof is also visible over the wall', () => {
+        const state = createState([
+            wallAt(5, 5),
+            roofAt(8, 4, 4, 4),       // roof at the target side
+        ]);
+        expect(hasLineOfSight(state, { x: 2, y: 5 }, { x: 9, y: 5 })).toBe(true);
+    });
+
+    it('shooter on a 1-unit hill still blocked by a 2-tall wall (1 < 2)', () => {
+        const hill: Terrain = {
+            id: 'hill',
+            name: 'Hill',
+            type: 'Area',
+            position: { x: 0, y: 4 },
+            size: { width: 4, height: 4 },
+            isDifficult: true,
+            providesCover: true,
+            blocksLineOfSight: false,
+            isImpassable: false,
+            baseElevation: 0,
+            objectHeight: 1,
+        };
+        const state = createState([hill, wallAt(5, 5)]);
+        expect(hasLineOfSight(state, { x: 2, y: 5 }, { x: 8, y: 5 })).toBe(false);
+    });
+
+    it('shooter on hill (figureZ=1) sees over a 1-tall LoS-blocking obstacle', () => {
+        // Hypothetical low LoS-blocker (e.g. a 1-tall hedge / smoke prop).
+        const lowHedge: Terrain = {
+            id: 'hedge',
+            name: 'Hedge',
+            type: 'Linear',
+            position: { x: 5, y: 5 },
+            size: { width: 1, height: 1 },
+            isDifficult: false,
+            providesCover: true,
+            blocksLineOfSight: true,
+            isImpassable: false,
+            baseElevation: 0,
+            objectHeight: 1,
+        };
+        const hill: Terrain = {
+            id: 'hill',
+            name: 'Hill',
+            type: 'Area',
+            position: { x: 0, y: 4 },
+            size: { width: 4, height: 4 },
+            isDifficult: true,
+            providesCover: true,
+            blocksLineOfSight: false,
+            isImpassable: false,
+            baseElevation: 0,
+            objectHeight: 1,
+        };
+        const state = createState([hill, lowHedge]);
+        expect(hasLineOfSight(state, { x: 2, y: 5 }, { x: 8, y: 5 })).toBe(true);
+    });
+
+    it('legacy fixture: LoS blocker without explicit height still blocks (safety heuristic)', () => {
+        // Pre-elevation Wall fixture: blocksLineOfSight=true with no
+        // baseElevation/objectHeight. Heuristic should treat it as blocking.
+        const legacyWall: Terrain = {
+            id: 'lw',
+            name: 'Wall',
+            type: 'Block',
+            position: { x: 5, y: 5 },
+            size: { width: 1, height: 1 },
+            isDifficult: false,
+            providesCover: true,
+            blocksLineOfSight: true,
+            isImpassable: true,
+        };
+        const state = createState([legacyWall]);
+        expect(hasLineOfSight(state, { x: 2, y: 5 }, { x: 8, y: 5 })).toBe(false);
+    });
+});

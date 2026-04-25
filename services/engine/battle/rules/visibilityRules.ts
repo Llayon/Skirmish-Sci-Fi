@@ -2,6 +2,7 @@ import { EngineBattleState } from '../types';
 import { Position } from '@/types/character';
 import { Terrain } from '@/types/battle';
 import { getSupercoverCells } from '../../utils/raycast';
+import { getFigureZ } from './goodShotRules';
 
 /**
  * Checks if a point is within the bounds of a terrain object.
@@ -16,8 +17,31 @@ function isPointInTerrain(point: Position, terrain: Terrain): boolean {
     );
 }
 
+function obstacleTop(t: Terrain): number {
+    const top = (t.baseElevation ?? 0) + (t.objectHeight ?? 0);
+    // Safeguard: if a piece is flagged as a LoS blocker but no explicit
+    // height was populated, treat it as tall enough to block any standing
+    // figure. Covers two cases: legacy fixtures that pre-date the height
+    // fields, and special-case pieces like doors (blocksLineOfSight=true
+    // while occupying a doorway at floor level).
+    if (top === 0 && t.blocksLineOfSight) return Number.POSITIVE_INFINITY;
+    return top;
+}
+
 /**
  * Checks if there is a clear Line of Sight between two points.
+ *
+ * Rulebook (Shooting across Linear Obstacles): "Linear obstacles are
+ * ignored for Line of Sight purposes if the target figure is entirely
+ * visible over them. This is typically the case when the shooter is
+ * placed on a raised terrain feature, such as a rooftop."
+ *
+ * Modeled as: an obstacle blocks LoS only when both shooter and target
+ * are at or below the obstacle's top. If either is at least as high as
+ * the top of the obstacle, the obstacle is ignored. (Symmetry follows
+ * from LoS being mutual; rulebook calls out the shooter-on-rooftop case
+ * but the same reasoning applies to a target on a rooftop.)
+ *
  * Pure function for Engine V2.
  */
 export function hasLineOfSight(
@@ -31,20 +55,30 @@ export function hasLineOfSight(
     // 2. Get all cells the ray passes through
     const rayCells = getSupercoverCells(origin, target);
 
-    // 3. Check for blocking terrain in intermediate cells
+    // 3. Eye heights of shooter and target
+    const shooterZ = getFigureZ(state, origin);
+    const targetZ = getFigureZ(state, target);
+
+    // 4. Check for blocking terrain in intermediate cells
     for (const cell of rayCells) {
         // Skip origin and target cells
-        if ((cell.x === origin.x && cell.y === origin.y) || 
+        if ((cell.x === origin.x && cell.y === origin.y) ||
             (cell.x === target.x && cell.y === target.y)) {
             continue;
         }
 
         // Find any terrain that covers this cell and blocks LoS
-        const blockingTerrain = state.battle.terrain.find(t => 
+        const blockingTerrain = state.battle.terrain.find(t =>
             t.blocksLineOfSight && isPointInTerrain(cell, t)
         );
 
-        if (blockingTerrain) return false;
+        if (!blockingTerrain) continue;
+
+        // Height-aware ignore: shooter or target sees over the obstacle.
+        const top = obstacleTop(blockingTerrain);
+        if (shooterZ >= top || targetZ >= top) continue;
+
+        return false;
     }
 
     return true;
