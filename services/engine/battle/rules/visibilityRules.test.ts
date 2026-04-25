@@ -182,3 +182,94 @@ describe('visibilityRules: hasLineOfSight — height-aware (rulebook: shooting a
         expect(hasLineOfSight(state, { x: 2, y: 5 }, { x: 8, y: 5 })).toBe(false);
     });
 });
+
+describe('visibilityRules: calculateCover — height-aware + within-1-of-firer', () => {
+    const createState = (terrain: Terrain[] = []): EngineBattleState => ({
+        schemaVersion: 1,
+        battle: {
+            terrain,
+            participants: [],
+            gridSize: { width: 16, height: 16 },
+            log: []
+        } as unknown as Battle,
+        rng: { cursor: 0, seed: 123 }
+    });
+
+    const crateAt = (x: number, y: number, objectHeight = 1): Terrain => ({
+        id: `crate_${x}_${y}`,
+        name: 'Container',
+        type: 'Block',
+        position: { x, y },
+        size: { width: 1, height: 1 },
+        isDifficult: false,
+        providesCover: true,
+        blocksLineOfSight: false, // does not block LoS, only cover
+        isImpassable: false,
+        baseElevation: 0,
+        objectHeight,
+    });
+
+    const roofAt = (x: number, y: number, w: number, h: number): Terrain => ({
+        id: `roof_${x}_${y}`,
+        name: 'Building Roof',
+        type: 'Area',
+        position: { x, y },
+        size: { width: w, height: h },
+        isDifficult: false,
+        providesCover: false,
+        blocksLineOfSight: false,
+        isImpassable: false,
+        baseElevation: 2,
+        objectHeight: 0,
+    });
+
+    it('cover applies between two ground-level figures with a crate in between', () => {
+        const state = createState([crateAt(5, 5)]);
+        // Attacker far enough from crate (Chebyshev 3 > 1).
+        expect(calculateCover(state, { x: 2, y: 5 }, { x: 8, y: 5 })).toBe(true);
+    });
+
+    it('shooter on a roof (figureZ=2) negates cover from a 1-tall crate', () => {
+        const state = createState([
+            roofAt(0, 4, 4, 4),
+            crateAt(5, 5),
+        ]);
+        expect(calculateCover(state, { x: 2, y: 5 }, { x: 8, y: 5 })).toBe(false);
+    });
+
+    it('target on a roof negates cover symmetrically', () => {
+        const state = createState([
+            crateAt(5, 5),
+            roofAt(8, 4, 4, 4),
+        ]);
+        expect(calculateCover(state, { x: 2, y: 5 }, { x: 9, y: 5 })).toBe(false);
+    });
+
+    it('firer within 1 cell of the cover piece — no cover (leaning over the wall)', () => {
+        // Firer at (4,5), crate at (5,5): Chebyshev 1 ≤ 1 → cover skipped.
+        const state = createState([crateAt(5, 5)]);
+        expect(calculateCover(state, { x: 4, y: 5 }, { x: 8, y: 5 })).toBe(false);
+    });
+
+    it('firer exactly 2 cells away — cover applies', () => {
+        const state = createState([crateAt(5, 5)]);
+        expect(calculateCover(state, { x: 3, y: 5 }, { x: 8, y: 5 })).toBe(true);
+    });
+
+    it('legacy cover piece without height fields still grants cover', () => {
+        // Pre-elevation crate fixture: providesCover=true, no objectHeight.
+        const legacyCrate: Terrain = {
+            id: 'lc',
+            name: 'Container',
+            type: 'Block',
+            position: { x: 5, y: 5 },
+            size: { width: 1, height: 1 },
+            isDifficult: false,
+            providesCover: true,
+            blocksLineOfSight: false,
+            isImpassable: false,
+        };
+        const state = createState([legacyCrate]);
+        expect(calculateCover(state, { x: 2, y: 5 }, { x: 8, y: 5 })).toBe(true);
+    });
+});

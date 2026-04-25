@@ -28,6 +28,19 @@ function obstacleTop(t: Terrain): number {
     return top;
 }
 
+function coverTop(t: Terrain): number {
+    const top = (t.baseElevation ?? 0) + (t.objectHeight ?? 0);
+    // Same heuristic for legacy cover pieces lacking height fields: assume
+    // they are tall enough to actually grant cover (otherwise old fixtures
+    // would lose all cover the moment the new height-aware rule applies).
+    if (top === 0 && t.providesCover) return Number.POSITIVE_INFINITY;
+    return top;
+}
+
+function chebyshevDistance(a: Position, b: Position): number {
+    return Math.max(Math.abs(a.x - b.x), Math.abs(a.y - b.y));
+}
+
 /**
  * Checks if there is a clear Line of Sight between two points.
  *
@@ -86,6 +99,22 @@ export function hasLineOfSight(
 
 /**
  * Calculates if a target has cover from an attacker.
+ *
+ * Rulebook ("Cover" sidebar): a figure has cover if any of the following:
+ *   - Line of Sight crossed any terrain feature MORE THAN 1" from the firer.
+ *   - The figure is positioned within an Area feature.
+ *   - The figure is in contact with a terrain feature that partially obscures LoS.
+ *
+ * Encoded here as:
+ *   1. No LoS → no cover.
+ *   2. Target inside a providesCover Area feature → cover.
+ *   3. Ray from firer to target crosses a providesCover piece, AND:
+ *        - the piece is more than 1 grid cell (Chebyshev) from the firer,
+ *          rulebook: "more than 1" from the firer" — close obstacles let
+ *          the firer lean over and shoot at the target without cover, AND
+ *        - neither shooter nor target is at or above the top of the cover
+ *          piece (height-aware extension of the rulebook 1" rule).
+ *
  * Pure function for Engine V2.
  */
 export function calculateCover(
@@ -96,24 +125,37 @@ export function calculateCover(
     // 1. If no LoS, no cover
     if (!hasLineOfSight(state, attackerPos, targetPos)) return false;
 
-    // 2. Check if target is INSIDE cover terrain
-    const terrainTargetIsIn = state.battle.terrain.find(t => 
+    // 2. Check if target is INSIDE cover terrain (Area feature rule)
+    const terrainTargetIsIn = state.battle.terrain.find(t =>
         t.providesCover && isPointInTerrain(targetPos, t)
     );
     if (terrainTargetIsIn) return true;
 
-    // 3. Check if the ray between them intersects any cover terrain
+    // 3. Check if the ray between them intersects any cover terrain.
     const rayCells = getSupercoverCells(attackerPos, targetPos);
     const coverTerrain = state.battle.terrain.filter(t => t.providesCover);
+    const shooterZ = getFigureZ(state, attackerPos);
+    const targetZ = getFigureZ(state, targetPos);
 
     for (const cell of rayCells) {
         // Skip attacker and target cells
-        if ((cell.x === attackerPos.x && cell.y === attackerPos.y) || 
+        if ((cell.x === attackerPos.x && cell.y === attackerPos.y) ||
             (cell.x === targetPos.x && cell.y === targetPos.y)) {
             continue;
         }
 
-        if (coverTerrain.some(t => isPointInTerrain(cell, t))) {
+        for (const t of coverTerrain) {
+            if (!isPointInTerrain(cell, t)) continue;
+
+            // Height-aware: shooter or target above cover top → cover useless.
+            const top = coverTop(t);
+            if (shooterZ >= top || targetZ >= top) continue;
+
+            // Rulebook: cover only counts if the piece is MORE THAN 1" from
+            // the firer (Chebyshev > 1 in our grid). Within 1, the firer
+            // leans over the obstacle and shoots without granting cover.
+            if (chebyshevDistance(attackerPos, cell) <= 1) continue;
+
             return true;
         }
     }
