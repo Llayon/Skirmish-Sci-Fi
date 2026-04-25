@@ -66,7 +66,8 @@ export type BattleEvent =
     | { type: 'CONSUMABLE_USED'; participantId: string; targetId?: string; consumableId: string }
     | { type: 'AOE_IMPACT_DECLARED'; attackerId: string; targetPos: Position; radius: number; weaponId: string }
     | { type: 'AOE_PARTICIPANT_HIT'; targetId: string; damage: number; roll: number; killed: boolean }
-    | { type: 'TERRAIN_GENERATED'; theme: TerrainTheme; pieceCount: number };
+    | { type: 'TERRAIN_GENERATED'; theme: TerrainTheme; pieceCount: number }
+    | { type: 'GOOD_SHOT_REROLL'; attackerId: string; targetId: string; reason: 'height_advantage'; original: number; rerolled: number };
 
 /**
  * Dependencies injected into the reducer.

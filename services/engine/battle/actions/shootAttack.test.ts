@@ -296,4 +296,108 @@ describe('shootAttack (Engine Unit)', () => {
         // Position should not change for casualty (unless pushback rule changes later)
         expect(targetResult?.position).toEqual({ x: 0, y: 5 });
     });
+
+    describe('Good Shot — Height Advantage', () => {
+        const roofTerrain = {
+            id: 'roof_atk',
+            name: 'Building Roof',
+            type: 'Area' as const,
+            position: { x: 0, y: 0 },
+            size: { width: 2, height: 2 },
+            isDifficult: false,
+            providesCover: false,
+            blocksLineOfSight: false,
+            isImpassable: false,
+            baseElevation: 2,
+            objectHeight: 0,
+        };
+
+        it('rerolls a 1 when shooter is at least 1 unit higher than target', () => {
+            const attacker = createTestCharacter({ id: 'atk', name: 'Shooter', position: { x: 0, y: 0 }, stats: { combat: 0 } });
+            const target = createTestEnemy({ id: 'tgt', name: 'Target', position: { x: 0, y: 5 }, stats: { toughness: 3 } });
+            const battle = createMinimalBattle({ participants: [attacker, target], terrain: [roofTerrain] });
+            battle.phase = 'quick_actions';
+
+            // RNG: first 1 (would miss) then reroll to 6 (hit)
+            const rng = createScriptedRngState([{ die: 'd6', value: 1 }, { die: 'd6', value: 6 }, { die: 'd6', value: 1 }]);
+            const state: EngineBattleState = { schemaVersion: CURRENT_ENGINE_SCHEMA_VERSION, battle, rng };
+
+            const action: Extract<BattleAction, { type: 'SHOOT_ATTACK' }> = {
+                type: 'SHOOT_ATTACK',
+                attackerId: 'atk',
+                targetId: 'tgt',
+                weapon: { id: 'pistol', range: 12, shots: 1, damage: 1, traits: [] }
+            };
+
+            const result = shootAttack(state, action, { rng: { d6, d100 } });
+
+            // Both the original 1 and the reroll were consumed; damage roll if hit
+            expect(result.next.rng.cursor).toBeGreaterThanOrEqual(2);
+
+            // Reroll log + event present
+            expect(result.log.find(l => l.key === 'log.goodShot.heightAdvantage')).toBeDefined();
+            const rerollEvent = result.events.find(e => e.type === 'GOOD_SHOT_REROLL');
+            expect(rerollEvent).toBeDefined();
+            if (rerollEvent && rerollEvent.type === 'GOOD_SHOT_REROLL') {
+                expect(rerollEvent.original).toBe(1);
+                expect(rerollEvent.rerolled).toBe(6);
+                expect(rerollEvent.reason).toBe('height_advantage');
+            }
+
+            // Final shot resolved using the rerolled 6 → hit
+            const resolved = result.events.find(e => e.type === 'SHOT_RESOLVED');
+            expect(resolved).toBeDefined();
+            if (resolved && resolved.type === 'SHOT_RESOLVED') {
+                expect(resolved.hit).toBe(true);
+                expect(resolved.roll).toBe(6); // reflects the effective roll
+            }
+        });
+
+        it('does not reroll when there is no height advantage (same elevation)', () => {
+            const attacker = createTestCharacter({ id: 'atk', name: 'Shooter', position: { x: 0, y: 0 }, stats: { combat: 0 } });
+            const target = createTestEnemy({ id: 'tgt', name: 'Target', position: { x: 0, y: 5 }, stats: { toughness: 3 } });
+            const battle = createMinimalBattle({ participants: [attacker, target] }); // no roof
+            battle.phase = 'quick_actions';
+
+            const rng = createScriptedRngState([{ die: 'd6', value: 1 }]);
+            const state: EngineBattleState = { schemaVersion: CURRENT_ENGINE_SCHEMA_VERSION, battle, rng };
+
+            const action: Extract<BattleAction, { type: 'SHOOT_ATTACK' }> = {
+                type: 'SHOOT_ATTACK',
+                attackerId: 'atk',
+                targetId: 'tgt',
+                weapon: { id: 'pistol', range: 12, shots: 1, damage: 1, traits: [] }
+            };
+
+            const result = shootAttack(state, action, { rng: { d6, d100 } });
+
+            // Only one die consumed — no reroll
+            expect(result.next.rng.cursor).toBe(1);
+            expect(result.log.find(l => l.key === 'log.goodShot.heightAdvantage')).toBeUndefined();
+            expect(result.events.find(e => e.type === 'GOOD_SHOT_REROLL')).toBeUndefined();
+        });
+
+        it('does not reroll when initial roll is not a 1 (only "single 1" qualifies)', () => {
+            const attacker = createTestCharacter({ id: 'atk', name: 'Shooter', position: { x: 0, y: 0 }, stats: { combat: 0 } });
+            const target = createTestEnemy({ id: 'tgt', name: 'Target', position: { x: 0, y: 5 }, stats: { toughness: 3 } });
+            const battle = createMinimalBattle({ participants: [attacker, target], terrain: [roofTerrain] });
+            battle.phase = 'quick_actions';
+
+            // Initial roll = 2 (not a 1); height advantage exists but rule doesn't trigger.
+            const rng = createScriptedRngState([{ die: 'd6', value: 2 }]);
+            const state: EngineBattleState = { schemaVersion: CURRENT_ENGINE_SCHEMA_VERSION, battle, rng };
+
+            const action: Extract<BattleAction, { type: 'SHOOT_ATTACK' }> = {
+                type: 'SHOOT_ATTACK',
+                attackerId: 'atk',
+                targetId: 'tgt',
+                weapon: { id: 'pistol', range: 12, shots: 1, damage: 1, traits: [] }
+            };
+
+            const result = shootAttack(state, action, { rng: { d6, d100 } });
+
+            expect(result.next.rng.cursor).toBe(1);
+            expect(result.events.find(e => e.type === 'GOOD_SHOT_REROLL')).toBeUndefined();
+        });
+    });
 });

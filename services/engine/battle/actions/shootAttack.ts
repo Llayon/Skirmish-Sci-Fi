@@ -1,6 +1,7 @@
 import { EngineBattleState, EngineDeps, BattleEvent, EngineLogEntry, BattleAction } from '../types';
 import { calculateEffectiveCombatOpenShot, calculateHitTargetNumberOpenShot } from '../rules/shootingRules';
 import { computePushbackPosition } from '../rules/pushbackRules';
+import { hasHeightAdvantage } from '../rules/goodShotRules';
 
 export function shootAttack(
     state: EngineBattleState,
@@ -48,33 +49,57 @@ export function shootAttack(
     // Calculate Hit TN using pure rules
     const { targetNumber, reasonKey } = calculateHitTargetNumberOpenShot(attacker, target, action.weapon);
 
-    // Roll
-    const { value: roll, next } = deps.rng.d6(currentRng);
+    // Initial firing roll
+    const { value: initialRoll, next } = deps.rng.d6(currentRng);
     currentRng = next;
+
+    // Good Shot — Height Advantage (rulebook errata): the firer may reroll
+    // a single 1 on the firing dice if positioned at least one figure height
+    // above the target. With one shot, "single 1" = this roll.
+    let roll = initialRoll;
+    let rerollDisplay: number | '' = '';
+    if (initialRoll === 1 && hasHeightAdvantage(state, attacker.position, target.position)) {
+        const { value: rerolled, next: nextAfterReroll } = deps.rng.d6(currentRng);
+        currentRng = nextAfterReroll;
+        roll = rerolled;
+        rerollDisplay = rerolled;
+        log.push({
+            key: 'log.goodShot.heightAdvantage',
+            params: { original: initialRoll, rerolled },
+        });
+        events.push({
+            type: 'GOOD_SHOT_REROLL',
+            attackerId: attacker.id,
+            targetId: target.id,
+            reason: 'height_advantage',
+            original: initialRoll,
+            rerolled,
+        });
+    }
 
     // Calculate Effective Stats
     const combatStat = calculateEffectiveCombatOpenShot(attacker);
-    
+
     // Calculate Bonus (Minimal: just combat stat + base modifiers if any)
-    let bonus = combatStat;
+    const bonus = combatStat;
 
     // Log TN
     log.push({ key: 'log.info.targetNumber', params: { targetNum: targetNumber, reason: reasonKey } });
-    
+
     // Check Hit
     const finalRoll = roll + bonus;
     const isHit = finalRoll >= targetNumber;
 
     // Log Roll Info
-    log.push({ 
-        key: 'log.info.rollInfo', 
-        params: { 
-            roll: roll, 
-            reroll: '', 
-            combat: attacker.stats.combat, 
-            bonus: bonus - attacker.stats.combat, 
-            total: finalRoll 
-        } 
+    log.push({
+        key: 'log.info.rollInfo',
+        params: {
+            roll: initialRoll,
+            reroll: rerollDisplay,
+            combat: attacker.stats.combat,
+            bonus: bonus - attacker.stats.combat,
+            total: finalRoll
+        }
     });
 
     if (isHit) {
