@@ -1,6 +1,7 @@
 import { Position } from '@/types/character';
 import { EngineBattleState } from '../battle/types';
 import { Terrain } from '@/types/battle';
+import { getFigureZ } from '../battle/rules/goodShotRules';
 
 /**
  * Checks if a point is within the bounds of a terrain object.
@@ -33,6 +34,24 @@ function getCellCost(state: EngineBattleState, pos: Position): { walkable: boole
 
     const cost = terrains.some(t => t.isDifficult) ? 2 : 1;
     return { walkable: true, cost };
+}
+
+/**
+ * Vertical movement cost for crossing from one walkable cell to another,
+ * per Five Parsecs rulebook "Moving Up and Down":
+ *
+ *   Climbing UP: pay the height of the obstacle (Δz units).
+ *   Descent of 1" or less: free.
+ *   Descent greater than 1": pay |Δz| (climb down). Jump is a separate
+ *     action (handled by C5) and does not flow through pathfinding.
+ *
+ * Pure: depends only on terrain heights at the two cells.
+ */
+function getElevationCost(state: EngineBattleState, from: Position, to: Position): number {
+    const dz = getFigureZ(state, to) - getFigureZ(state, from);
+    if (dz > 0) return dz;            // climb up
+    if (dz < -1) return -dz;          // descent > 1: climb down at full cost
+    return 0;                          // descent of 1 or less: free
 }
 
 /**
@@ -82,7 +101,8 @@ export function getShortestPath(
                 const { walkable, cost } = getCellCost(state, neighbor);
                 if (!walkable) continue;
 
-                const tentativeGScore = (gScore.get(posKey(current)) ?? Infinity) + cost;
+                const climbCost = getElevationCost(state, current, neighbor);
+                const tentativeGScore = (gScore.get(posKey(current)) ?? Infinity) + cost + climbCost;
                 if (tentativeGScore < (gScore.get(posKey(neighbor)) ?? Infinity)) {
                     cameFrom.set(posKey(neighbor), current);
                     gScore.set(posKey(neighbor), tentativeGScore);
