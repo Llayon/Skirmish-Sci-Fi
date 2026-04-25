@@ -22,7 +22,13 @@ export const TerrainMesh = ({ terrain, gridSize }: TerrainMeshProps) => {
     }
   }, [terrain.id, register, unregister]);
 
-  const position = gridToWorld(terrain.position, gridSize, terrain.height / 2);
+  // Give flat pieces (floors, roofs) a thin visible slab so they render as
+  // a platform rather than collapsing to zero. Rules never consult visual
+  // height — they read baseElevation + objectHeight from the Terrain data —
+  // so this slab is purely cosmetic.
+  const visualHeight = terrain.height > 0 ? terrain.height : 0.05;
+  const centerY = terrain.baseElevation + visualHeight / 2;
+  const position = gridToWorld(terrain.position, gridSize, centerY);
 
   return (
     <mesh
@@ -33,25 +39,25 @@ export const TerrainMesh = ({ terrain, gridSize }: TerrainMeshProps) => {
       receiveShadow
       userData={{ terrainId: terrain.id, terrainType: terrain.type }}
     >
-      {getTerrainGeometry(terrain)}
+      {getTerrainGeometry(terrain, visualHeight)}
       {getTerrainMaterial(terrain)}
     </mesh>
   );
 };
 
-function getTerrainGeometry(terrain: Terrain3D) {
+function getTerrainGeometry(terrain: Terrain3D, visualHeight: number) {
   switch (terrain.type) {
     case 'Wall':
-      return <boxGeometry args={[TILE_SIZE, terrain.height, TILE_SIZE * 0.2]} />;
+      return <boxGeometry args={[TILE_SIZE, visualHeight, TILE_SIZE * 0.2]} />;
     case 'Barrel':
-      return <cylinderGeometry args={[0.3, 0.35, terrain.height, 8]} />;
+      return <cylinderGeometry args={[0.3, 0.35, visualHeight, 8]} />;
     case 'Container':
-      return <boxGeometry args={[TILE_SIZE * 2, terrain.height, TILE_SIZE]} />;
+      return <boxGeometry args={[TILE_SIZE * 2, visualHeight, TILE_SIZE]} />;
     case 'Floor':
-      return <boxGeometry args={[TILE_SIZE, terrain.height, TILE_SIZE]} />;
+      return <boxGeometry args={[TILE_SIZE, visualHeight, TILE_SIZE]} />;
     case 'Obstacle':
     default:
-      return <boxGeometry args={[TILE_SIZE * 0.8, terrain.height, TILE_SIZE * 0.8]} />;
+      return <boxGeometry args={[TILE_SIZE * 0.8, visualHeight, TILE_SIZE * 0.8]} />;
   }
 }
 

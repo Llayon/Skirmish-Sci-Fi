@@ -62,17 +62,18 @@ describe('Terrain Generation (V2 Structural Baseline)', () => {
             }
         });
 
-        it('every terrain piece has a defined elevation', () => {
+        it('every terrain piece has defined baseElevation and objectHeight', () => {
             const { terrain } = generateTerrain('Industrial', gridSize, [], createRng(7777));
 
             for (const t of terrain) {
-                expect(typeof t.elevation).toBe('number');
-                expect(t.elevation).toBeGreaterThanOrEqual(0);
+                expect(typeof t.baseElevation).toBe('number');
+                expect(typeof t.objectHeight).toBe('number');
+                expect(t.baseElevation).toBeGreaterThanOrEqual(0);
+                expect(t.objectHeight).toBeGreaterThanOrEqual(0);
             }
         });
 
-        it('elevations match rulebook heights per terrain kind', () => {
-            // Industrial covers Walls, Containers, Doors, Interiors.
+        it('rulebook heights: walls 2, containers 1, doors flat, interiors flat', () => {
             const { terrain } = generateTerrain('Industrial', gridSize, [], createRng(7777));
 
             const walls = terrain.filter((t) => t.name === 'Wall');
@@ -81,16 +82,28 @@ describe('Terrain Generation (V2 Structural Baseline)', () => {
             const interiors = terrain.filter((t) => t.type === 'Interior');
 
             expect(walls.length).toBeGreaterThan(0);
-            walls.forEach((w) => expect(w.elevation).toBe(2));
-            containers.forEach((c) => expect(c.elevation).toBe(1));
-            doors.forEach((d) => expect(d.elevation).toBe(0));
-            interiors.forEach((i) => expect(i.elevation).toBe(0));
+            walls.forEach((w) => {
+                expect(w.baseElevation).toBe(0);
+                expect(w.objectHeight).toBe(2);
+            });
+            containers.forEach((c) => {
+                expect(c.baseElevation).toBe(0);
+                expect(c.objectHeight).toBe(1);
+            });
+            doors.forEach((d) => {
+                expect(d.baseElevation).toBe(0);
+                expect(d.objectHeight).toBe(0);
+            });
+            interiors.forEach((i) => {
+                expect(i.baseElevation).toBe(0);
+                expect(i.objectHeight).toBe(0);
+            });
         });
 
-        it('every building with an interior also emits a roof at elevation 2', () => {
-            // Each building gets Walls (elevation 2) + Interior (0) + Roof (2) + Door (0).
-            // The roof footprint must match the interior footprint: same parentId,
-            // same position, same size.
+        it('every building emits a flat roof at baseElevation 2', () => {
+            // Each building gets Walls (objectHeight 2) + Interior (flat at 0) +
+            // Roof (flat at baseElevation 2) + Door (flat at 0). Roof footprint
+            // matches Interior footprint: same parentId, position, size.
             const { terrain } = generateTerrain('Industrial', gridSize, [], createRng(7777));
 
             const interiors = terrain.filter((t) => t.type === 'Interior');
@@ -100,7 +113,8 @@ describe('Terrain Generation (V2 Structural Baseline)', () => {
             expect(roofs.length).toBe(interiors.length);
 
             for (const roof of roofs) {
-                expect(roof.elevation).toBe(2);
+                expect(roof.baseElevation).toBe(2);
+                expect(roof.objectHeight).toBe(0);
                 expect(roof.isImpassable).toBe(false);
                 expect(roof.blocksLineOfSight).toBe(false);
                 const matchingInterior = interiors.find((i) => i.parentId === roof.parentId);
@@ -145,6 +159,8 @@ describe('Terrain Generation (V2 Structural Baseline)', () => {
                         providesCover: t.providesCover,
                         blocksLineOfSight: t.blocksLineOfSight,
                         isImpassable: t.isImpassable,
+                        baseElevation: t.baseElevation,
+                        objectHeight: t.objectHeight,
                     })),
                 };
 

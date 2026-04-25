@@ -50,21 +50,28 @@ function mapParticipantTo3D(
 
 function mapTerrainTo3D(t: Terrain): Terrain3D {
   const type = getTerrain3DType(t);
-  // Prefer the authoritative elevation baked into terrain data (populated
-  // by the Engine V2 generator per rulebook); fall back to the legacy
-  // name/flag-derived height for older test fixtures that pre-date the
-  // elevation field.
-  const height = t.elevation ?? getTerrainHeight(type);
+  // Prefer authoritative fields baked into terrain data by the Engine V2
+  // generator. Fall back to the legacy name-derived height for older test
+  // fixtures that pre-date these fields. Both values are in world units
+  // (TILE_SIZE = 1, so they equal the rulebook grid units directly).
+  const height = t.objectHeight ?? getTerrainHeight(type);
+  const baseElevation = t.baseElevation ?? 0;
 
   return {
     id: t.id,
     type,
     position: t.position,
+    baseElevation,
     height,
   };
 }
 
 function getTerrain3DType(t: Terrain): Terrain3DType {
+  // Flat surfaces (interior floors, roofs) render as thin Floor tiles
+  // regardless of name/flag heuristics.
+  if (t.type === 'Interior') return 'Floor';
+  if (t.name.endsWith('Roof')) return 'Floor';
+
   if (t.name === 'Barrel') return 'Barrel';
   if (t.name === 'Container') return 'Container';
 

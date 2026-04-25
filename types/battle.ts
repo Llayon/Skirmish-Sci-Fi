@@ -31,14 +31,29 @@ export interface Terrain {
   isInteractive?: boolean;
   parentId?: string;
   /**
-   * Vertical height of the feature in grid units (1 unit = 1" = one human
-   * figure height, per Five Parsecs rulebook "Moving Up and Down"). Examples:
-   * a 2" waist-high wall is `elevation: 2`; a roof/hill is `elevation: 1`;
-   * a floor interior or doorway is `elevation: 0`. Undefined means the
-   * consumer should fall back to a legacy heuristic (currently the 3D
-   * adapter infers from terrain name/flags).
+   * Height of the surface on which a figure standing on this terrain rests,
+   * in grid units (1 = 1" = one human figure height, per Five Parsecs
+   * rulebook "Moving Up and Down"). Default 0 = ground level.
+   *
+   * Examples: a roof sits at `baseElevation: 2` (figures on it stand 2 units
+   * above ground); a hill's top surface might be `baseElevation: 1`. Walls
+   * and containers stand on the ground, so their `baseElevation` is 0 — but
+   * their `objectHeight` is what gives them presence.
+   *
+   * For rules: `figureZ = baseElevation + objectHeight` describes the height
+   * at which a figure standing on this piece has its eyes/weapon.
    */
-  elevation?: number;
+  baseElevation?: number;
+  /**
+   * Vertical thickness of the object above `baseElevation`, in grid units.
+   * A 2" waist-high wall is `objectHeight: 2` at `baseElevation: 0`.
+   * A flat roof is `objectHeight: 0` at `baseElevation: 2`.
+   * Default 0 = flat (floor/roof/swamp/landing pad).
+   *
+   * For Cover and Line of Sight rules, the relevant obstacle height is
+   * `baseElevation + objectHeight` (the top of the piece).
+   */
+  objectHeight?: number;
 }
 
 export type TerrainTheme = 'Industrial' | 'Wilderness' | 'AlienRuin' | 'CrashSite';
