@@ -225,6 +225,13 @@ export const useBattleStore = create<BattleState>()(
       setNewBattle: (battle) =>
         set((state) => {
           state.battle = battle;
+          // Initialize Engine V2 RNG from the battle's master seed. This
+          // is the single point of truth for "a new Battle has arrived",
+          // covering both host (startBattle path) and guest
+          // (setBattleFromLobby on START_BATTLE) so peers agree on dice.
+          // Falls back to wall-clock for legacy battles without seed.
+          const seed = battle.seed ?? Date.now();
+          state.rng = createRng(seed);
         }),
       setBattle: (recipe) => {
         set((state) => {
@@ -291,13 +298,8 @@ export const useBattleStore = create<BattleState>()(
           }
         });
 
-        // Initialize Engine V2 RNG
-        const seed = Date.now();
-        logger.debug(`Battle started with seed: ${seed}`);
-        const rng = createRng(seed);
-        set((state) => {
-          state.rng = rng;
-        });
+        // RNG is initialized by setNewBattle above using battle.seed.
+        logger.debug(`Battle started with seed: ${newBattle.seed ?? 'wall-clock fallback'}`);
         get().actions.resetEventStream();
         get().actions.resetEngineTracking();
         get().actions.captureEngineBaseline();

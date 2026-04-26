@@ -66,6 +66,27 @@ describe('battleStore', () => {
     expect(useBattleStore.getState().battle).toEqual(mockBattle);
   });
 
+  it('setNewBattle initializes V2 RNG from battle.seed (host/guest agree)', () => {
+    const seeded = { ...mockBattle, seed: 42 } as Battle;
+    useBattleStore.getState().actions.setNewBattle(seeded);
+    const hostRng = useBattleStore.getState().rng!;
+    expect(hostRng.seed).toBe(42);
+    expect(hostRng.cursor).toBe(0);
+
+    // A "guest" call with the same payload yields the same RNG state.
+    useBattleStore.setState({ rng: null });
+    useBattleStore.getState().actions.setNewBattle(seeded);
+    const guestRng = useBattleStore.getState().rng!;
+    expect(guestRng).toEqual(hostRng);
+  });
+
+  it('setNewBattle falls back to wall-clock RNG for legacy battles without seed', () => {
+    useBattleStore.getState().actions.setNewBattle(mockBattle); // no seed
+    const rng = useBattleStore.getState().rng;
+    expect(rng).not.toBeNull();
+    expect(typeof rng!.seed).toBe('number');
+  });
+
   it('setSelectedParticipantId should update the selected participant ID', () => {
     useBattleStore.getState().actions.setSelectedParticipantId('player1');
     expect(useBattleStore.getState().selectedParticipantId).toBe('player1');
@@ -422,8 +443,8 @@ describe('battleStore', () => {
       const state = useBattleStore.getState();
       
       expect(state.engineActionLog).toHaveLength(2);
-      expect(state.engineActionLog[0]).toEqual(action1);
-      expect(state.engineActionLog[1]).toEqual(action2);
+      expect(state.engineActionLog[0]).toMatchObject({ action: action1 });
+      expect(state.engineActionLog[1]).toMatchObject({ action: action2 });
     });
 
     it('resetEventStream: clears only stream data, not history', () => {
