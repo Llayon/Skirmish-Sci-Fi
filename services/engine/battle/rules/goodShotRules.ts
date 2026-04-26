@@ -1,14 +1,6 @@
 import type { EngineBattleState } from '../types';
-import type { Position, Terrain } from '@/types/battle';
-
-function isPointInFootprint(t: Terrain, pos: Position): boolean {
-    return (
-        pos.x >= t.position.x &&
-        pos.x < t.position.x + t.size.width &&
-        pos.y >= t.position.y &&
-        pos.y < t.position.y + t.size.height
-    );
-}
+import type { Position } from '@/types/battle';
+import { isPointInTerrain } from '../../utils/terrain';
 
 /**
  * World-space y-height a figure standing in `pos` rests at.
@@ -21,7 +13,7 @@ function isPointInFootprint(t: Terrain, pos: Position): boolean {
  */
 export function getFigureZ(state: EngineBattleState, pos: Position): number {
     const walkable = state.battle.terrain.filter(
-        (t) => !t.isImpassable && isPointInFootprint(t, pos),
+        (t) => !t.isImpassable && isPointInTerrain(pos, t),
     );
     if (walkable.length === 0) return 0;
     return Math.max(

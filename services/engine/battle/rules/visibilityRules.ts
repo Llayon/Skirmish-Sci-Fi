@@ -2,20 +2,8 @@ import { EngineBattleState } from '../types';
 import { Position } from '@/types/character';
 import { Terrain } from '@/types/battle';
 import { getSupercoverCells } from '../../utils/raycast';
+import { isPointInTerrain } from '../../utils/terrain';
 import { getFigureZ } from './goodShotRules';
-
-/**
- * Checks if a point is within the bounds of a terrain object.
- * Multi-cell aware.
- */
-function isPointInTerrain(point: Position, terrain: Terrain): boolean {
-    return (
-        point.x >= terrain.position.x &&
-        point.x < terrain.position.x + terrain.size.width &&
-        point.y >= terrain.position.y &&
-        point.y < terrain.position.y + terrain.size.height
-    );
-}
 
 function obstacleTop(t: Terrain): number {
     const top = (t.baseElevation ?? 0) + (t.objectHeight ?? 0);

@@ -1,19 +1,7 @@
 import { Position } from '@/types/character';
 import { EngineBattleState } from '../battle/types';
-import { Terrain } from '@/types/battle';
 import { getFigureZ } from '../battle/rules/goodShotRules';
-
-/**
- * Checks if a point is within the bounds of a terrain object.
- */
-function isPointInTerrain(point: Position, terrain: Terrain): boolean {
-    return (
-        point.x >= terrain.position.x &&
-        point.x < terrain.position.x + terrain.size.width &&
-        point.y >= terrain.position.y &&
-        point.y < terrain.position.y + terrain.size.height
-    );
-}
+import { isPointInTerrain } from './terrain';
 
 /**
  * Calculates the cost and walkability of a cell.
