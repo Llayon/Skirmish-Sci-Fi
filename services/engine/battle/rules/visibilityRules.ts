@@ -72,7 +72,49 @@ export function hasLineOfSight(
     const shooterZ = getFigureZ(state, origin);
     const targetZ = getFigureZ(state, target);
 
-    // 4. Check for blocking terrain in intermediate cells
+    // 4. Area-feature edge rule (rulebook: "Line of Sight into an Area
+    //    feature terminates at the nearest edge"). Figures inside the same
+    //    Area can see each other within 3" (Chebyshev 3). Otherwise:
+    //      - target inside an Area is visible only if the target cell is the
+    //        first ray cell in that Area (i.e. on the edge facing the firer);
+    //      - shooter inside an Area can see out only from the far-side edge,
+    //        i.e. the last ray cell still inside that Area must be the
+    //        shooter cell.
+    //    Areas on the ray that contain neither end do not block LoS by this
+    //    rule (they may still grant cover via calculateCover).
+    //
+    //    "Concealing" Areas only — ground-level cover features (forest,
+    //    swamp, jungle): providesCover, with no elevation and no thickness.
+    //    Roofs (baseElevation>0, no cover) and hills (objectHeight>0, raise
+    //    figures) are also `type:'Area'` in data but don't conceal their
+    //    occupants and so are excluded from this rule.
+    const isConcealingArea = (t: Terrain): boolean =>
+        t.type === 'Area' && t.providesCover &&
+        (t.baseElevation ?? 0) === 0 && (t.objectHeight ?? 0) === 0;
+    const areasOrigin = state.battle.terrain.filter(t => isConcealingArea(t) && isPointInTerrain(origin, t));
+    const areasTarget = state.battle.terrain.filter(t => isConcealingArea(t) && isPointInTerrain(target, t));
+    const sharedArea = areasOrigin.find(ao => areasTarget.some(at => at.id === ao.id));
+    if (sharedArea) {
+        if (chebyshevDistance(origin, target) > 3) return false;
+    } else {
+        for (const a of areasTarget) {
+            const firstIdx = rayCells.findIndex(c => isPointInTerrain(c, a));
+            if (firstIdx === -1) continue;
+            const fc = rayCells[firstIdx];
+            if (fc.x !== target.x || fc.y !== target.y) return false;
+        }
+        for (const a of areasOrigin) {
+            let lastIdx = -1;
+            for (let i = 0; i < rayCells.length; i++) {
+                if (isPointInTerrain(rayCells[i], a)) lastIdx = i;
+            }
+            if (lastIdx === -1) continue;
+            const lc = rayCells[lastIdx];
+            if (lc.x !== origin.x || lc.y !== origin.y) return false;
+        }
+    }
+
+    // 5. Check for blocking terrain in intermediate cells
     for (const cell of rayCells) {
         // Skip origin and target cells
         if ((cell.x === origin.x && cell.y === origin.y) ||

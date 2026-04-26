@@ -273,3 +273,73 @@ describe('visibilityRules: calculateCover — height-aware + within-1-of-firer',
         expect(calculateCover(state, { x: 2, y: 5 }, { x: 8, y: 5 })).toBe(true);
     });
 });
+
+describe('visibilityRules: hasLineOfSight — Area features (LoS terminates at nearest edge)', () => {
+    const createState = (terrain: Terrain[] = []): EngineBattleState => ({
+        schemaVersion: 1,
+        battle: {
+            terrain,
+            participants: [],
+            gridSize: { width: 20, height: 20 },
+            log: []
+        } as unknown as Battle,
+        rng: { cursor: 0, seed: 123 }
+    });
+
+    // A "forest"-style Area: provides cover, doesn't block LoS by itself, no height.
+    const forestAt = (x: number, y: number, w: number, h: number): Terrain => ({
+        id: `forest_${x}_${y}_${w}x${h}`,
+        name: 'Forest',
+        type: 'Area',
+        position: { x, y },
+        size: { width: w, height: h },
+        isDifficult: true,
+        providesCover: true,
+        blocksLineOfSight: false,
+        isImpassable: false,
+        baseElevation: 0,
+        objectHeight: 0,
+    });
+
+    it('target on the near edge of an Area is visible from outside', () => {
+        // Forest spans (5..9, 4..7). Shooter at (2,5), target at (5,5) — nearest edge cell.
+        const state = createState([forestAt(5, 4, 5, 4)]);
+        expect(hasLineOfSight(state, { x: 2, y: 5 }, { x: 5, y: 5 })).toBe(true);
+    });
+
+    it('target deep inside an Area is NOT visible from outside (LoS terminates at edge)', () => {
+        // Forest spans (5..9, 4..7). Shooter at (2,5), target at (8,5) — 3 cells inside.
+        const state = createState([forestAt(5, 4, 5, 4)]);
+        expect(hasLineOfSight(state, { x: 2, y: 5 }, { x: 8, y: 5 })).toBe(false);
+    });
+
+    it('shooter on the near edge of their own Area can see outside targets', () => {
+        // Symmetric case — shooter at (5,5) on the edge facing target outside at (2,5).
+        const state = createState([forestAt(5, 4, 5, 4)]);
+        expect(hasLineOfSight(state, { x: 5, y: 5 }, { x: 2, y: 5 })).toBe(true);
+    });
+
+    it('shooter deep inside an Area cannot see outside targets', () => {
+        // Shooter at (8,5), several cells deep into the forest.
+        const state = createState([forestAt(5, 4, 5, 4)]);
+        expect(hasLineOfSight(state, { x: 8, y: 5 }, { x: 2, y: 5 })).toBe(false);
+    });
+
+    it('two figures inside the same Area can see each other within 3 cells', () => {
+        // Both inside forest, Chebyshev = 3.
+        const state = createState([forestAt(5, 4, 5, 4)]);
+        expect(hasLineOfSight(state, { x: 5, y: 5 }, { x: 8, y: 5 })).toBe(true);
+    });
+
+    it('two figures inside the same Area cannot see each other beyond 3 cells', () => {
+        // Forest spans (5..14, 4..7). Both inside, Chebyshev = 4.
+        const state = createState([forestAt(5, 4, 10, 4)]);
+        expect(hasLineOfSight(state, { x: 5, y: 5 }, { x: 9, y: 5 })).toBe(false);
+    });
+
+    it('a pass-through Area (neither end inside) does not block LoS', () => {
+        // Forest spans (4..6, 4..6); shooter at (2,5), target at (8,5) — ray crosses forest.
+        const state = createState([forestAt(4, 4, 3, 3)]);
+        expect(hasLineOfSight(state, { x: 2, y: 5 }, { x: 8, y: 5 })).toBe(true);
+    });
+});
