@@ -45,7 +45,8 @@ export type BattleAction =
     | { type: 'USE_CONSUMABLE'; participantId: string; consumableId: string }
     | { type: 'THROW_GRENADE'; attackerId: string; targetPos: Position; weapon: { id: string; range: number; damage: number; radius: number } }
     | { type: 'PROCESS_AI_TURN'; participantId: string }
-    | { type: 'GENERATE_TERRAIN'; theme: TerrainTheme; gridSize: GridSize; worldTraits?: WorldTrait[] };
+    | { type: 'GENERATE_TERRAIN'; theme: TerrainTheme; gridSize: GridSize; worldTraits?: WorldTrait[] }
+    | { type: 'JUMP_DOWN'; participantId: string; to: Position };
 
 /**
  * Events emitted by the engine for UI/Animation consumption.
@@ -67,7 +68,8 @@ export type BattleEvent =
     | { type: 'AOE_IMPACT_DECLARED'; attackerId: string; targetPos: Position; radius: number; weaponId: string }
     | { type: 'AOE_PARTICIPANT_HIT'; targetId: string; damage: number; roll: number; killed: boolean }
     | { type: 'TERRAIN_GENERATED'; theme: TerrainTheme; pieceCount: number }
-    | { type: 'GOOD_SHOT_REROLL'; attackerId: string; targetId: string; reason: 'height_advantage'; original: number; rerolled: number };
+    | { type: 'GOOD_SHOT_REROLL'; attackerId: string; targetId: string; reason: 'height_advantage'; original: number; rerolled: number }
+    | { type: 'FALL_DAMAGE_RESOLVED'; participantId: string; dropHeight: number; d6Roll: number; damage: number; toughness: number; outcome: 'unhurt' | 'stunned' | 'casualty' };
 
 /**
  * Dependencies injected into the reducer.

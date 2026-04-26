@@ -11,6 +11,7 @@ import { missionSetup } from './actions/missionSetup';
 import { resolveConsumable } from './actions/resolveConsumable';
 import { throwGrenade } from './actions/throwGrenade';
 import { generateTerrain } from './actions/generateTerrain';
+import { jumpDown } from './actions/jumpDown';
 import { generateAIPlan } from './ai/aiDispatcher';
 
 function assertNever(x: never): never {
@@ -45,6 +46,8 @@ function dispatchAction(
             return throwGrenade(state, action, deps);
         case 'GENERATE_TERRAIN':
             return generateTerrain(state, action);
+        case 'JUMP_DOWN':
+            return jumpDown(state, action, deps);
         case 'PROCESS_AI_TURN': {
             const { actions: plan, nextRng } = generateAIPlan(state, action.participantId, deps);
             let currentState = { ...state, rng: nextRng };
