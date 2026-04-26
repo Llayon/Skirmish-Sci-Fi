@@ -286,7 +286,7 @@ describe('visibilityRules: hasLineOfSight — Area features (LoS terminates at n
         rng: { cursor: 0, seed: 123 }
     });
 
-    // A "forest"-style Area: provides cover, doesn't block LoS by itself, no height.
+    // A "forest"-style Area: conceals figures inside (LoS edge rule).
     const forestAt = (x: number, y: number, w: number, h: number): Terrain => ({
         id: `forest_${x}_${y}_${w}x${h}`,
         name: 'Forest',
@@ -297,6 +297,7 @@ describe('visibilityRules: hasLineOfSight — Area features (LoS terminates at n
         providesCover: true,
         blocksLineOfSight: false,
         isImpassable: false,
+        concealsLineOfSight: true,
         baseElevation: 0,
         objectHeight: 0,
     });

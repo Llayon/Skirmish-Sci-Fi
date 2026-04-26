@@ -71,14 +71,20 @@ export function hasLineOfSight(
     //    Areas on the ray that contain neither end do not block LoS by this
     //    rule (they may still grant cover via calculateCover).
     //
-    //    "Concealing" Areas only — ground-level cover features (forest,
-    //    swamp, jungle): providesCover, with no elevation and no thickness.
-    //    Roofs (baseElevation>0, no cover) and hills (objectHeight>0, raise
-    //    figures) are also `type:'Area'` in data but don't conceal their
-    //    occupants and so are excluded from this rule.
-    const isConcealingArea = (t: Terrain): boolean =>
-        t.type === 'Area' && t.providesCover &&
-        (t.baseElevation ?? 0) === 0 && (t.objectHeight ?? 0) === 0;
+    //    Concealing Areas opt in via `concealsLineOfSight: true`. Roofs
+    //    and hills are also `type:'Area'` in data but elevate instead of
+    //    conceal, and so omit the flag.
+    //
+    //    Heuristic fallback for legacy fixtures (pre-flag): an Area piece
+    //    at ground level (no elevation, no thickness) that provides cover
+    //    is treated as concealing. New code should set the flag instead.
+    const isConcealingArea = (t: Terrain): boolean => {
+        if (t.type !== 'Area') return false;
+        if (t.concealsLineOfSight === true) return true;
+        if (t.concealsLineOfSight === false) return false;
+        return !!t.providesCover &&
+            (t.baseElevation ?? 0) === 0 && (t.objectHeight ?? 0) === 0;
+    };
     const areasOrigin = state.battle.terrain.filter(t => isConcealingArea(t) && isPointInTerrain(origin, t));
     const areasTarget = state.battle.terrain.filter(t => isConcealingArea(t) && isPointInTerrain(target, t));
     const sharedArea = areasOrigin.find(ao => areasTarget.some(at => at.id === ao.id));

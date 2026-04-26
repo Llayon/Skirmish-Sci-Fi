@@ -54,6 +54,16 @@ export interface Terrain {
    * `baseElevation + objectHeight` (the top of the piece).
    */
   objectHeight?: number;
+  /**
+   * True for Area features that *conceal* figures inside them — forests,
+   * jungles, swamps, smoke. LoS into such an area terminates at the
+   * nearest edge facing the firer, and figures within the same area can
+   * see each other only within 3" (rulebook "Lines of Sight").
+   *
+   * Roofs, hills, and landing pads are also `type:'Area'` but do NOT
+   * conceal — they elevate. Set this flag explicitly to opt in.
+   */
+  concealsLineOfSight?: boolean;
 }
 
 export type TerrainTheme = 'Industrial' | 'Wilderness' | 'AlienRuin' | 'CrashSite';
