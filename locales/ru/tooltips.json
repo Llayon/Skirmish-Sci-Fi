@@ -3,7 +3,9 @@
   "tooltips": {
     "engineV2": {
       "rollInitiative": "Engine V2: только в фазе реакции",
-      "advancePhase": "Engine V2: только в фазах действий"
+      "advancePhase": "Engine V2: только в фазах действий",
+      "jumpDown": "Спрыгнуть на {{drop}}{{risk}}",
+      "jumpDownUnavailable": "Некуда спрыгнуть"
     },
     "stats": {
       "reactions": "Реакция: Определяет порядок хода и броски инициативы. Чем выше, тем лучше.",

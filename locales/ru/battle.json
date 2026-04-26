@@ -24,7 +24,8 @@
     "defeatMessage": "Отряд выжил, чтобы сражаться в другой день.",
     "engineV2": {
       "rollInitiative": "Бросок инициативы",
-      "advancePhase": "Следующая фаза"
+      "advancePhase": "Следующая фаза",
+      "jumpDown": "Спрыгнуть"
     },
     "infoPanel": {
       "statsTab": "Статы",

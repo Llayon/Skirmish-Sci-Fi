@@ -3,7 +3,9 @@
   "tooltips": {
     "engineV2": {
       "rollInitiative": "Engine V2: only in reaction roll",
-      "advancePhase": "Engine V2: only in action phases"
+      "advancePhase": "Engine V2: only in action phases",
+      "jumpDown": "Jump down {{drop}} units{{risk}}",
+      "jumpDownUnavailable": "No lower cell to jump to"
     },
     "stats": {
       "reactions": "Reactions: Determines turn order and initiative rolls. Higher is better.",

@@ -24,7 +24,8 @@
     "defeatMessage": "The crew lives to fight another day.",
     "engineV2": {
       "rollInitiative": "Roll Initiative",
-      "advancePhase": "Advance Phase"
+      "advancePhase": "Advance Phase",
+      "jumpDown": "Jump Down"
     },
     "infoPanel": {
       "statsTab": "Stats",

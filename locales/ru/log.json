@@ -8,7 +8,8 @@
       "slides": "{name} скользит по льду!",
       "brawlerWeapon": "{name} сражается с помощью {weapon}.",
       "brawlerUnarmed": "{name} сражается без оружия.",
-      "useDevice": "{name} активирует {device}!"
+      "useDevice": "{name} активирует {device}!",
+      "jumpDown": "{id} спрыгивает вниз на {drop}."
     },
     "info": {
       "battleBegins": "--- Начало боя ---",
@@ -46,6 +47,7 @@
       "lethalHit": "Это смертельное попадание!",
       "outcomeCasualty": "{name} выведен(а) из строя!",
       "outcomeStunned": "Попадание было несмертельным. Цель оглушена и отброшена.",
+      "fallDamage": "Урон от падения: высота {drop} + d6 {roll} = {damage} против Стойкости {toughness}.",
       "pushedBack": "{name} отброшен(а) назад.",
       "notPushedBack": "{name} не может быть отброшен(а) назад.",
       "stimPackSave": "Стим-пак {name} автоматически спасает от смертельного попадания!",

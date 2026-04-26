@@ -8,7 +8,8 @@
       "slides": "{name} slides on the ice!",
       "brawlerWeapon": "{name} is fighting with a {weapon}.",
       "brawlerUnarmed": "{name} is fighting unarmed.",
-      "useDevice": "{name} activates a {device}!"
+      "useDevice": "{name} activates a {device}!",
+      "jumpDown": "{id} jumps down {drop} units."
     },
     "info": {
       "battleBegins": "--- Battle Begins ---",
@@ -46,6 +47,7 @@
       "lethalHit": "It's a lethal hit!",
       "outcomeCasualty": "{name} is a casualty!",
       "outcomeStunned": "The hit was not lethal. Target is stunned and pushed back.",
+      "fallDamage": "Fall damage: drop {drop} + d6 {roll} = {damage} vs Toughness {toughness}.",
       "pushedBack": "{name} is pushed back.",
       "notPushedBack": "{name} cannot be pushed back.",
       "stimPackSave": "{name}'s stim-pack automatically saves them from the lethal hit!",
