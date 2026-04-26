@@ -110,18 +110,80 @@ describe('EngineV2HudControls', () => {
   });
 
   it('enables Advance Phase in action phases', () => {
-    useBattleStore.setState({ 
+    useBattleStore.setState({
       engineV2Enabled: true,
       battle: { phase: 'quick_actions' } as unknown as Battle,
       rng: { cursor: 0, seed: 1 } as RngState
     });
 
     render(<EngineV2HudControls />);
-    
+
     const rollBtn = screen.getByTestId('enginev2-roll-initiative');
     const advanceBtn = screen.getByTestId('enginev2-advance-phase');
 
     expect(rollBtn).toBeDisabled();
     expect(advanceBtn).not.toBeDisabled();
+  });
+
+  describe('Jump Down button', () => {
+    const buildBattle = (overrides: Partial<Battle> = {}): Battle => ({
+      participants: [],
+      terrain: [],
+      gridSize: { width: 10, height: 10 },
+      phase: 'quick_actions',
+      ...(overrides as object),
+    } as Battle);
+
+    it('is disabled when no participant is selected', () => {
+      useBattleStore.setState({
+        engineV2Enabled: true,
+        battle: buildBattle(),
+        rng: { cursor: 0, seed: 1 } as RngState,
+        selectedParticipantId: null,
+      });
+      render(<EngineV2HudControls />);
+      expect(screen.getByTestId('enginev2-jump-down')).toBeDisabled();
+    });
+
+    it('is disabled when the selected participant has no valid drop', () => {
+      const ground = { id: 'p1', position: { x: 5, y: 5 }, status: 'active' };
+      useBattleStore.setState({
+        engineV2Enabled: true,
+        battle: buildBattle({ participants: [ground] as unknown as Battle['participants'] }),
+        rng: { cursor: 0, seed: 1 } as RngState,
+        selectedParticipantId: 'p1',
+      });
+      render(<EngineV2HudControls />);
+      expect(screen.getByTestId('enginev2-jump-down')).toBeDisabled();
+    });
+
+    it('is enabled and dispatches JUMP_DOWN when a drop target exists', async () => {
+      const dispatchSpy = vi.fn();
+      const elevated = { id: 'p1', position: { x: 5, y: 5 }, status: 'active' };
+      useBattleStore.setState({
+        engineV2Enabled: true,
+        battle: buildBattle({
+          participants: [elevated] as unknown as Battle['participants'],
+          terrain: [{
+            id: 'roof', name: 'Roof', type: 'Area',
+            position: { x: 5, y: 5 }, size: { width: 1, height: 1 },
+            isDifficult: false, providesCover: false, blocksLineOfSight: false,
+            isImpassable: false, baseElevation: 2, objectHeight: 0,
+          }] as Battle['terrain'],
+        }),
+        rng: { cursor: 0, seed: 1 } as RngState,
+        selectedParticipantId: 'p1',
+        actions: { ...useBattleStore.getState().actions, dispatchEngineAction: dispatchSpy },
+      });
+      render(<EngineV2HudControls />);
+      const btn = screen.getByTestId('enginev2-jump-down');
+      expect(btn).not.toBeDisabled();
+      btn.click();
+      await waitFor(() => expect(dispatchSpy).toHaveBeenCalled());
+      const dispatched = dispatchSpy.mock.calls[0][0];
+      expect(dispatched.type).toBe('JUMP_DOWN');
+      expect(dispatched.participantId).toBe('p1');
+      expect(dispatched.to).toBeDefined();
+    });
   });
 });
