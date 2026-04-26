@@ -1,6 +1,7 @@
 import { describe, it, expect } from 'vitest';
-import { getFigureZ, hasHeightAdvantage } from './goodShotRules';
-import type { EngineBattleState } from '../types';
+import { applyGoodShotReroll, getFigureZ, hasHeightAdvantage } from './goodShotRules';
+import { createScriptedRngState, d6, d100 } from '../../rng/rng';
+import type { EngineBattleState, EngineDeps } from '../types';
 import type { Battle, Terrain } from '@/types/battle';
 
 function makeTerrain(over: Partial<Terrain>): Terrain {
@@ -161,5 +162,47 @@ describe('goodShotRules.hasHeightAdvantage', () => {
     it('both on the same roof → no advantage', () => {
         const state = makeState([roof]);
         expect(hasHeightAdvantage(state, { x: 1, y: 1 }, { x: 2, y: 2 })).toBe(false);
+    });
+});
+
+describe('applyGoodShotReroll', () => {
+    const deps: EngineDeps = { rng: { d6, d100 } };
+
+    it('returns input unchanged when ineligible', () => {
+        const rng = createScriptedRngState([{ die: 'd6', value: 6 }]);
+        const out = applyGoodShotReroll([1, 1, 1], rng, deps, false);
+        expect(out.rolls).toEqual([1, 1, 1]);
+        expect(out.rerolled).toBeNull();
+        expect(out.rng).toBe(rng);
+    });
+
+    it('returns input unchanged when no roll is a 1', () => {
+        const rng = createScriptedRngState([{ die: 'd6', value: 6 }]);
+        const out = applyGoodShotReroll([2, 3, 4], rng, deps, true);
+        expect(out.rolls).toEqual([2, 3, 4]);
+        expect(out.rerolled).toBeNull();
+        expect(out.rng).toBe(rng);
+    });
+
+    it('rerolls the first 1 in a multi-shot array (rulebook: single 1)', () => {
+        const rng = createScriptedRngState([{ die: 'd6', value: 5 }]);
+        const out = applyGoodShotReroll([3, 1, 1, 6], rng, deps, true);
+        expect(out.rolls).toEqual([3, 5, 1, 6]);
+        expect(out.rerolled).toEqual({ index: 1, original: 1, rerolled: 5 });
+    });
+
+    it('consumes exactly one d6 from the RNG when a reroll fires', () => {
+        const rng = createScriptedRngState([{ die: 'd6', value: 4 }]);
+        const out = applyGoodShotReroll([1, 1], rng, deps, true);
+        // Only one reroll, even with multiple 1s — the script has only 1 entry.
+        expect(out.rolls).toEqual([4, 1]);
+        expect(out.rng.cursor).toBe(1);
+    });
+
+    it('1-shot path matches the original single-shot semantics', () => {
+        const rng = createScriptedRngState([{ die: 'd6', value: 6 }]);
+        const out = applyGoodShotReroll([1], rng, deps, true);
+        expect(out.rolls).toEqual([6]);
+        expect(out.rerolled).toEqual({ index: 0, original: 1, rerolled: 6 });
     });
 });

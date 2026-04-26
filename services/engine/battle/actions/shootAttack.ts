@@ -1,7 +1,7 @@
 import { EngineBattleState, EngineDeps, BattleEvent, EngineLogEntry, BattleAction } from '../types';
 import { calculateEffectiveCombatOpenShot, calculateHitTargetNumberOpenShot } from '../rules/shootingRules';
 import { computePushbackPosition } from '../rules/pushbackRules';
-import { hasHeightAdvantage } from '../rules/goodShotRules';
+import { applyGoodShotReroll, hasHeightAdvantage } from '../rules/goodShotRules';
 
 export function shootAttack(
     state: EngineBattleState,
@@ -54,26 +54,30 @@ export function shootAttack(
     currentRng = next;
 
     // Good Shot — Height Advantage (rulebook errata): the firer may reroll
-    // a single 1 on the firing dice if positioned at least one figure height
-    // above the target. With one shot, "single 1" = this roll.
-    let roll = initialRoll;
-    let rerollDisplay: number | '' = '';
-    if (initialRoll === 1 && hasHeightAdvantage(state, attacker.position, target.position)) {
-        const { value: rerolled, next: nextAfterReroll } = deps.rng.d6(currentRng);
-        currentRng = nextAfterReroll;
-        roll = rerolled;
-        rerollDisplay = rerolled;
+    // a single 1 across all firing dice if positioned at least one figure
+    // height above the target. The helper handles both 1-shot and (future)
+    // multi-shot arrays uniformly.
+    const goodShot = applyGoodShotReroll(
+        [initialRoll],
+        currentRng,
+        deps,
+        hasHeightAdvantage(state, attacker.position, target.position),
+    );
+    currentRng = goodShot.rng;
+    const roll = goodShot.rolls[0];
+    const rerollDisplay: number | '' = goodShot.rerolled?.rerolled ?? '';
+    if (goodShot.rerolled) {
         log.push({
             key: 'log.goodShot.heightAdvantage',
-            params: { original: initialRoll, rerolled },
+            params: { original: goodShot.rerolled.original, rerolled: goodShot.rerolled.rerolled },
         });
         events.push({
             type: 'GOOD_SHOT_REROLL',
             attackerId: attacker.id,
             targetId: target.id,
             reason: 'height_advantage',
-            original: initialRoll,
-            rerolled,
+            original: goodShot.rerolled.original,
+            rerolled: goodShot.rerolled.rerolled,
         });
     }
 
