@@ -175,6 +175,17 @@ export type BattleEventTableEntry = TableEntry<BattleEvent>;
 
 export interface Battle {
   id:string;
+  /**
+   * Master seed for all randomness in this battle. Generated once when
+   * the battle is set up and persisted so any peer that receives the
+   * Battle can deterministically reproduce identical state by replaying
+   * the action log against an RNG initialised from this seed (terrain
+   * generation, dice rolls, and any other engine-level randomness).
+   *
+   * Optional for backward compatibility with saved battles that pre-date
+   * this field; new code MUST populate it via setupBattle.
+   */
+  seed?: number;
   participants: BattleParticipant[];
   gridSize: { width: number; height: number };
   terrain: Terrain[];

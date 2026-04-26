@@ -74,16 +74,16 @@ export const setupBattle = async (
     PORTRAITS.sort(() => Math.random() - 0.5);
     portraitIndex = 0;
 
-    // Terrain now flows through the Engine V2 reducer so multiplayer peers can
-    // replay the same GENERATE_TERRAIN action to reach an identical layout.
-    // Seed is still wall-clock here; future step will carry a battle-level seed
-    // that the host broadcasts to guests.
-    const terrainSeed = (Date.now() & 0x7fffffff) | 0;
+    // The battle's master seed is generated here once. It is stored on the
+    // Battle so the multiplayer broadcast (START_BATTLE) carries it to
+    // guests, and so any peer can deterministically reproduce the same
+    // engine-level randomness — starting with terrain generation.
+    const battleSeed = ((Math.random() * 0x7fffffff) | 0) >>> 0;
     const terrain = runTerrainAction(
         options.forceTerrainTheme || 'Industrial',
         BATTLE_GRID_SIZE,
         campaign?.currentWorld?.traits,
-        terrainSeed,
+        battleSeed,
     );
     
     // --- MISSION & DEPLOYMENT ---
@@ -138,6 +138,7 @@ export const setupBattle = async (
 
     const battle: Battle = {
         id: `battle_${Date.now()}`,
+        seed: battleSeed,
         participants,
         gridSize: BATTLE_GRID_SIZE,
         terrain,
@@ -497,8 +498,8 @@ export const setupMultiplayerBattle = async (
 ): Promise<Battle> => {
     let participants: BattleParticipant[] = [];
 
-    const mpTerrainSeed = (Date.now() & 0x7fffffff) | 0;
-    const terrain = runTerrainAction('Industrial', BATTLE_GRID_SIZE, [], mpTerrainSeed);
+    const mpBattleSeed = ((Math.random() * 0x7fffffff) | 0) >>> 0;
+    const terrain = runTerrainAction('Industrial', BATTLE_GRID_SIZE, [], mpBattleSeed);
 
     const missionTemplate = MISSION_DEFINITIONS.find(m => m.type === 'FightOff')!;
     const mission: Mission = {
@@ -512,6 +513,7 @@ export const setupMultiplayerBattle = async (
 
     const battle: Battle = {
         id: `battle_mp_${Date.now()}`,
+        seed: mpBattleSeed,
         participants,
         gridSize: BATTLE_GRID_SIZE,
         terrain,
