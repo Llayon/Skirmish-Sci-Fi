@@ -86,19 +86,25 @@ describe('pathfinding: getShortestPath', () => {
             // through the hill should still succeed without exploding cost.
         });
 
-        it('a 3-tall descent costs |Δz| (no free drop beyond 1 unit)', () => {
-            // Plateau of height 3 at (1,0) and (2,0); from on-plateau (1,0) to (3,0)
-            // requires descending 3 units: 1 (base) + 3 (climb-down) = 4 for that step.
-            // Compared to walking around — but with a 3-tall plateau the cost should
-            // still complete and reflect the climb-down. We assert pathfinding
-            // returns *some* route rather than failing.
+        it('descent > 1 is not traversable by walking — pathfinding returns null', () => {
+            // Plateau of height 3 at (1,0) and (2,0). Every neighbor of the
+            // plateau is at z=0, so any exit requires a 3-unit drop. Per
+            // rulebook, a drop > 1 is a JUMP_DOWN action (with its own
+            // fall-damage check), not a walk. Pathfinding must refuse.
             const terrain = [hillAt(1, 0, 2, 1, 3)];
             const state = createState(terrain);
-            // Start on the plateau (1,0). End on flat (3,0).
             const path = getShortestPath(state, { x: 1, y: 0 }, { x: 3, y: 0 });
-            expect(path).not.toBeNull();
-            // The direct step (1,0)→(2,0) stays on plateau (free), then (2,0)→(3,0)
-            // descends 3 (cost 1+3=4). Total 5. A* should still find a path.
+            expect(path).toBeNull();
+        });
+
+        it('descent of exactly 1 is still walkable (boundary check)', () => {
+            // 1-tall hill at (1,0); (1,0) is at z=1, (2,0) is at z=0 (drop 1).
+            // The free-descent rule applies. From on-hill (1,0) to flat (2,0)
+            // is a single legal step.
+            const terrain = [hillAt(1, 0, 1, 1, 1)];
+            const state = createState(terrain);
+            const path = getShortestPath(state, { x: 1, y: 0 }, { x: 2, y: 0 });
+            expect(path).toEqual([{ x: 2, y: 0 }]);
         });
     });
 });

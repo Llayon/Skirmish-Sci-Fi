@@ -42,15 +42,16 @@ function getCellCost(state: EngineBattleState, pos: Position): { walkable: boole
  *
  *   Climbing UP: pay the height of the obstacle (Δz units).
  *   Descent of 1" or less: free.
- *   Descent greater than 1": pay |Δz| (climb down). Jump is a separate
- *     action (handled by C5) and does not flow through pathfinding.
+ *   Descent greater than 1": NOT traversable by walking — requires the
+ *     JUMP_DOWN action (with its own fall-damage check). Pathfinding
+ *     refuses these edges by returning null so the caller skips them.
  *
  * Pure: depends only on terrain heights at the two cells.
  */
-function getElevationCost(state: EngineBattleState, from: Position, to: Position): number {
+function getElevationCost(state: EngineBattleState, from: Position, to: Position): number | null {
     const dz = getFigureZ(state, to) - getFigureZ(state, from);
     if (dz > 0) return dz;            // climb up
-    if (dz < -1) return -dz;          // descent > 1: climb down at full cost
+    if (dz < -1) return null;          // descent > 1: must JUMP_DOWN, not walk
     return 0;                          // descent of 1 or less: free
 }
 
@@ -102,6 +103,7 @@ export function getShortestPath(
                 if (!walkable) continue;
 
                 const climbCost = getElevationCost(state, current, neighbor);
+                if (climbCost === null) continue;   // descent > 1: needs JUMP_DOWN
                 const tentativeGScore = (gScore.get(posKey(current)) ?? Infinity) + cost + climbCost;
                 if (tentativeGScore < (gScore.get(posKey(neighbor)) ?? Infinity)) {
                     cameFrom.set(posKey(neighbor), current);
