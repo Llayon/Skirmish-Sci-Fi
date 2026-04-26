@@ -7,22 +7,18 @@ import { getFigureZ } from './goodShotRules';
 
 function obstacleTop(t: Terrain): number {
     const top = (t.baseElevation ?? 0) + (t.objectHeight ?? 0);
-    // Safeguard: if a piece is flagged as a LoS blocker but no explicit
-    // height was populated, treat it as tall enough to block any standing
-    // figure. Covers two cases: legacy fixtures that pre-date the height
-    // fields, and special-case pieces like doors (blocksLineOfSight=true
-    // while occupying a doorway at floor level).
+    // Special case for doors: a closed door is `isImpassable:false` (figures
+    // walk through it when open) but `blocksLineOfSight:true` (closed door
+    // is opaque). It is modeled as an opaque pass-through with no
+    // elevation, so the height-aware "see over the obstacle" rule must not
+    // accidentally treat it as transparent. Promote any zero-height LoS
+    // blocker to "tall enough to block any standing figure".
     if (top === 0 && t.blocksLineOfSight) return Number.POSITIVE_INFINITY;
     return top;
 }
 
 function coverTop(t: Terrain): number {
-    const top = (t.baseElevation ?? 0) + (t.objectHeight ?? 0);
-    // Same heuristic for legacy cover pieces lacking height fields: assume
-    // they are tall enough to actually grant cover (otherwise old fixtures
-    // would lose all cover the moment the new height-aware rule applies).
-    if (top === 0 && t.providesCover) return Number.POSITIVE_INFINITY;
-    return top;
+    return (t.baseElevation ?? 0) + (t.objectHeight ?? 0);
 }
 
 function chebyshevDistance(a: Position, b: Position): number {

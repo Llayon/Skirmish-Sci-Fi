@@ -101,6 +101,8 @@ export const createCoverTerrain = (position: Position, size = { width: 1, height
   providesCover: true,
   blocksLineOfSight: false,
   isImpassable: false,
+  baseElevation: 0,
+  objectHeight: 1,
 });
 
 export const createMinimalBattle = (config: {

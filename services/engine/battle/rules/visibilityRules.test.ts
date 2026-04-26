@@ -24,7 +24,9 @@ describe('visibilityRules: calculateCover', () => {
         blocksLineOfSight: blocksLoS,
         providesCover: providesCover,
         isDifficult: false,
-        isImpassable: blocksLoS
+        isImpassable: blocksLoS,
+        baseElevation: 0,
+        objectHeight: 1,
     } as Terrain);
 
     it('Scenario 1: Target behind an obstacle has cover', () => {
@@ -256,22 +258,6 @@ describe('visibilityRules: calculateCover — height-aware + within-1-of-firer',
         expect(calculateCover(state, { x: 3, y: 5 }, { x: 8, y: 5 })).toBe(true);
     });
 
-    it('legacy cover piece without height fields still grants cover', () => {
-        // Pre-elevation crate fixture: providesCover=true, no objectHeight.
-        const legacyCrate: Terrain = {
-            id: 'lc',
-            name: 'Container',
-            type: 'Block',
-            position: { x: 5, y: 5 },
-            size: { width: 1, height: 1 },
-            isDifficult: false,
-            providesCover: true,
-            blocksLineOfSight: false,
-            isImpassable: false,
-        };
-        const state = createState([legacyCrate]);
-        expect(calculateCover(state, { x: 2, y: 5 }, { x: 8, y: 5 })).toBe(true);
-    });
 });
 
 describe('visibilityRules: hasLineOfSight — Area features (LoS terminates at nearest edge)', () => {
