@@ -400,4 +400,135 @@ describe('shootAttack (Engine Unit)', () => {
             expect(result.events.find(e => e.type === 'GOOD_SHOT_REROLL')).toBeUndefined();
         });
     });
+
+    describe('Multi-shot weapons', () => {
+        it('rolls all firing dice up-front, then resolves each shot in order', () => {
+            const attacker = createTestCharacter({ id: 'atk', name: 'Shooter', position: { x: 0, y: 0 }, stats: { combat: 5 } });
+            const target = createTestEnemy({ id: 'tgt', name: 'Target', position: { x: 0, y: 5 }, stats: { toughness: 6 } });
+            const battle = createMinimalBattle({ participants: [attacker, target] });
+            battle.phase = 'quick_actions';
+            battle.gridSize = { width: 10, height: 10 };
+
+            // 3 firing dice up-front (6, 1, 6), then a damage roll for each
+            // hit. Roll 1 misses (1+5=6 ties TN6 in test? actually 1+5=6 hits).
+            // Tweak: TN with combat 5 vs target stats default — let's just
+            // pick rolls that map cleanly: 6, 6, 1 → all three are hits
+            // (6+5=11, 6+5=11, 1+5=6 vs TN 6). Damage rolls all 1 →
+            // total 1 < toughness 6 → stun every shot but no kill.
+            const rng = createScriptedRngState([
+                { die: 'd6', value: 6 }, { die: 'd6', value: 6 }, { die: 'd6', value: 1 },
+                { die: 'd6', value: 1 }, { die: 'd6', value: 1 }, { die: 'd6', value: 1 },
+            ]);
+            const state: EngineBattleState = { schemaVersion: CURRENT_ENGINE_SCHEMA_VERSION, battle, rng };
+
+            const action: Extract<BattleAction, { type: 'SHOOT_ATTACK' }> = {
+                type: 'SHOOT_ATTACK', attackerId: 'atk', targetId: 'tgt',
+                weapon: { id: 'autorifle', range: 12, shots: 3, damage: 0, traits: [] },
+            };
+
+            const result = shootAttack(state, action, { rng: { d6, d100 } });
+
+            // 3 firing dice + 3 damage rolls = 6 RNG draws.
+            expect(result.next.rng.cursor).toBe(6);
+            // Three SHOT_RESOLVED events (all hits).
+            const shotEvents = result.events.filter(e => e.type === 'SHOT_RESOLVED');
+            expect(shotEvents).toHaveLength(3);
+            expect(shotEvents.every(e => e.type === 'SHOT_RESOLVED' && e.hit)).toBe(true);
+            // Three stun tokens (one per non-lethal hit).
+            const tgtResult = result.next.battle.participants.find(p => p.id === 'tgt');
+            expect(tgtResult?.stunTokens).toBe(3);
+            expect(tgtResult?.status).toBe('stunned');
+        });
+
+        it('stops the volley as soon as the target becomes a casualty', () => {
+            const attacker = createTestCharacter({ id: 'atk', name: 'Shooter', position: { x: 0, y: 0 }, stats: { combat: 5 } });
+            const target = createTestEnemy({ id: 'tgt', name: 'Target', position: { x: 0, y: 5 }, stats: { toughness: 3 } });
+            const battle = createMinimalBattle({ participants: [attacker, target] });
+            battle.phase = 'quick_actions';
+
+            // 3 firing dice up-front (all hits), then damage for first hit
+            // = 6 + 1 = 7 ≥ toughness 3 → casualty. Volley stops; remaining
+            // damage rolls never consumed.
+            const rng = createScriptedRngState([
+                { die: 'd6', value: 6 }, { die: 'd6', value: 6 }, { die: 'd6', value: 6 },
+                { die: 'd6', value: 6 },
+            ]);
+            const state: EngineBattleState = { schemaVersion: CURRENT_ENGINE_SCHEMA_VERSION, battle, rng };
+
+            const action: Extract<BattleAction, { type: 'SHOOT_ATTACK' }> = {
+                type: 'SHOOT_ATTACK', attackerId: 'atk', targetId: 'tgt',
+                weapon: { id: 'autorifle', range: 12, shots: 3, damage: 1, traits: [] },
+            };
+
+            const result = shootAttack(state, action, { rng: { d6, d100 } });
+
+            // 3 firing dice rolled up-front + only 1 damage roll consumed
+            // (the kill); remaining 2 damage rolls never drawn.
+            expect(result.next.rng.cursor).toBe(4);
+            expect(result.log.find(l => l.key === 'log.info.lethalHit')).toBeDefined();
+            // Only one SHOT_RESOLVED event since we stop on the kill.
+            const shotEvents = result.events.filter(e => e.type === 'SHOT_RESOLVED');
+            expect(shotEvents).toHaveLength(1);
+        });
+
+        it('Good Shot reroll applies once across the whole volley', () => {
+            // Attacker on a roof for height advantage; volley of 2 shots.
+            // Initial rolls: [1, 1]. Reroll fires on the FIRST 1 only,
+            // matching rulebook "single 1 on the firing dice" — second 1
+            // stays.
+            const attacker = createTestCharacter({ id: 'atk', position: { x: 1, y: 1 }, stats: { combat: 1 } });
+            const target = createTestEnemy({ id: 'tgt', position: { x: 5, y: 5 }, stats: { toughness: 10 } });
+            const roof = {
+                id: 'roof', name: 'Roof', type: 'Area' as const,
+                position: { x: 0, y: 0 }, size: { width: 4, height: 4 },
+                isDifficult: false, providesCover: false, blocksLineOfSight: false,
+                isImpassable: false, baseElevation: 2, objectHeight: 0,
+            };
+            const battle = createMinimalBattle({ participants: [attacker, target], terrain: [roof] });
+            battle.phase = 'quick_actions';
+
+            // Volley: [1, 1] (both 1s). Reroll: 5 (replaces FIRST 1).
+            // Extra damage dice script entries cover any incidental hit
+            // resolution; the focus is the reroll count.
+            const rng = createScriptedRngState([
+                { die: 'd6', value: 1 }, { die: 'd6', value: 1 },   // initial firing
+                { die: 'd6', value: 5 },                              // single reroll
+                { die: 'd6', value: 1 }, { die: 'd6', value: 1 },   // possible damage rolls
+            ]);
+            const state: EngineBattleState = { schemaVersion: CURRENT_ENGINE_SCHEMA_VERSION, battle, rng };
+
+            const action: Extract<BattleAction, { type: 'SHOOT_ATTACK' }> = {
+                type: 'SHOOT_ATTACK', attackerId: 'atk', targetId: 'tgt',
+                weapon: { id: 'pistol', range: 12, shots: 2, damage: 0, traits: [] },
+            };
+
+            const result = shootAttack(state, action, { rng: { d6, d100 } });
+
+            const rerolls = result.events.filter(e => e.type === 'GOOD_SHOT_REROLL');
+            expect(rerolls).toHaveLength(1);
+            expect(rerolls[0].type === 'GOOD_SHOT_REROLL' && rerolls[0].original).toBe(1);
+            expect(rerolls[0].type === 'GOOD_SHOT_REROLL' && rerolls[0].rerolled).toBe(5);
+        });
+
+        it('shots: 1 still works (regression for the original single-shot path)', () => {
+            const attacker = createTestCharacter({ id: 'atk', position: { x: 0, y: 0 }, stats: { combat: 0 } });
+            const target = createTestEnemy({ id: 'tgt', position: { x: 0, y: 5 }, stats: { toughness: 3 } });
+            const battle = createMinimalBattle({ participants: [attacker, target] });
+            battle.phase = 'quick_actions';
+
+            const rng = createScriptedRngState([{ die: 'd6', value: 1 }]); // miss
+            const state: EngineBattleState = { schemaVersion: CURRENT_ENGINE_SCHEMA_VERSION, battle, rng };
+
+            const action: Extract<BattleAction, { type: 'SHOOT_ATTACK' }> = {
+                type: 'SHOOT_ATTACK', attackerId: 'atk', targetId: 'tgt',
+                weapon: { id: 'pistol', range: 12, shots: 1, damage: 1, traits: [] },
+            };
+
+            const result = shootAttack(state, action, { rng: { d6, d100 } });
+            expect(result.next.rng.cursor).toBe(1);
+            const shotEvents = result.events.filter(e => e.type === 'SHOT_RESOLVED');
+            expect(shotEvents).toHaveLength(1);
+            expect(shotEvents[0].type === 'SHOT_RESOLVED' && shotEvents[0].hit).toBe(false);
+        });
+    });
 });

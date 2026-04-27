@@ -17,7 +17,6 @@ export function shootAttack(
     const target = battle.participants.find(p => p.id === action.targetId);
 
     if (!attacker || !target) {
-        // Fallback for safety, though caller should ensure valid IDs
         return { next: state, events, log };
     }
 
@@ -40,32 +39,28 @@ export function shootAttack(
         weaponId: action.weapon.id
     });
 
-    // 2. Resolve Shot (Minimal implementation)
-    // Mirroring V1 loop structure (simplest case: 1 shot, no volley logic needed for vertical slice)
-    
-    // V1 Log: log.info.resolvingShot
-    log.push({ key: 'log.info.resolvingShot', params: { shotNum: 1, target: target.name } });
+    // 2. Roll the entire volley up-front. Multi-shot weapons (`weapon.shots
+    //    > 1`) fire all dice as a burst before any resolution; this is what
+    //    lets the Good Shot Height Advantage reroll target a single 1
+    //    across the whole volley (rulebook errata). With shots: 1 the
+    //    behaviour collapses to the original single-shot path.
+    const shotsToFire = Math.max(1, action.weapon.shots ?? 1);
+    const initialRolls: number[] = [];
+    for (let i = 0; i < shotsToFire; i++) {
+        const { value, next } = deps.rng.d6(currentRng);
+        currentRng = next;
+        initialRolls.push(value);
+    }
 
-    // Calculate Hit TN using pure rules
-    const { targetNumber, reasonKey } = calculateHitTargetNumberOpenShot(attacker, target, action.weapon);
-
-    // Initial firing roll
-    const { value: initialRoll, next } = deps.rng.d6(currentRng);
-    currentRng = next;
-
-    // Good Shot — Height Advantage (rulebook errata): the firer may reroll
-    // a single 1 across all firing dice if positioned at least one figure
-    // height above the target. The helper handles both 1-shot and (future)
-    // multi-shot arrays uniformly.
+    // 3. Good Shot — Height Advantage: a single reroll across the volley.
     const goodShot = applyGoodShotReroll(
-        [initialRoll],
+        initialRolls,
         currentRng,
         deps,
         hasHeightAdvantage(state, attacker.position, target.position),
     );
     currentRng = goodShot.rng;
-    const roll = goodShot.rolls[0];
-    const rerollDisplay: number | '' = goodShot.rerolled?.rerolled ?? '';
+    const firingRolls = goodShot.rolls;
     if (goodShot.rerolled) {
         log.push({
             key: 'log.goodShot.heightAdvantage',
@@ -81,121 +76,120 @@ export function shootAttack(
         });
     }
 
-    // Calculate Effective Stats
+    // 4. Compute volley-wide constants.
+    const { targetNumber, reasonKey } = calculateHitTargetNumberOpenShot(attacker, target, action.weapon);
     const combatStat = calculateEffectiveCombatOpenShot(attacker);
-
-    // Calculate Bonus (Minimal: just combat stat + base modifiers if any)
     const bonus = combatStat;
-
-    // Log TN
     log.push({ key: 'log.info.targetNumber', params: { targetNum: targetNumber, reason: reasonKey } });
 
-    // Check Hit
-    const finalRoll = roll + bonus;
-    const isHit = finalRoll >= targetNumber;
+    // 5. Resolve each shot in order. Stop if the target becomes a
+    //    casualty (V1 default: no auto-target-switching in V2 yet).
+    let stopVolley = false;
+    for (let i = 0; i < firingRolls.length; i++) {
+        if (stopVolley) break;
 
-    // Log Roll Info
-    log.push({
-        key: 'log.info.rollInfo',
-        params: {
-            roll: initialRoll,
-            reroll: rerollDisplay,
-            combat: attacker.stats.combat,
-            bonus: bonus - attacker.stats.combat,
-            total: finalRoll
-        }
-    });
+        const initialRoll = initialRolls[i];
+        const roll = firingRolls[i];
+        const rerollDisplay: number | '' = goodShot.rerolled?.index === i ? goodShot.rerolled.rerolled : '';
+        const finalRoll = roll + bonus;
+        const isHit = finalRoll >= targetNumber;
 
-    if (isHit) {
-        log.push({ key: 'log.info.hit' });
-        events.push({ type: 'SHOT_RESOLVED', attackerId: attacker.id, targetId: target.id, hit: true, roll });
-        
-        // Damage Roll (Stage 4.2B)
-        const { value: damageRoll, next: nextRngAfterDamage } = deps.rng.d6(currentRng);
-        currentRng = nextRngAfterDamage;
-        
-        const weaponDamage = action.weapon.damage;
-        const totalDamage = damageRoll + weaponDamage;
-        const targetToughness = target.stats.toughness;
-        
-        log.push({ 
-            key: 'log.info.damageRoll', 
-            params: { 
-                roll: damageRoll, 
-                damage: weaponDamage, 
-                total: totalDamage, 
-                toughness: targetToughness 
-            } 
+        log.push({ key: 'log.info.resolvingShot', params: { shotNum: i + 1, target: target.name } });
+        log.push({
+            key: 'log.info.rollInfo',
+            params: {
+                roll: initialRoll,
+                reroll: rerollDisplay,
+                combat: attacker.stats.combat,
+                bonus: bonus - attacker.stats.combat,
+                total: finalRoll,
+            },
         });
 
-        if (totalDamage < targetToughness) {
-            // Non-lethal hit
-            // 1. Check Neural Optimization (Stage 4.2C)
-            const hasNeuralOpt = targetMutable.type === 'character' && targetMutable.implants.includes('neural_optimization');
-            
-            if (hasNeuralOpt) {
-                log.push({ key: 'log.trait.neuralOptimization' });
-            } else {
-                // Apply Stun
-                targetMutable.stunTokens = (targetMutable.stunTokens || 0) + 1;
-                targetMutable.status = 'stunned';
-                log.push({ key: 'log.info.outcomeStunned' });
-            }
+        if (!isHit) {
+            log.push({ key: 'log.info.miss' });
+            events.push({ type: 'SHOT_RESOLVED', attackerId: attacker.id, targetId: target.id, hit: false, roll });
+            continue;
+        }
 
-            // 2. Apply Pushback (Stage 4.2D)
-            if (battle.gridSize) {
-                const occupied = new Set(battle.participants.map(p => `${p.position.x},${p.position.y}`));
-                const pushPos = computePushbackPosition({
-                    attackerPos: attacker.position,
-                    targetPos: targetMutable.position,
-                    gridSize: battle.gridSize,
-                    occupiedPositions: occupied
-                });
+        log.push({ key: 'log.info.hit' });
+        events.push({ type: 'SHOT_RESOLVED', attackerId: attacker.id, targetId: target.id, hit: true, roll });
 
-                if (pushPos) {
-                    const oldPos = targetMutable.position;
-                    targetMutable.position = pushPos;
-                    log.push({ key: 'log.info.pushedBack' });
-                    events.push({
-                        type: 'PARTICIPANT_MOVED',
-                        participantId: target.id,
-                        from: oldPos,
-                        to: pushPos
-                    });
-                } else {
-                    log.push({ key: 'log.info.notPushedBack' });
-                }
-            } else {
-                // Safety: no grid size, skip pushback (log as not pushed back or just skip? Test expects notPushedBack log)
-                log.push({ key: 'log.info.notPushedBack' });
-            }
+        // Damage roll for this shot.
+        const { value: damageRoll, next: nextRngAfterDamage } = deps.rng.d6(currentRng);
+        currentRng = nextRngAfterDamage;
 
-        } else {
-            // Lethal hit
+        const weaponDamage = action.weapon.damage;
+        const totalDamage = damageRoll + weaponDamage;
+        const targetToughness = targetMutable.stats.toughness;
+
+        log.push({
+            key: 'log.info.damageRoll',
+            params: {
+                roll: damageRoll,
+                damage: weaponDamage,
+                total: totalDamage,
+                toughness: targetToughness,
+            },
+        });
+
+        if (totalDamage >= targetToughness) {
+            // Lethal hit ends the volley.
             log.push({ key: 'log.info.lethalHit' });
             targetMutable.status = 'casualty';
             targetMutable.actionsRemaining = 0;
             log.push({ key: 'log.info.outcomeCasualty' });
+            stopVolley = true;
+            continue;
         }
 
-    } else {
-        log.push({ key: 'log.info.miss' });
-        events.push({ type: 'SHOT_RESOLVED', attackerId: attacker.id, targetId: target.id, hit: false, roll });
-    }
+        // Non-lethal: stun (or Neural Optimization no-op) + pushback.
+        const hasNeuralOpt = targetMutable.type === 'character' && targetMutable.implants.includes('neural_optimization');
+        if (hasNeuralOpt) {
+            log.push({ key: 'log.trait.neuralOptimization' });
+        } else {
+            targetMutable.stunTokens = (targetMutable.stunTokens || 0) + 1;
+            targetMutable.status = 'stunned';
+            log.push({ key: 'log.info.outcomeStunned' });
+        }
 
-    // Update State
-    const nextBattle = { 
-        ...battle,
-        participants: nextParticipants
-    };
+        if (battle.gridSize) {
+            const occupied = new Set(nextParticipants
+                .filter(p => p.status !== 'casualty')
+                .map(p => `${p.position.x},${p.position.y}`),
+            );
+            const pushPos = computePushbackPosition({
+                attackerPos: attacker.position,
+                targetPos: targetMutable.position,
+                gridSize: battle.gridSize,
+                occupiedPositions: occupied,
+            });
+
+            if (pushPos) {
+                const oldPos = targetMutable.position;
+                targetMutable.position = pushPos;
+                log.push({ key: 'log.info.pushedBack' });
+                events.push({
+                    type: 'PARTICIPANT_MOVED',
+                    participantId: target.id,
+                    from: oldPos,
+                    to: pushPos,
+                });
+            } else {
+                log.push({ key: 'log.info.notPushedBack' });
+            }
+        } else {
+            log.push({ key: 'log.info.notPushedBack' });
+        }
+    }
 
     return {
         next: {
             ...state,
-            battle: nextBattle,
-            rng: currentRng
+            battle: { ...battle, participants: nextParticipants },
+            rng: currentRng,
         },
         events,
-        log
+        log,
     };
 }
