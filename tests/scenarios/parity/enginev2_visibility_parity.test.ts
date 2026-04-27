@@ -49,16 +49,18 @@ describe('Parity: Visibility (Line of Sight)', () => {
 
     it('Scenario 2: Wall blocking horizontal sight', () => {
         const terrain: Terrain[] = [
-            { 
-                id: 'w1', 
+            {
+                id: 'w1',
                 name: 'Wall',
-                type: 'Wall', 
-                position: { x: 5, y: 5 }, 
-                size: { width: 1, height: 1 }, 
+                type: 'Wall',
+                position: { x: 5, y: 5 },
+                size: { width: 1, height: 1 },
                 blocksLineOfSight: true,
                 isDifficult: false,
                 providesCover: true,
-                isImpassable: true
+                isImpassable: true,
+                baseElevation: 0,
+                objectHeight: 2,
             }
         ];
         const state = createState(terrain);
@@ -74,16 +76,18 @@ describe('Parity: Visibility (Line of Sight)', () => {
 
     it('Scenario 3: Diagonal blocking wall', () => {
         const terrain: Terrain[] = [
-            { 
-                id: 'w1', 
+            {
+                id: 'w1',
                 name: 'Wall',
-                type: 'Wall', 
-                position: { x: 3, y: 3 }, 
-                size: { width: 1, height: 1 }, 
+                type: 'Wall',
+                position: { x: 3, y: 3 },
+                size: { width: 1, height: 1 },
                 blocksLineOfSight: true,
                 isDifficult: false,
                 providesCover: true,
-                isImpassable: true
+                isImpassable: true,
+                baseElevation: 0,
+                objectHeight: 2,
             }
         ];
         const state = createState(terrain);
@@ -99,17 +103,20 @@ describe('Parity: Visibility (Line of Sight)', () => {
 
     it('Scenario 4: Closed door blocks sight', () => {
         const terrain: Terrain[] = [
-            { 
-                id: 'd1', 
+            {
+                id: 'd1',
                 name: 'Door',
-                type: 'Door', 
-                position: { x: 5, y: 5 }, 
-                size: { width: 1, height: 1 }, 
+                type: 'Door',
+                position: { x: 5, y: 5 },
+                size: { width: 1, height: 1 },
                 blocksLineOfSight: true,
                 status: 'closed',
                 isDifficult: false,
                 providesCover: false,
-                isImpassable: true
+                isImpassable: true,
+                baseElevation: 0,
+                objectHeight: 0,
+                losBlockerHeight: 2,
             } as any
         ];
         const state = createState(terrain);
@@ -151,16 +158,18 @@ describe('Parity: Visibility (Line of Sight)', () => {
 
     it('Scenario 6: Multi-cell block (2x2) blocking sight', () => {
         const terrain: Terrain[] = [
-            { 
-                id: 'b1', 
+            {
+                id: 'b1',
                 name: 'Block',
-                type: 'Block', 
-                position: { x: 4, y: 4 }, 
-                size: { width: 2, height: 2 }, 
+                type: 'Block',
+                position: { x: 4, y: 4 },
+                size: { width: 2, height: 2 },
                 blocksLineOfSight: true,
                 isDifficult: false,
                 providesCover: true,
-                isImpassable: true
+                isImpassable: true,
+                baseElevation: 0,
+                objectHeight: 2,
             } as any
         ];
         const state = createState(terrain);

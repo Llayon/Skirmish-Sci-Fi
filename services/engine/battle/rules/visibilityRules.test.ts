@@ -166,21 +166,25 @@ describe('visibilityRules: hasLineOfSight — height-aware (rulebook: shooting a
         expect(hasLineOfSight(state, { x: 2, y: 5 }, { x: 8, y: 5 })).toBe(true);
     });
 
-    it('legacy fixture: LoS blocker without explicit height still blocks (safety heuristic)', () => {
-        // Pre-elevation Wall fixture: blocksLineOfSight=true with no
-        // baseElevation/objectHeight. Heuristic should treat it as blocking.
-        const legacyWall: Terrain = {
-            id: 'lw',
-            name: 'Wall',
-            type: 'Block',
+    it('door (walkable, opaque) blocks LoS via losBlockerHeight', () => {
+        // A closed door is walkable (figures pass through) but opaque to
+        // LoS. losBlockerHeight: 2 captures the LoS opacity without
+        // giving the door physical thickness for movement.
+        const door: Terrain = {
+            id: 'door',
+            name: 'Door',
+            type: 'Door',
             position: { x: 5, y: 5 },
             size: { width: 1, height: 1 },
             isDifficult: false,
             providesCover: true,
             blocksLineOfSight: true,
-            isImpassable: true,
+            isImpassable: false,
+            baseElevation: 0,
+            objectHeight: 0,
+            losBlockerHeight: 2,
         };
-        const state = createState([legacyWall]);
+        const state = createState([door]);
         expect(hasLineOfSight(state, { x: 2, y: 5 }, { x: 8, y: 5 })).toBe(false);
     });
 });

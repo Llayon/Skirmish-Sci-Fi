@@ -71,7 +71,7 @@ function createTerrain(
     type: Terrain['type'],
     pos: Position,
     size: {width: number, height: number},
-    options: Partial<Pick<Terrain, 'isDifficult' | 'providesCover' | 'blocksLineOfSight' | 'isImpassable' | 'isInteractive' | 'parentId' | 'baseElevation' | 'objectHeight'>> = {}
+    options: Partial<Pick<Terrain, 'isDifficult' | 'providesCover' | 'blocksLineOfSight' | 'isImpassable' | 'isInteractive' | 'parentId' | 'baseElevation' | 'objectHeight' | 'losBlockerHeight'>> = {}
 ): Terrain {
     return {
         id: `terrain_${terrainIdCounter++}`,
@@ -87,6 +87,7 @@ function createTerrain(
         parentId: options.parentId,
         baseElevation: options.baseElevation ?? 0,
         objectHeight: options.objectHeight ?? 0,
+        ...(options.losBlockerHeight != null ? { losBlockerHeight: options.losBlockerHeight } : {}),
     };
 }
 
@@ -162,10 +163,13 @@ function createBuilding(
         buildingTerrain.splice(wallIndex, 1);
     }
 
-    // A door is passable at ground level — elevation 0 so figures walk through it.
+    // A door is passable at ground level — figures walk through at floor
+    // level (objectHeight: 0). When closed, it is opaque to LoS for
+    // standing figures: losBlockerHeight: 2 captures that without giving
+    // the door physical thickness for movement.
     buildingTerrain.push(createTerrain(
         'Door', 'Door', doorPos, { width: 1, height: 1 },
-        { isImpassable: false, providesCover: true, blocksLineOfSight: true, isInteractive: true, parentId: buildingId, objectHeight: 0 }
+        { isImpassable: false, providesCover: true, blocksLineOfSight: true, isInteractive: true, parentId: buildingId, objectHeight: 0, losBlockerHeight: 2 }
     ));
 
     return buildingTerrain;

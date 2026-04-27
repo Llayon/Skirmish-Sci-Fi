@@ -55,6 +55,19 @@ export interface Terrain {
    */
   objectHeight?: number;
   /**
+   * Effective top height (in grid units) used for Line-of-Sight blocking
+   * checks, when it differs from `baseElevation + objectHeight`. The
+   * canonical case is a closed door: the door is walkable
+   * (`isImpassable: false, objectHeight: 0`) so figures pass at floor
+   * level when it is open, but it is opaque when closed
+   * (`blocksLineOfSight: true`). Setting `losBlockerHeight: 2` lets the
+   * door block standing figures' LoS without giving it physical
+   * thickness for movement.
+   *
+   * Defaults to `baseElevation + objectHeight` when omitted.
+   */
+  losBlockerHeight?: number;
+  /**
    * True for Area features that *conceal* figures inside them — forests,
    * jungles, swamps, smoke. LoS into such an area terminates at the
    * nearest edge facing the firer, and figures within the same area can

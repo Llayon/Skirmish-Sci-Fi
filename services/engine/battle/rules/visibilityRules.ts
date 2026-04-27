@@ -6,15 +6,12 @@ import { isPointInTerrain } from '../../utils/terrain';
 import { getFigureZ } from './goodShotRules';
 
 function obstacleTop(t: Terrain): number {
-    const top = (t.baseElevation ?? 0) + (t.objectHeight ?? 0);
-    // Special case for doors: a closed door is `isImpassable:false` (figures
-    // walk through it when open) but `blocksLineOfSight:true` (closed door
-    // is opaque). It is modeled as an opaque pass-through with no
-    // elevation, so the height-aware "see over the obstacle" rule must not
-    // accidentally treat it as transparent. Promote any zero-height LoS
-    // blocker to "tall enough to block any standing figure".
-    if (top === 0 && t.blocksLineOfSight) return Number.POSITIVE_INFINITY;
-    return top;
+    // `losBlockerHeight` overrides physical top when present — used by
+    // pieces whose LoS opacity differs from their walkable surface (e.g.
+    // closed doors at floor level). Otherwise the top is just the
+    // physical top of the piece.
+    if (t.losBlockerHeight != null) return t.losBlockerHeight;
+    return (t.baseElevation ?? 0) + (t.objectHeight ?? 0);
 }
 
 function coverTop(t: Terrain): number {
