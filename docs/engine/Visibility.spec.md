@@ -59,30 +59,33 @@ pieces are rectangular AABBs by construction (`Terrain.size` is W×H).
 For every intermediate ray cell that contains a `blocksLineOfSight`
 terrain piece:
 
-- Compute `top = obstacleTop(t) = baseElevation + objectHeight`.
+- Compute `top = obstacleTop(t) = losBlockerHeight ?? (baseElevation + objectHeight)`.
 - Skip the obstacle when `shooterZ >= top || targetZ >= top` — either
   end sees over (rulebook: linear obstacles ignored when target
   entirely visible over them; symmetry for the rooftop case).
 - Otherwise the ray is blocked.
 
-**Door special case:** `obstacleTop` promotes any zero-height
-LoS-blocker to `Number.POSITIVE_INFINITY`. A closed door is modeled
-with `isImpassable: false, blocksLineOfSight: true, objectHeight: 0`
-so figures can walk through it when open; the heuristic prevents that
-data shape from accidentally turning the door transparent. *Tech
-debt:* a separate `losBlockerHeight` field would model this without a
-heuristic — see `D3_Setup_In_Action_Log.todo.md` and the height-tech
-TODO list.
+**Door modeling (`losBlockerHeight`):** a closed door is
+`isImpassable: false` (figures walk through when open),
+`blocksLineOfSight: true` (opaque when closed),
+`objectHeight: 0` (no physical thickness for movement) and
+`losBlockerHeight: 2` (effective top for LoS). The override field
+makes the model explicit and removes the prior `top===0 → ∞`
+heuristic. Any future zero-thickness opaque marker (smoke, energy
+field) declares its LoS height the same way.
 
 ## 3. Cover (`calculateCover`)
 
 Encodes rulebook "Cover" sidebar:
 
 1. **No LoS → no cover.**
-2. **Target inside a `providesCover` terrain → cover** (Area-feature
-   rule). Note: this clause is currently height-blind — a shooter on a
-   roof firing into a forest still grants cover. Documented as
-   rules-as-written; revisit if it causes unrealistic outcomes.
+2. **Target inside a `providesCover` terrain → cover**, *unless* the
+   shooter is strictly above the cover piece's top (`shooterZ >
+   coverTop`). A figure on a 2-tall roof firing down at a target
+   inside a 1-tall hedge sees over the canopy — the step falls
+   through to step 3 rather than granting cover. Two ground-level
+   figures with the target inside the hedge keep cover (boundary
+   `shooterZ <= top` is inclusive).
 3. **Ray crosses a `providesCover` piece**, AND
    - `coverTop = baseElevation + objectHeight`, with shooter and
      target both **below** the cover top (otherwise: cover is
@@ -91,9 +94,10 @@ Encodes rulebook "Cover" sidebar:
      the firer (rulebook "more than 1" from the firer" — within 1, the
      firer leans over and shoots without granting cover).
 
-`coverTop` no longer has the legacy `top===0 → ∞` heuristic; cover
-pieces must declare height explicitly. The `obstacleTop` heuristic
-(LoS) remains, scoped to doors as documented above.
+Both `obstacleTop` and `coverTop` are now plain functions of the
+explicit height fields — no zero-height heuristics remain. Pieces
+that need to override the physical top for LoS purposes (doors etc.)
+do so via `losBlockerHeight`.
 
 ## 4. API
 

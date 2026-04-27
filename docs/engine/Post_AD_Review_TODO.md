@@ -9,33 +9,18 @@ slice.
 
 ## Medium priority
 
-### M1. `calculateCover` step 2 is height-blind
+### ~~M1. `calculateCover` step 2 is height-blind~~ — closed in `f6b7f03`
 
-**Where:** `services/engine/battle/rules/visibilityRules.ts:160-164`.
+Step 2 now negates cover when `shooterZ > coverTop`. Target inside
+a hedge gets cover from a ground-level shooter; a roof-side shooter
+sees over.
 
-**What:** "Target inside a `providesCover` Area → cover" runs before
-the height check that step 3 applies, so a shooter on a 3-tall roof
-firing into a forest still grants cover. By literal rulebook this is
-correct ("figure positioned within an Area feature → cover"), but
-inconsistent with C2's height-aware step-3 logic.
+### ~~M2. Cleaner LoS-blocker height than the door heuristic~~ — closed in `1e76e14`
 
-**Decide:** keep as rules-as-written (current) OR add symmetric height
-check (`shooterZ < topOfArea`). If the latter, "topOfArea" needs a
-sensible value for ground-level concealing pieces (forest canopy is 1
-unit up?) — likely tied to M2 below.
-
-### M2. Cleaner LoS-blocker height than the door heuristic
-
-**Where:** `obstacleTop` in `visibilityRules.ts:8-18`.
-
-**What:** Closed door is `objectHeight: 0` (figure walks through) but
-`blocksLineOfSight: true` (opaque). The heuristic `top===0 &&
-blocksLineOfSight → ∞` keeps doors blocking LoS. It also fires for any
-zero-height LoS-blocker someone might add later (smoke marker etc.).
-
-**Fix idea:** add `losBlockerHeight?: number` to `Terrain`, defaulting
-to `objectHeight`. Door sets `losBlockerHeight: 2`. Heuristic becomes
-unnecessary; the model becomes explicit.
+`losBlockerHeight?: number` field added to `Terrain`. Doors declare
+it explicitly; `obstacleTop` no longer has the `top===0 → ∞`
+heuristic. Migrated production door fixture and visibility parity
+tests.
 
 ### M3. Concealing-Area heuristic fallback still in code
 
@@ -125,8 +110,8 @@ improvement.
 
 ## Snapshot
 
-- 493/493 tests green at the time this list was assembled (commit
-  `bf97605`).
-- All items above are non-blocking — current behaviour is correct or
-  conservative; the items are about model clarity, coverage,
+- 495/495 tests green at the latest update (commits `1e76e14`
+  closing M2, `f6b7f03` closing M1).
+- All remaining items are non-blocking — current behaviour is correct
+  or conservative; the items are about model clarity, coverage,
   forward-compatibility.
