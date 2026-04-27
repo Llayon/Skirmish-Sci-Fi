@@ -59,15 +59,13 @@ covered.
 **Why deferred:** PeerJS is heavy to mock. Worth doing once the
 protocol stabilises further.
 
-### L2. Multi-shot weapons not yet iterating in `shootAttack`
+### ~~L2. Multi-shot weapons not yet iterating in `shootAttack`~~ — closed in `3190156`
 
-**What:** `applyGoodShotReroll` already accepts an array (D4,
-`4bee40a`), so the reroll semantics are multi-shot-ready. But
-`shootAttack.ts` still rolls a single d6 — `weapon.shots > 1` is
-ignored.
-
-**Pickup:** when implementing multi-shot, build the rolls array up-front,
-hand it to the helper, then resolve hits per-die.
+`weapon.shots > 1` now fires the full volley. All firing dice rolled
+up-front, Good Shot reroll selects the first 1 across the array, each
+shot resolves in order, volley stops on casualty. V1 features still
+missing in V2: target switching on dead defender, focused trait, and
+aimed-shot rerolls — separate follow-ups, not in scope.
 
 ### L3. Fall damage outside `TraitPlugin` pipeline
 
@@ -110,8 +108,8 @@ improvement.
 
 ## Snapshot
 
-- 495/495 tests green at the latest update (commits `1e76e14`
-  closing M2, `f6b7f03` closing M1).
+- 499/499 tests green at the latest update (commits `1e76e14`
+  closing M2, `f6b7f03` closing M1, `3190156` closing L2).
 - All remaining items are non-blocking — current behaviour is correct
   or conservative; the items are about model clarity, coverage,
   forward-compatibility.
