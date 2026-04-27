@@ -30,15 +30,14 @@ flag, or had `providesCover:false`/`objectHeight>0` excluding it
 already). Heuristic dropped; `isConcealingArea` is now strictly
 `type === 'Area' && concealsLineOfSight === true`.
 
-### M4. Naming collision: D1–D4
+### ~~M4. Naming collision: D1–D4~~ — closed in (this commit)
 
-**Issue:** Closure of C tech-debt was tagged `(D1)`–`(D4)` in commit
-messages (`2b79ec1`, `8aac35a`, `d2bee4b`, `4bee40a`). Multiplayer
-seed propagation then started over with `(D1)`–`(D2)` (`ac6d08e`,
-`1ce5949`). Git archaeology will be confusing.
-
-**Fix:** in any future CHANGELOG/release notes, refer to commits by
-hash or use a clearer scheme (e.g. `Cdebt-1`…`Cdebt-4` vs `MP-1`…).
+Authoritative remap published at
+`docs/engine/REPORTS/2026-04-27-Engine-V2-Height-Multiplayer-Changelog.md`.
+The 4 C-debt commits become `C-debt-1..4` (`2b79ec1`, `8aac35a`,
+`d2bee4b`, `4bee40a`); the 2 multiplayer commits become `MP-1..2`
+(`ac6d08e`, `1ce5949`). Convention going forward: avoid reusing
+letters once they've been spent on a block.
 
 ---
 
