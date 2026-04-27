@@ -67,17 +67,8 @@ export function hasLineOfSight(
     //    Concealing Areas opt in via `concealsLineOfSight: true`. Roofs
     //    and hills are also `type:'Area'` in data but elevate instead of
     //    conceal, and so omit the flag.
-    //
-    //    Heuristic fallback for legacy fixtures (pre-flag): an Area piece
-    //    at ground level (no elevation, no thickness) that provides cover
-    //    is treated as concealing. New code should set the flag instead.
-    const isConcealingArea = (t: Terrain): boolean => {
-        if (t.type !== 'Area') return false;
-        if (t.concealsLineOfSight === true) return true;
-        if (t.concealsLineOfSight === false) return false;
-        return !!t.providesCover &&
-            (t.baseElevation ?? 0) === 0 && (t.objectHeight ?? 0) === 0;
-    };
+    const isConcealingArea = (t: Terrain): boolean =>
+        t.type === 'Area' && t.concealsLineOfSight === true;
     const areasOrigin = state.battle.terrain.filter(t => isConcealingArea(t) && isPointInTerrain(origin, t));
     const areasTarget = state.battle.terrain.filter(t => isConcealingArea(t) && isPointInTerrain(target, t));
     const sharedArea = areasOrigin.find(ao => areasTarget.some(at => at.id === ao.id));

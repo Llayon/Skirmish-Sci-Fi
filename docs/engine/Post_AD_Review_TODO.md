@@ -22,17 +22,13 @@ it explicitly; `obstacleTop` no longer has the `top===0 → ∞`
 heuristic. Migrated production door fixture and visibility parity
 tests.
 
-### M3. Concealing-Area heuristic fallback still in code
+### ~~M3. Concealing-Area heuristic fallback still in code~~ — closed in (this commit)
 
-**Where:** `visibilityRules.ts:80-82`.
-
-**What:** When `Terrain.concealsLineOfSight` is undefined, fall back
-to `(providesCover && baseElevation==0 && objectHeight==0)`. The
-generator no longer produces such pieces (verified in `8aac35a`); only
-some legacy fixtures.
-
-**Fix:** sweep remaining fixtures, set the flag explicitly, drop the
-fallback.
+Verified across all 11 files using `type:'Area'` that none currently
+relied on the implicit fallback (every fixture either had explicit
+flag, or had `providesCover:false`/`objectHeight>0` excluding it
+already). Heuristic dropped; `isConcealingArea` is now strictly
+`type === 'Area' && concealsLineOfSight === true`.
 
 ### M4. Naming collision: D1–D4
 

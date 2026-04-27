@@ -41,14 +41,10 @@ edge." Two figures inside the same Area can see each other within 3"
   (they can still grant cover via `calculateCover`).
 
 **What counts as a concealing Area:** `type === 'Area' &&
-concealsLineOfSight === true`. The flag is opt-in. Roofs, hills, and
-landing pads share `type:'Area'` in data but elevate rather than
-conceal, and so omit the flag.
-
-**Heuristic fallback** (legacy fixtures pre-flag): an Area with
-`providesCover === true && baseElevation === 0 && objectHeight === 0`
-is treated as concealing. New code MUST set the flag explicitly; the
-fallback exists only to keep old fixtures green.
+concealsLineOfSight === true`. The flag is opt-in and required —
+roofs, hills, and landing pads share `type:'Area'` in data but
+elevate rather than conceal, and so omit the flag. There is no
+implicit fallback; a forest/swamp/jungle MUST declare the flag.
 
 **Convex-AABB assumption:** the "first ray cell in Area" check is
 correct only when the Area's footprint is convex. All current Area
