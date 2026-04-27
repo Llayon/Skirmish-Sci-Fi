@@ -154,17 +154,26 @@ export function calculateCover(
     // 1. If no LoS, no cover
     if (!hasLineOfSight(state, attackerPos, targetPos)) return false;
 
-    // 2. Check if target is INSIDE cover terrain (Area feature rule)
+    const shooterZ = getFigureZ(state, attackerPos);
+    const targetZ = getFigureZ(state, targetPos);
+
+    // 2. Target inside a cover piece (rulebook "figure positioned within
+    //    an Area feature → cover"). Negated when the shooter is strictly
+    //    above the cover top — a roof-side firer looking down into a
+    //    forest sees over the canopy. Keeps step 2 consistent with the
+    //    height-aware step 3.
     const terrainTargetIsIn = state.battle.terrain.find(t =>
         t.providesCover && isPointInTerrain(targetPos, t)
     );
-    if (terrainTargetIsIn) return true;
+    if (terrainTargetIsIn) {
+        const top = coverTop(terrainTargetIsIn);
+        if (shooterZ <= top) return true;
+        // shooter strictly above the cover piece — fall through to step 3
+    }
 
     // 3. Check if the ray between them intersects any cover terrain.
     const rayCells = getSupercoverCells(attackerPos, targetPos);
     const coverTerrain = state.battle.terrain.filter(t => t.providesCover);
-    const shooterZ = getFigureZ(state, attackerPos);
-    const targetZ = getFigureZ(state, targetPos);
 
     for (const cell of rayCells) {
         // Skip attacker and target cells

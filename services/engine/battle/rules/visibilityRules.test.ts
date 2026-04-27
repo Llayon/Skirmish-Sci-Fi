@@ -262,6 +262,34 @@ describe('visibilityRules: calculateCover — height-aware + within-1-of-firer',
         expect(calculateCover(state, { x: 3, y: 5 }, { x: 8, y: 5 })).toBe(true);
     });
 
+    it('shooter on a roof firing into a ground-level cover Area negates step 2', () => {
+        // Target stands inside a 1-tall hedge Area (providesCover, top=1).
+        // Shooter on a 2-tall roof (figureZ=2). Step 2 would naively grant
+        // cover; height check should negate (2 > 1).
+        const hedge: Terrain = {
+            id: 'hedge', name: 'Hedge', type: 'Area',
+            position: { x: 7, y: 4 }, size: { width: 3, height: 3 },
+            isDifficult: false, providesCover: true, blocksLineOfSight: false,
+            isImpassable: false, baseElevation: 0, objectHeight: 1,
+        };
+        const state = createState([roofAt(0, 4, 4, 4), hedge]);
+        // Shooter inside the roof footprint at (2,5) → figureZ = 2.
+        // Target inside the hedge at (8,5).
+        expect(calculateCover(state, { x: 2, y: 5 }, { x: 8, y: 5 })).toBe(false);
+    });
+
+    it('two ground-level figures with target inside a cover Area still get cover', () => {
+        // Same hedge as above, but shooter on the ground (figureZ=0). Step
+        // 2 grants cover because shooter is not above hedge top.
+        const hedge: Terrain = {
+            id: 'hedge', name: 'Hedge', type: 'Area',
+            position: { x: 7, y: 4 }, size: { width: 3, height: 3 },
+            isDifficult: false, providesCover: true, blocksLineOfSight: false,
+            isImpassable: false, baseElevation: 0, objectHeight: 1,
+        };
+        const state = createState([hedge]);
+        expect(calculateCover(state, { x: 2, y: 5 }, { x: 8, y: 5 })).toBe(true);
+    });
 });
 
 describe('visibilityRules: hasLineOfSight — Area features (LoS terminates at nearest edge)', () => {
