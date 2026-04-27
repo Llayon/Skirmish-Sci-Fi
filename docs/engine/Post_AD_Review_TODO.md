@@ -22,7 +22,7 @@ it explicitly; `obstacleTop` no longer has the `top===0 → ∞`
 heuristic. Migrated production door fixture and visibility parity
 tests.
 
-### ~~M3. Concealing-Area heuristic fallback still in code~~ — closed in (this commit)
+### ~~M3. Concealing-Area heuristic fallback still in code~~ — closed in `9b6ffe9`
 
 Verified across all 11 files using `type:'Area'` that none currently
 relied on the implicit fallback (every fixture either had explicit
@@ -30,7 +30,7 @@ flag, or had `providesCover:false`/`objectHeight>0` excluding it
 already). Heuristic dropped; `isConcealingArea` is now strictly
 `type === 'Area' && concealsLineOfSight === true`.
 
-### ~~M4. Naming collision: D1–D4~~ — closed in (this commit)
+### ~~M4. Naming collision: D1–D4~~ — closed in `251b6a2`
 
 Authoritative remap published at
 `docs/engine/REPORTS/2026-04-27-Engine-V2-Height-Multiplayer-Changelog.md`.
@@ -103,8 +103,9 @@ improvement.
 
 ## Snapshot
 
-- 499/499 tests green at the latest update (commits `1e76e14`
-  closing M2, `f6b7f03` closing M1, `3190156` closing L2).
-- All remaining items are non-blocking — current behaviour is correct
-  or conservative; the items are about model clarity, coverage,
-  forward-compatibility.
+- 499/499 tests green at the latest update. Closures: M1 `f6b7f03`,
+  M2 `1e76e14`, M3 `9b6ffe9`, M4 `251b6a2`, L2 `3190156`. The
+  high-priority AI fallback closed earlier in `bf97605`.
+- All remaining items (L1, L3, L4, A1, A2) are non-blocking — current
+  behaviour is correct or conservative; the items are about model
+  clarity, coverage, forward-compatibility.
