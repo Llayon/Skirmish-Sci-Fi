@@ -2,6 +2,47 @@ import { EngineBattleState, EngineDeps, BattleEvent, EngineLogEntry, BattleActio
 import { calculateEffectiveCombatOpenShot, calculateHitTargetNumberOpenShot } from '../rules/shootingRules';
 import { computePushbackPosition } from '../rules/pushbackRules';
 import { applyGoodShotReroll, hasHeightAdvantage } from '../rules/goodShotRules';
+import { hasLineOfSight } from '../rules/visibilityRules';
+import type { BattleParticipant, Position } from '@/types/battle';
+
+const TARGET_SWITCH_RANGE = 3;
+
+function chebyshev(a: Position, b: Position): number {
+    return Math.max(Math.abs(a.x - b.x), Math.abs(a.y - b.y));
+}
+
+/**
+ * Rulebook (multi-shot weapons): "If the target is destroyed, you may
+ * select another target within 3" of the original." We pick the closest
+ * eligible enemy by Chebyshev distance from the attacker, with a
+ * deterministic id-sort tiebreaker. Range/cover for the new shot are
+ * recomputed by `calculateHitTargetNumberOpenShot` against the new
+ * target — out-of-range candidates may still be picked but will miss
+ * (TN 99), matching the rulebook reading that switching is allowed
+ * regardless of range to the new target.
+ */
+function findSwitchTarget(
+    state: EngineBattleState,
+    attacker: BattleParticipant,
+    killedPos: Position,
+    killedId: string,
+    participants: BattleParticipant[],
+): BattleParticipant | null {
+    const candidates = participants.filter(p =>
+        p.id !== killedId &&
+        p.side !== attacker.side &&
+        p.status !== 'casualty' &&
+        chebyshev(p.position, killedPos) <= TARGET_SWITCH_RANGE &&
+        hasLineOfSight(state, attacker.position, p.position),
+    );
+    candidates.sort((a, b) => {
+        const da = chebyshev(attacker.position, a.position);
+        const db = chebyshev(attacker.position, b.position);
+        if (da !== db) return da - db;
+        return a.id.localeCompare(b.id);
+    });
+    return candidates[0] ?? null;
+}
 
 export function shootAttack(
     state: EngineBattleState,
@@ -20,12 +61,12 @@ export function shootAttack(
         return { next: state, events, log };
     }
 
-    // Clone participants to allow mutation without side effects
-    const nextParticipants = battle.participants.map(p => {
-        if (p.id === target.id) return { ...p };
-        return p;
-    });
-    const targetMutable = nextParticipants.find(p => p.id === target.id)!;
+    // Clone all participants up-front so the volley can mutate any of
+    // them — target-switching after a casualty (rulebook "may select
+    // another target within 3"") may hit a different participant on
+    // later shots.
+    const nextParticipants = battle.participants.map(p => ({ ...p }));
+    let targetMutable = nextParticipants.find(p => p.id === target.id)!;
 
     // 1. Declare Shot
     log.push({
@@ -35,7 +76,7 @@ export function shootAttack(
     events.push({
         type: 'SHOOT_DECLARED',
         attackerId: attacker.id,
-        targetId: target.id,
+        targetId: targetMutable.id,
         weaponId: action.weapon.id
     });
 
@@ -69,21 +110,23 @@ export function shootAttack(
         events.push({
             type: 'GOOD_SHOT_REROLL',
             attackerId: attacker.id,
-            targetId: target.id,
+            targetId: targetMutable.id,
             reason: 'height_advantage',
             original: goodShot.rerolled.original,
             rerolled: goodShot.rerolled.rerolled,
         });
     }
 
-    // 4. Compute volley-wide constants.
-    const { targetNumber, reasonKey } = calculateHitTargetNumberOpenShot(attacker, target, action.weapon);
+    // 4. Compute volley-wide constants. Target-number is per-target —
+    //    recomputed below whenever the volley switches to a new target.
     const combatStat = calculateEffectiveCombatOpenShot(attacker);
     const bonus = combatStat;
+    let { targetNumber, reasonKey } = calculateHitTargetNumberOpenShot(attacker, targetMutable, action.weapon);
     log.push({ key: 'log.info.targetNumber', params: { targetNum: targetNumber, reason: reasonKey } });
 
-    // 5. Resolve each shot in order. Stop if the target becomes a
-    //    casualty (V1 default: no auto-target-switching in V2 yet).
+    // 5. Resolve each shot in order. On a lethal hit, attempt to switch
+    //    to another enemy within 3" of the just-killed target (rulebook
+    //    multi-shot rule). If no valid target exists, the volley ends.
     let stopVolley = false;
     for (let i = 0; i < firingRolls.length; i++) {
         if (stopVolley) break;
@@ -94,7 +137,7 @@ export function shootAttack(
         const finalRoll = roll + bonus;
         const isHit = finalRoll >= targetNumber;
 
-        log.push({ key: 'log.info.resolvingShot', params: { shotNum: i + 1, target: target.name } });
+        log.push({ key: 'log.info.resolvingShot', params: { shotNum: i + 1, target: targetMutable.name } });
         log.push({
             key: 'log.info.rollInfo',
             params: {
@@ -108,12 +151,12 @@ export function shootAttack(
 
         if (!isHit) {
             log.push({ key: 'log.info.miss' });
-            events.push({ type: 'SHOT_RESOLVED', attackerId: attacker.id, targetId: target.id, hit: false, roll });
+            events.push({ type: 'SHOT_RESOLVED', attackerId: attacker.id, targetId: targetMutable.id, hit: false, roll });
             continue;
         }
 
         log.push({ key: 'log.info.hit' });
-        events.push({ type: 'SHOT_RESOLVED', attackerId: attacker.id, targetId: target.id, hit: true, roll });
+        events.push({ type: 'SHOT_RESOLVED', attackerId: attacker.id, targetId: targetMutable.id, hit: true, roll });
 
         // Damage roll for this shot.
         const { value: damageRoll, next: nextRngAfterDamage } = deps.rng.d6(currentRng);
@@ -134,12 +177,41 @@ export function shootAttack(
         });
 
         if (totalDamage >= targetToughness) {
-            // Lethal hit ends the volley.
             log.push({ key: 'log.info.lethalHit' });
             targetMutable.status = 'casualty';
             targetMutable.actionsRemaining = 0;
             log.push({ key: 'log.info.outcomeCasualty' });
-            stopVolley = true;
+
+            // Rulebook: on a kill, may select another target within 3"
+            // of the destroyed one. If a valid candidate exists, switch
+            // and keep firing the remaining shots; otherwise the volley
+            // ends.
+            const remaining = firingRolls.length - i - 1;
+            if (remaining <= 0) {
+                stopVolley = true;
+                continue;
+            }
+            const switchTarget = findSwitchTarget(
+                state, attacker, targetMutable.position, targetMutable.id, nextParticipants,
+            );
+            if (!switchTarget) {
+                log.push({ key: 'log.info.targetEliminatedNoTargets' });
+                stopVolley = true;
+                continue;
+            }
+            log.push({
+                key: 'log.info.targetDownSwitchFire',
+                params: { attacker: attacker.name, target: switchTarget.name },
+            });
+            events.push({
+                type: 'SHOOT_DECLARED',
+                attackerId: attacker.id,
+                targetId: switchTarget.id,
+                weaponId: action.weapon.id,
+            });
+            targetMutable = switchTarget;
+            ({ targetNumber, reasonKey } = calculateHitTargetNumberOpenShot(attacker, targetMutable, action.weapon));
+            log.push({ key: 'log.info.targetNumber', params: { targetNum: targetNumber, reason: reasonKey } });
             continue;
         }
 
@@ -171,7 +243,7 @@ export function shootAttack(
                 log.push({ key: 'log.info.pushedBack' });
                 events.push({
                     type: 'PARTICIPANT_MOVED',
-                    participantId: target.id,
+                    participantId: targetMutable.id,
                     from: oldPos,
                     to: pushPos,
                 });

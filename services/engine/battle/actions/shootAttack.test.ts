@@ -510,6 +510,86 @@ describe('shootAttack (Engine Unit)', () => {
             expect(rerolls[0].type === 'GOOD_SHOT_REROLL' && rerolls[0].rerolled).toBe(5);
         });
 
+        it('switches fire to a new target within 3" of the destroyed one', () => {
+            // Rulebook: "If the target is destroyed, you may select another
+            // target within 3" of the original." Two enemies stand close
+            // together; the volley kills the first and continues on the
+            // second.
+            const attacker = createTestCharacter({ id: 'atk', name: 'Shooter', position: { x: 0, y: 0 }, stats: { combat: 5 }, side: 'player' });
+            const target1 = createTestEnemy({ id: 'tgt1', name: 'Target1', position: { x: 0, y: 5 }, stats: { toughness: 3 }, side: 'enemy' });
+            const target2 = createTestEnemy({ id: 'tgt2', name: 'Target2', position: { x: 2, y: 5 }, stats: { toughness: 3 }, side: 'enemy' });
+            const battle = createMinimalBattle({ participants: [attacker, target1, target2] });
+            battle.phase = 'quick_actions';
+
+            // 3 firing dice up-front (all 6, all hits). Shot 1: damage 6 → kills tgt1.
+            // Switch to tgt2 (Chebyshev 2 from tgt1). Shot 2: damage 6 → kills tgt2.
+            // No further candidates → volley stops; 3rd damage roll never drawn.
+            const rng = createScriptedRngState([
+                { die: 'd6', value: 6 }, { die: 'd6', value: 6 }, { die: 'd6', value: 6 },
+                { die: 'd6', value: 6 }, // damage shot 1
+                { die: 'd6', value: 6 }, // damage shot 2 (after switch)
+            ]);
+            const state: EngineBattleState = { schemaVersion: CURRENT_ENGINE_SCHEMA_VERSION, battle, rng };
+
+            const action: Extract<BattleAction, { type: 'SHOOT_ATTACK' }> = {
+                type: 'SHOOT_ATTACK', attackerId: 'atk', targetId: 'tgt1',
+                weapon: { id: 'autorifle', range: 12, shots: 3, damage: 1, traits: [] },
+            };
+
+            const result = shootAttack(state, action, { rng: { d6, d100 } });
+
+            // Both targets are casualties.
+            const t1 = result.next.battle.participants.find(p => p.id === 'tgt1')!;
+            const t2 = result.next.battle.participants.find(p => p.id === 'tgt2')!;
+            expect(t1.status).toBe('casualty');
+            expect(t2.status).toBe('casualty');
+
+            // Log shows the switch and second target number.
+            expect(result.log.find(l => l.key === 'log.info.targetDownSwitchFire')).toBeDefined();
+            const targetNumberLogs = result.log.filter(l => l.key === 'log.info.targetNumber');
+            expect(targetNumberLogs).toHaveLength(2);
+
+            // SHOOT_DECLARED fires twice: original target + switch target.
+            const declared = result.events.filter(e => e.type === 'SHOOT_DECLARED');
+            expect(declared).toHaveLength(2);
+            const declared2 = declared[1];
+            expect(declared2.type === 'SHOOT_DECLARED' && declared2.targetId).toBe('tgt2');
+
+            // 3 firing dice + 2 damage rolls = 5 RNG draws; the 3rd damage
+            // roll is never drawn because no further candidates exist.
+            expect(result.next.rng.cursor).toBe(5);
+        });
+
+        it('stops the volley when no candidate within 3" of the destroyed target exists', () => {
+            // Two enemies but the second is 5 cells away — out of the
+            // 3" switch radius. Volley ends after the first kill.
+            const attacker = createTestCharacter({ id: 'atk', name: 'Shooter', position: { x: 0, y: 0 }, stats: { combat: 5 }, side: 'player' });
+            const target1 = createTestEnemy({ id: 'tgt1', name: 'Target1', position: { x: 0, y: 5 }, stats: { toughness: 3 }, side: 'enemy' });
+            const target2 = createTestEnemy({ id: 'tgt2', name: 'Target2', position: { x: 5, y: 5 }, stats: { toughness: 3 }, side: 'enemy' });
+            const battle = createMinimalBattle({ participants: [attacker, target1, target2] });
+            battle.phase = 'quick_actions';
+
+            const rng = createScriptedRngState([
+                { die: 'd6', value: 6 }, { die: 'd6', value: 6 }, { die: 'd6', value: 6 },
+                { die: 'd6', value: 6 }, // damage shot 1 only
+            ]);
+            const state: EngineBattleState = { schemaVersion: CURRENT_ENGINE_SCHEMA_VERSION, battle, rng };
+
+            const action: Extract<BattleAction, { type: 'SHOOT_ATTACK' }> = {
+                type: 'SHOOT_ATTACK', attackerId: 'atk', targetId: 'tgt1',
+                weapon: { id: 'autorifle', range: 12, shots: 3, damage: 1, traits: [] },
+            };
+
+            const result = shootAttack(state, action, { rng: { d6, d100 } });
+
+            const t1 = result.next.battle.participants.find(p => p.id === 'tgt1')!;
+            const t2 = result.next.battle.participants.find(p => p.id === 'tgt2')!;
+            expect(t1.status).toBe('casualty');
+            expect(t2.status).not.toBe('casualty');
+            expect(result.log.find(l => l.key === 'log.info.targetEliminatedNoTargets')).toBeDefined();
+            expect(result.log.find(l => l.key === 'log.info.targetDownSwitchFire')).toBeUndefined();
+        });
+
         it('shots: 1 still works (regression for the original single-shot path)', () => {
             const attacker = createTestCharacter({ id: 'atk', position: { x: 0, y: 0 }, stats: { combat: 0 } });
             const target = createTestEnemy({ id: 'tgt', position: { x: 0, y: 5 }, stats: { toughness: 3 } });

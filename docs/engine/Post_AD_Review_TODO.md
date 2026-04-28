@@ -58,9 +58,19 @@ protocol stabilises further.
 
 `weapon.shots > 1` now fires the full volley. All firing dice rolled
 up-front, Good Shot reroll selects the first 1 across the array, each
-shot resolves in order, volley stops on casualty. V1 features still
-missing in V2: target switching on dead defender, focused trait, and
-aimed-shot rerolls — separate follow-ups, not in scope.
+shot resolves in order. V1 features still missing in V2: focused
+trait and aimed-shot rerolls — separate follow-ups, not in scope.
+
+### ~~L2.1. Target switching on a destroyed defender~~ — closed in this commit
+
+Rulebook (multi-shot weapons): "If the target is destroyed, you may
+select another target within 3" of the original." On a lethal hit
+mid-volley, `shootAttack` now picks the closest enemy within
+Chebyshev 3 of the killed target (id-sort tiebreaker), with LoS from
+the attacker. Re-emits `SHOOT_DECLARED`, recomputes the hit target
+number for the new target, and continues with remaining firing
+dice. If no candidate exists, logs `targetEliminatedNoTargets` and
+ends the volley as before.
 
 ### L3. Fall damage outside `TraitPlugin` pipeline
 
