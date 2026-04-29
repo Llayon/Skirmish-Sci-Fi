@@ -368,6 +368,41 @@ const featureGenerators: Record<FeatureType, FeatureGenerator> = (() => {
     return generators as Record<FeatureType, FeatureGenerator>;
 })();
 
+const ZONE_TEMPLATES: TacticalZoneSpec[] = [
+  {
+    id: 'player_edge',
+    bounds: { x: 0, y: 30, width: 32, height: 2 },
+    requirements: { minCoverCells: 0, maxCoverCells: 6, needsElevation: false, minPathsTo: ['central_arena'], chokepointCount: 0, anchorChance: 0 },
+    themeWeights: {}
+  },
+  {
+    id: 'enemy_edge',
+    bounds: { x: 0, y: 0, width: 32, height: 2 },
+    requirements: { minCoverCells: 0, maxCoverCells: 6, needsElevation: false, minPathsTo: ['central_arena'], chokepointCount: 0, anchorChance: 0 },
+    themeWeights: {}
+  },
+  {
+    id: 'central_arena',
+    bounds: { x: 10, y: 10, width: 13, height: 13 },
+    requirements: { minCoverCells: 25, maxCoverCells: 50, needsElevation: true, minPathsTo: ['north_flank', 'south_flank', 'player_edge', 'enemy_edge'], chokepointCount: 0, anchorChance: 0.7 },
+    themeWeights: { building: 2, hill: 2, large_structure: 3 }
+  },
+  {
+    id: 'north_flank',
+    bounds: { x: 0, y: 8, width: 9, height: 17 },
+    requirements: { minCoverCells: 15, maxCoverCells: 30, needsElevation: false, minPathsTo: ['central_arena', 'player_edge', 'enemy_edge'], chokepointCount: 1, anchorChance: 0.3 },
+    themeWeights: { linear_obstacle: 2, scatter: 1, natural_linear: 2 }
+  },
+  {
+    id: 'south_flank',
+    bounds: { x: 23, y: 8, width: 9, height: 17 },
+    requirements: { minCoverCells: 15, maxCoverCells: 30, needsElevation: false, minPathsTo: ['central_arena', 'player_edge', 'enemy_edge'], chokepointCount: 1, anchorChance: 0.3 },
+    themeWeights: { linear_obstacle: 2, scatter: 1, natural_linear: 2 }
+  }
+];
+
+const MAX_ANCHORS = 3;
+const MIN_ANCHOR_DISTANCE = 8;
 
 export const generateTerrain = (
     theme: TerrainTheme,
