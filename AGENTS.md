@@ -69,6 +69,37 @@ PeerJS WebRTC peer-to-peer. Host maintains an action log with state hashes. Reco
 - Tailwind CSS v3 is used with `@tailwind` directives in `index.css`. No `tailwind.config.js` is present; it likely relies on default configuration.
 - Build copies `locales/`, `assets/`, and `assets/portraits/` to `dist/` via `vite-plugin-static-copy`.
 
+## Commit Style (Conventional Commits)
+
+All commits must follow [Conventional Commits](https://www.conventionalcommits.org/) so `git log` is machine-readable and LLM-context-friendly.
+
+Format: `<type>[optional scope]: <description>`
+
+**Types:** `feat`, `fix`, `docs`, `style`, `refactor`, `perf`, `test`, `chore`, `i18n`
+
+**Scopes (use when relevant):**
+- `engine` — battle engine V2 core logic
+- `rules` — game rules (shooting, visibility, pathfinding)
+- `ai` — AI planners and dispatchers
+- `ui` — React components and HUD
+- `mp` / `multiplayer` — PeerJS sync and networking
+- `campaign` — campaign manager features
+- `test` — test files and fixtures
+
+**Good examples:**
+- `feat(rules): add Area feature LoS terminates at nearest edge`
+- `fix(ai): JUMP_DOWN fallback when stranded on elevation`
+- `refactor(engine): extract isPointInTerrain to utils/terrain`
+- `docs(engine): refresh Visibility spec and post-review TODO`
+- `i18n: add Jump Down button tooltip and log entries`
+- `test(parity): verify deterministic AoE results`
+
+**Rules:**
+- One logical change per commit (atomic).
+- Use imperative mood (`add`, not `added`).
+- If a commit closes a plan item, reference it: `(C4)`, `(M2)`, etc.
+- Do not mix refactoring and features in the same commit.
+
 ## Style & Workflow
 
 - **Parity testing first** — When migrating a mechanic to V2, create `enginev2_[feature]_parity.test.ts` before writing any V2 logic.
