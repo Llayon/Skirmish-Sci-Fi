@@ -1,0 +1,39 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(git -C \"D:\\\\Max\\\\skirmish\\\\Skirmish-Sci-Fi\" log --oneline --all)",
+      "Bash(xargs grep *)",
+      "Bash(npx eslint *)",
+      "Bash(npm run *)",
+      "Bash(git add *)",
+      "Bash(git commit -m ' *)",
+      "Bash(grep -E \"error|\\\\.ts$\")",
+      "Bash(npx vitest *)",
+      "Bash(git commit -m 'feat\\(rules\\): Area features LoS terminates at nearest edge \\(C4\\) *)",
+      "Bash(git commit -m 'feat\\(rules\\): fall damage computation \\(C5a\\) *)",
+      "Bash(git commit -m 'feat\\(engine\\): JUMP_DOWN action with fall-damage resolution \\(C5b\\) *)",
+      "Bash(git commit -m 'feat\\(ui\\): Jump Down button in EngineV2 HUD \\(C5c\\) *)",
+      "Bash(git commit -m 'fix\\(rules\\): pathfinding refuses descent > 1, requires JUMP_DOWN *)",
+      "Bash(node *)",
+      "Bash(git commit -m 'i18n: Jump Down button, tooltip, and log entries *)",
+      "Bash(git commit -m 'refactor\\(engine\\): extract isPointInTerrain to utils/terrain \\(D1\\) *)",
+      "Bash(git commit -m 'feat\\(rules\\): explicit concealsLineOfSight flag on Terrain \\(D2\\) *)",
+      "Bash(git commit -m 'refactor\\(rules\\): drop top===0 cover heuristic, migrate fixtures \\(D3\\) *)",
+      "Bash(git commit -m 'refactor\\(rules\\): Good Shot reroll generalised over firing-dice array \\(D4\\) *)",
+      "Bash(git commit -m 'feat\\(mp\\): persist battle.seed for deterministic reproduction \\(D1\\) *)",
+      "Bash(git commit -m 'feat\\(mp\\): V2 RNG initializes from battle.seed in setNewBattle \\(D2\\) *)",
+      "Bash(git commit -m 'docs\\(engine\\): roadmap entry for deferred D3 \\(setup in action log\\) *)",
+      "Bash(git commit -m 'fix\\(ai\\): JUMP_DOWN fallback when stranded on elevation *)",
+      "Bash(git commit -m 'docs\\(engine\\): refresh Visibility spec, add Height Mechanics + post-review TODO *)",
+      "Bash(git commit -m 'refactor\\(rules\\): explicit losBlockerHeight on Terrain \\(M2\\) *)",
+      "Bash(git commit -m 'fix\\(rules\\): height-aware cover when target is inside an Area \\(M1\\) *)",
+      "Bash(git commit -m 'docs\\(engine\\): reflect M1+M2 in Visibility spec and review TODO *)",
+      "Bash(git commit -m 'feat\\(engine\\): multi-shot weapons in shootAttack \\(L2\\) *)",
+      "Bash(git commit -m 'docs\\(engine\\): mark L2 \\(multi-shot\\) closed in review TODO *)",
+      "Bash(git commit -m 'refactor\\(rules\\): drop concealsLineOfSight heuristic fallback \\(M3\\) *)",
+      "Bash(git commit -m 'docs\\(engine\\): authoritative changelog disambiguates D-tag collision \\(M4\\) *)",
+      "Bash(git commit -m 'docs\\(engine\\): replace '\\\\''this commit'\\\\'' placeholders with M3/M4 hashes *)",
+      "Bash(git commit *)"
+    ]
+  }
+}

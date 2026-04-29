@@ -33,6 +33,7 @@ describe('useConsumable', () => {
                 }),
                 createParticipant({
                     id: 'guest-1',
+                    side: 'enemy',
                     position: { x: 1, y: 0 }
                 })
             ],
@@ -112,7 +113,7 @@ describe('useConsumable', () => {
             consumableId: 'kiranin_crystals'
         };
 
-        const result = useConsumable(kiraninState, action);
+        const result = resolveConsumable(kiraninState, action);
         const opponent = result.next.battle.participants.find(p => p.id === 'guest-1')!;
 
         // Opponent is close (dist 1), active, and has 2 actions. Should be dazed.

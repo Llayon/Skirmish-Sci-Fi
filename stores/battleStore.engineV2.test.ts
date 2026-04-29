@@ -93,7 +93,7 @@ describe('Stage 6A: Engine V2 Multiplayer Store Actions', () => {
     const state = useBattleStore.getState();
     expect(state.lastEngineStateHash).toBe(result.stateHash);
     expect(state.engineActionLog).toHaveLength(1);
-    expect(state.engineActionLog[0]).toEqual(action);
+    expect(state.engineActionLog[0]).toEqual({ action, resultingHash: result.stateHash });
     // Baseline should be captured automatically
     expect(state.engineBaseline).not.toBeNull();
   });
@@ -429,8 +429,8 @@ describe('Stage 6C: Engine V2 Ordered Delivery', () => {
         state = useBattleStore.getState();
         // Should have applied 1 and drained 2
         expect(state.engineActionLog).toHaveLength(2);
-        expect(state.engineActionLog[0]).toEqual(action1);
-        expect(state.engineActionLog[1]).toEqual(action2);
+        expect(state.engineActionLog[0]).toEqual({ action: action1, resultingHash: 'hash-1' });
+        expect(state.engineActionLog[1]).toEqual({ action: action2, resultingHash: 'hash-2' });
         expect(state.engineNetExpectedSeq).toBe(3);
         expect(state.engineNetRemoteSeq).toBe(2);
         expect(state.engineNetActionBuffer).toEqual({});
