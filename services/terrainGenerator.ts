@@ -1,7 +1,7 @@
 
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 import { Terrain, Position, TerrainTheme, FeatureType, WorldTrait, TacticalZoneSpec, TacticalAnchorType, PlacedAnchor, InteractiveTerrainType } from '../types';
-import { TERRAIN_THEME_GENERATORS } from '../constants/terrain';
+import { TERRAIN_THEME_GENERATORS, TerrainGeneratorSchema } from '../constants/terrain';
 import { SeededRngState, d6, nextFloat } from './engine/rng/rng';
 
 type Rect = { x: number; y: number; width: number; height: number };

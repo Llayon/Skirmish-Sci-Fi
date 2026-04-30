@@ -1,6 +1,6 @@
 import { TerrainTheme, FeatureType } from '../types';
 
-interface TerrainGeneratorSchema {
+export interface TerrainGeneratorSchema {
     notableFeatures: FeatureType[]; // Array of 6, index 0 = roll 1
     regularFeatures: FeatureType[]; // Array of 6, index 0 = roll 1
 }
