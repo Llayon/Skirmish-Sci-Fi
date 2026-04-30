@@ -18,6 +18,7 @@ function runTerrainAction(
     gridSize: { width: number; height: number },
     worldTraits: WorldTrait[] | undefined,
     seed: number,
+    missionType?: MissionType,
 ): Terrain[] {
     const seededRng = createRng(seed);
     const skeletonBattle = {
@@ -31,7 +32,7 @@ function runTerrainAction(
     };
     const result = reduceBattle(
         initialState,
-        { type: 'GENERATE_TERRAIN', theme, gridSize, worldTraits },
+        { type: 'GENERATE_TERRAIN', theme, gridSize, worldTraits, missionType },
         { rng: { d6: engineD6, d100: engineD100 } },
     );
     return result.next.battle.terrain;
@@ -84,6 +85,7 @@ export const setupBattle = async (
         BATTLE_GRID_SIZE,
         campaign?.currentWorld?.traits,
         battleSeed,
+        finalMissionType,
     );
     
     // --- MISSION & DEPLOYMENT ---
