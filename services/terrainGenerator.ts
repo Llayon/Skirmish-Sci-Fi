@@ -605,6 +605,65 @@ function validateAndRepairConnectivity(
   }
 }
 
+function placeInteractiveProps(
+  terrain: Terrain[],
+  gridSize: { width: number; height: number },
+  rng: GenCursor
+): void {
+  // Find chokepoints and elevated positions
+  const chokepoints = terrain.filter(t => t.name === 'Choke Barrier' || t.name === 'Door');
+  const elevated = terrain.filter(t => t.baseElevation && t.baseElevation > 0);
+
+  // Place explosive barrels near chokepoints (1-3 total)
+  const barrelCount = Math.min(3, rng.d6());
+  let placed = 0;
+  for (const choke of chokepoints) {
+    if (placed >= barrelCount) break;
+    const size = { width: 1, height: 1 };
+    const adjacentPositions = [
+      { x: choke.position.x - 1, y: choke.position.y },
+      { x: choke.position.x + choke.size.width, y: choke.position.y },
+      { x: choke.position.x, y: choke.position.y - 1 },
+      { x: choke.position.x, y: choke.position.y + choke.size.height }
+    ];
+    for (const pos of adjacentPositions) {
+      if (pos.x >= 0 && pos.x < gridSize.width && pos.y >= 0 && pos.y < gridSize.height) {
+        if (!isAreaOccupied(pos, size, terrain)) {
+          terrain.push(createTerrain(rng, 'Explosive Barrel', 'Individual', pos, size, { providesCover: false, blocksLineOfSight: false, isInteractive: true, objectHeight: 1 }));
+          placed++;
+          break;
+        }
+      }
+    }
+  }
+
+  // Place hackable turret on elevated position (0-1)
+  if (elevated.length > 0 && rng.float() > 0.5) {
+    const platform = elevated[Math.floor(rng.float() * elevated.length)];
+    const pos = { x: platform.position.x, y: platform.position.y };
+    const size = { width: 1, height: 1 };
+    if (!isAreaOccupied(pos, size, terrain)) {
+      terrain.push(createTerrain(rng, 'Turret', 'Individual', pos, size, { providesCover: true, blocksLineOfSight: true, isInteractive: true, objectHeight: 1, baseElevation: platform.baseElevation }));
+    }
+  }
+
+  // Place lockable doors on building entrances (1-2)
+  const buildings = terrain.filter(t => t.parentId && t.name === 'Wall');
+  const doorCount = Math.min(2, rng.d6() > 3 ? 2 : 1);
+  let doorsPlaced = 0;
+  for (const wall of buildings) {
+    if (doorsPlaced >= doorCount) break;
+    const size = { width: 1, height: 1 };
+    const pos = wall.position;
+    const idx = terrain.indexOf(wall);
+    if (idx !== -1) {
+      terrain.splice(idx, 1);
+      terrain.push(createTerrain(rng, 'Lockable Door', 'Door', pos, size, { isImpassable: true, providesCover: true, blocksLineOfSight: true, isInteractive: true, objectHeight: 0, losBlockerHeight: 2 }));
+      doorsPlaced++;
+    }
+  }
+}
+
 function placeTacticalAnchors(
   zones: TacticalZoneSpec[],
   terrain: Terrain[],
@@ -724,6 +783,8 @@ export const generateTerrain = (
       }
 
       placeTacticalAnchors(zones, attemptTerrain, rng);
+
+      placeInteractiveProps(attemptTerrain, gridSize, rng);
 
       validateAndRepairConnectivity(attemptTerrain, zones, gridSize, rng);
 
