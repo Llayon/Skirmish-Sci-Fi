@@ -1283,7 +1283,11 @@ function placeTacticalAnchors(
   if (missionType === "Protect") {
     const playerZone = zones.find((z) => z.id === "player_edge");
     if (playerZone) {
-      const pieces = anchorGenerators["evacuation_point"](playerZone, terrain, rng);
+      const pieces = anchorGenerators["evacuation_point"](
+        playerZone,
+        terrain,
+        rng,
+      );
       if (pieces.length > 0) {
         terrain.push(...pieces);
         anchors.push({

@@ -216,20 +216,25 @@ describe("Mission-aware terrain generation (Protect)", () => {
       gridSize,
       [],
       createRng(12345),
-      "Protect"
+      "Protect",
     );
     const evac = terrain.filter((t) => t.name.includes("Evacuation"));
     expect(evac.length).toBeGreaterThan(0);
   });
 
   it("Protect has denser player edge than generic", () => {
-    const generic = generateTerrain("Industrial", gridSize, [], createRng(12345));
+    const generic = generateTerrain(
+      "Industrial",
+      gridSize,
+      [],
+      createRng(12345),
+    );
     const protect = generateTerrain(
       "Industrial",
       gridSize,
       [],
       createRng(12345),
-      "Protect"
+      "Protect",
     );
 
     const genericPlayer = countCoverInZone(generic.terrain, "player_edge");
@@ -239,13 +244,18 @@ describe("Mission-aware terrain generation (Protect)", () => {
   });
 
   it("Protect has open flanks for alternative routes", () => {
-    const generic = generateTerrain("Industrial", gridSize, [], createRng(12345));
+    const generic = generateTerrain(
+      "Industrial",
+      gridSize,
+      [],
+      createRng(12345),
+    );
     const protect = generateTerrain(
       "Industrial",
       gridSize,
       [],
       createRng(12345),
-      "Protect"
+      "Protect",
     );
 
     const genericNorth = countCoverInZone(generic.terrain, "north_flank");
