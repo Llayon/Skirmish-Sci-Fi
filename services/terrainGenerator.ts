@@ -1280,6 +1280,7 @@ export const generateTerrain = (
   gridSize: { width: number; height: number },
   worldTraits: WorldTrait[] = [],
   rngState: SeededRngState,
+  missionType?: string,
 ): { terrain: Terrain[]; rng: SeededRngState } => {
   const rng = createGenCursor(rngState);
   const terrain: Terrain[] = [];
@@ -1304,6 +1305,8 @@ export const generateTerrain = (
     };
   });
 
+  const overriddenZones = applyMissionOverrides(zones, missionType);
+
   let attempts = 0;
   let valid = false;
   let finalTerrain: Terrain[] = [];
@@ -1312,15 +1315,15 @@ export const generateTerrain = (
     attempts++;
     const attemptTerrain: Terrain[] = [];
 
-    for (const zone of zones) {
+    for (const zone of overriddenZones) {
       placeZoneFeatures(zone, themeGenerator, attemptTerrain, rng);
     }
 
-    placeTacticalAnchors(zones, attemptTerrain, rng);
+    placeTacticalAnchors(overriddenZones, attemptTerrain, rng, missionType);
 
     placeInteractiveProps(attemptTerrain, gridSize, rng);
 
-    validateAndRepairConnectivity(attemptTerrain, zones, gridSize, rng);
+    validateAndRepairConnectivity(attemptTerrain, overriddenZones, gridSize, rng);
 
     // Final validation check
     const playerCenter = {
