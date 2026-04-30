@@ -732,6 +732,44 @@ const ZONE_TEMPLATES: TacticalZoneSpec[] = [
 const MAX_ANCHORS = 3;
 const MIN_ANCHOR_DISTANCE = 8;
 
+type ZoneRequirementOverrides = Partial<TacticalZoneSpec["requirements"]>;
+type ZoneOverrides = Partial<Record<string, ZoneRequirementOverrides>>;
+
+const MISSION_OVERRIDES: Record<string, ZoneOverrides> = {
+  Eliminate: {
+    central_arena: {
+      minCoverCells: 35,
+      maxCoverCells: 55,
+      anchorChance: 1.0,
+    },
+    north_flank: {
+      minCoverCells: 10,
+      maxCoverCells: 20,
+    },
+    south_flank: {
+      minCoverCells: 10,
+      maxCoverCells: 20,
+    },
+  },
+};
+
+function applyMissionOverrides(
+  zones: TacticalZoneSpec[],
+  missionType?: string,
+): TacticalZoneSpec[] {
+  if (!missionType) return zones;
+  const overrides = MISSION_OVERRIDES[missionType];
+  if (!overrides) return zones;
+
+  return zones.map((zone) => ({
+    ...zone,
+    requirements: {
+      ...zone.requirements,
+      ...overrides[zone.id],
+    },
+  }));
+}
+
 function countCoverCells(terrain: Terrain[], zone: TacticalZoneSpec): number {
   let count = 0;
   const zb = zone.bounds;
