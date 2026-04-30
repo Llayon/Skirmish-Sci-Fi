@@ -1,5 +1,5 @@
 import { useMemo } from 'react';
-import { TILE_SIZE } from '@/constants/three';
+
 import { gridToWorld } from '@/services/three/coordinates';
 import type { GridSize } from '@/types/battle';
 import type { Terrain3D } from '@/types/battle3d';
@@ -30,9 +30,9 @@ export const GLBTerrainMesh = ({ terrain, gridSize }: GLBTerrainMeshProps) => {
     centerY,
   );
 
-  // Scale to match tile size if the GLB mesh is authored at unit scale
-  const scaleX = terrain.size.width * TILE_SIZE;
-  const scaleZ = terrain.size.height * TILE_SIZE;
+  // Scale handling: GLB mesh scale to be verified after export
+  // const scaleX = terrain.size.width * TILE_SIZE;
+  // const scaleZ = terrain.size.height * TILE_SIZE;
 
   return (
     <mesh

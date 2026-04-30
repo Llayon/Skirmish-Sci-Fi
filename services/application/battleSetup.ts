@@ -1,16 +1,10 @@
 import {
   Battle,
   Crew,
-  PlayerAction,
   MultiplayerRole,
-  AIActionPlan,
-  AnimationState,
   MissionType,
-  MissionModifiers,
   Difficulty,
   Campaign,
-  NotableSightResult,
-  LogEntry,
   BattleParticipant,
   TerrainTheme,
   Mission,
@@ -31,7 +25,7 @@ import {
   EnemyEncounterCategory,
 } from "../../constants/enemyEncounters";
 import { MISSION_DEFINITIONS } from "../../constants/missions";
-import { isPointInTerrain, findNearestWalkable } from "../gridUtils";
+import { findNearestWalkable } from "../gridUtils";
 import {
   createRng,
   d6 as engineD6,
@@ -174,7 +168,7 @@ export const setupBattle = async (
     forceTerrainTheme?: TerrainTheme;
   } = {},
 ): Promise<Battle> => {
-  let participants: BattleParticipant[] = [];
+  const participants: BattleParticipant[] = [];
 
   // Shuffle portraits for this battle
   PORTRAITS.sort(() => Math.random() - 0.5);
@@ -774,7 +768,7 @@ export const setupMultiplayerBattle = async (
   hostCrew: Crew,
   guestCrew: Crew,
 ): Promise<Battle> => {
-  let participants: BattleParticipant[] = [];
+  const participants: BattleParticipant[] = [];
 
   const mpBattleSeed = ((Math.random() * 0x7fffffff) | 0) >>> 0;
   const terrain = runTerrainAction(

@@ -8,7 +8,7 @@ import Modal from '@/components/ui/Modal';
 import Card from '@/components/ui/Card';
 import ThemeSwitcher from '@/components/ThemeSwitcher';
 import { QuickBattleModal } from './QuickBattleModal';
-import type { SaveSlot } from '@/types';
+import type { SaveSlot, SlotId } from '@/types';
 import {
   preloadCampaignDashboard,
   preloadCrewCreator,
@@ -213,7 +213,7 @@ const MainMenu: React.FC = () => {
     if (lastSaveSlot) {
       const slotId = Object.keys(saveSlots).find(key => saveSlots[key as keyof typeof saveSlots] === lastSaveSlot)
       if(slotId) {
-        campaignActions.loadGame(slotId as any);
+        campaignActions.loadGame(slotId as SlotId);
       }
     }
   };
