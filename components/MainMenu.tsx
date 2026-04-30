@@ -482,10 +482,18 @@ const MainMenu: React.FC = () => {
         <QuickBattleModal
           onClose={() => setQuickBattleOpen(false)}
           onStart={async (missionType) => {
-            setQuickBattleOpen(false);
-            const battle = await setupQuickBattle(missionType);
-            setNewBattle(battle);
-            setGameMode("battle");
+            try {
+              setQuickBattleOpen(false);
+              console.log("Starting quick battle with mission:", missionType);
+              const battle = await setupQuickBattle(missionType);
+              console.log("Quick battle setup complete, battle ID:", battle.id);
+              setNewBattle(battle);
+              setGameMode("battle");
+              console.log("Game mode set to battle");
+            } catch (err) {
+              console.error("Quick battle failed:", err);
+              alert("Failed to start quick battle: " + (err instanceof Error ? err.message : String(err)));
+            }
           }}
         />
       )}

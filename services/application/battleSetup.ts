@@ -196,7 +196,7 @@ export const setupBattle = async (
     BATTLE_GRID_SIZE,
     campaign?.currentWorld?.traits,
     battleSeed,
-    finalMissionType,
+    missionType,
   );
 
   // --- MISSION & DEPLOYMENT ---
