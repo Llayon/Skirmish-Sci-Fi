@@ -150,6 +150,7 @@ function createBuilding(
   pos: Position,
   size: { width: number; height: number },
   rng: GenCursor,
+  modelRef?: string,
 ): Terrain[] {
   const buildingTerrain: Terrain[] = [];
   const buildingId = `building_${rng.nextId()}`;
@@ -163,6 +164,7 @@ function createBuilding(
         blocksLineOfSight: true,
         isImpassable: true,
         objectHeight: 2,
+        modelRef,
       }),
     ];
   }
@@ -206,7 +208,7 @@ function createBuilding(
       "Interior",
       { x: pos.x + 1, y: pos.y + 1 },
       { width: size.width - 2, height: size.height - 2 },
-      { blocksLineOfSight: false, parentId: buildingId, objectHeight: 0 },
+      { blocksLineOfSight: false, parentId: buildingId, objectHeight: 0, modelRef },
     ),
   );
 
@@ -230,6 +232,7 @@ function createBuilding(
         parentId: buildingId,
         baseElevation: 2,
         objectHeight: 0,
+        modelRef,
       },
     ),
   );
@@ -292,6 +295,7 @@ function createBuilding(
         parentId: buildingId,
         objectHeight: 0,
         losBlockerHeight: 2,
+        modelRef,
       },
     ),
   );
@@ -340,7 +344,7 @@ const featureGenerators: Record<FeatureType, FeatureGenerator> = (() => {
       const size = { width: rng.d6() + 4, height: rng.d6() + 4 };
       const pos = findFreeSpot(rect, size, existing, rng);
       if (!pos) return [];
-      return createBuilding("Large Structure", pos, size, rng);
+      return createBuilding("Large Structure", pos, size, rng, "BldgLgCommsArray");
     },
     industrial_cluster: (rect, existing, rng) => {
       const terrain: Terrain[] = [];
@@ -350,7 +354,7 @@ const featureGenerators: Record<FeatureType, FeatureGenerator> = (() => {
       if (towerPos) {
         // Create the central block
         terrain.push(
-          ...createBuilding("Control Tower", towerPos, towerSize, rng),
+          ...createBuilding("Control Tower", towerPos, towerSize, rng, "BldgLgCommsArray"),
         );
 
         // Create surrounding individual equipment pieces
@@ -443,6 +447,7 @@ const featureGenerators: Record<FeatureType, FeatureGenerator> = (() => {
           providesCover: false,
           blocksLineOfSight: false,
           objectHeight: 0,
+          modelRef: "LandingPad",
         }),
       ];
     },
