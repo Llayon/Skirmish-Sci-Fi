@@ -12,7 +12,8 @@ export type TacticalAnchorType =
   | "sniper_nest"
   | "objective_point"
   | "choke_anchor"
-  | "danger_zone";
+  | "danger_zone"
+  | "evacuation_point";
 
 export type InteractiveTerrainType =
   | "door"
