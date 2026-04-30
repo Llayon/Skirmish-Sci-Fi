@@ -2,10 +2,11 @@ import React, { useState, useMemo, Suspense, lazy, useRef, useEffect } from 'rea
 import { useCampaignProgressStore, useUiStore, useMultiplayerStore } from '@/stores';
 import { useTranslation } from '@/i18n';
 import Button from '@/components/ui/Button';
-import { Play, FilePlus, FolderOpen, Settings, Loader, Users, Calendar, Coins, User, Radio, CircleDot } from 'lucide-react';
+import { Play, FilePlus, FolderOpen, Settings, Loader, Users, Calendar, Coins, User, Radio, CircleDot, Zap } from 'lucide-react';
 import Modal from '@/components/ui/Modal';
 import Card from '@/components/ui/Card';
 import ThemeSwitcher from '@/components/ThemeSwitcher';
+import { QuickBattleModal } from './QuickBattleModal';
 import type { SaveSlot } from '@/types';
 import {
   preloadCampaignDashboard,
@@ -138,6 +139,7 @@ const MainMenu: React.FC = () => {
 
   const [isLoadModalOpen, setLoadModalOpen] = useState(false);
   const [isSettingsModalOpen, setSettingsModalOpen] = useState(false);
+  const [isQuickBattleOpen, setQuickBattleOpen] = useState(false);
   
   const mainContainerRef = useRef<HTMLDivElement>(null);
 
@@ -218,9 +220,14 @@ const MainMenu: React.FC = () => {
     startMultiplayer();
   };
 
+  const handleQuickBattle = () => {
+    setQuickBattleOpen(true);
+  };
+
   const menuItems = [
     { id: 'new_game', label: t('app.newGame'), icon: FilePlus, action: handleNewGame, onMouseEnter: preloadCrewCreator, condition: true },
     { id: 'load_game', label: t('buttons.loadGame'), icon: FolderOpen, action: () => setLoadModalOpen(true), onMouseEnter: preloadLoadGameModal, condition: hasSaves },
+    { id: 'quick_battle', label: t('quickBattle.title'), icon: Zap, action: handleQuickBattle, onMouseEnter: () => {}, condition: true },
     { id: 'multiplayer', label: t('buttons.playWithFriend'), icon: Users, action: handleMultiplayer, onMouseEnter: preloadMultiplayerLobby, condition: true },
     { id: 'settings', label: t('app.settings'), icon: Settings, action: () => setSettingsModalOpen(true), onMouseEnter: () => {}, condition: true },
   ];
@@ -329,6 +336,15 @@ const MainMenu: React.FC = () => {
       )}
       {isSettingsModalOpen && (
         <SettingsModal onClose={() => setSettingsModalOpen(false)} />
+      )}
+      {isQuickBattleOpen && (
+        <QuickBattleModal
+          onClose={() => setQuickBattleOpen(false)}
+          onStart={(missionType) => {
+            setQuickBattleOpen(false);
+            console.log('Quick Battle mission selected:', missionType);
+          }}
+        />
       )}
     </>
   );
