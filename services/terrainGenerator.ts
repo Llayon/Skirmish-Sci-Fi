@@ -605,6 +605,83 @@ function validateAndRepairConnectivity(
   }
 }
 
+function placeTacticalAnchors(
+  zones: TacticalZoneSpec[],
+  terrain: Terrain[],
+  rng: GenCursor
+): PlacedAnchor[] {
+  const anchors: PlacedAnchor[] = [];
+  const centralZone = zones.find(z => z.id === 'central_arena');
+  const flanks = zones.filter(z => z.id === 'north_flank' || z.id === 'south_flank');
+
+  const anchorGenerators: Record<TacticalAnchorType, (zone: TacticalZoneSpec, existing: Terrain[], rng: GenCursor) => Terrain[]> = {
+    sniper_nest: (zone, existing, rng) => {
+      const size = { width: rng.d6() > 3 ? 3 : 2, height: rng.d6() > 3 ? 3 : 2 };
+      const pos = findFreeSpot(zone.bounds, size, existing, rng);
+      if (!pos) return [];
+      return createBuilding('Sniper Nest', pos, size, rng);
+    },
+    objective_point: (zone, existing, rng) => {
+      const size = { width: rng.d6() + 2, height: rng.d6() + 2 };
+      const pos = findFreeSpot(zone.bounds, size, existing, rng);
+      if (!pos) return [];
+      return createBuilding('Objective', pos, size, rng);
+    },
+    choke_anchor: (zone, existing, rng) => {
+      const len = rng.d6() + 3;
+      const size = rng.float() > 0.5 ? { width: len, height: 1 } : { width: 1, height: len };
+      const pos = findFreeSpot(zone.bounds, size, existing, rng);
+      if (!pos) return [];
+      return [createTerrain(rng, 'Choke Barrier', 'Linear', pos, size, { providesCover: true, blocksLineOfSight: true, isImpassable: false, objectHeight: 1 })];
+    },
+    danger_zone: (zone, existing, rng) => {
+      const pieces: Terrain[] = [];
+      const count = rng.d6() + 1;
+      for (let i = 0; i < count; i++) {
+        const size = { width: 1, height: 1 };
+        const pos = findFreeSpot(zone.bounds, size, [...existing, ...pieces], rng);
+        if (pos) {
+          pieces.push(createTerrain(rng, 'Fuel Barrel', 'Individual', pos, size, { providesCover: false, blocksLineOfSight: false, isInteractive: true, objectHeight: 1 }));
+        }
+      }
+      return pieces;
+    }
+  };
+
+  // Place at least 1 anchor in central
+  if (centralZone && rng.float() < centralZone.requirements.anchorChance) {
+    const types: TacticalAnchorType[] = ['sniper_nest', 'objective_point', 'danger_zone'];
+    const type = types[Math.floor(rng.float() * types.length)];
+    const pieces = anchorGenerators[type](centralZone, terrain, rng);
+    if (pieces.length > 0) {
+      terrain.push(...pieces);
+      anchors.push({ type, position: pieces[0].position, zoneId: centralZone.id });
+    }
+  }
+
+  // Place 1-2 more in flanks
+  for (const flank of flanks) {
+    if (anchors.length >= MAX_ANCHORS) break;
+    if (rng.float() < flank.requirements.anchorChance) {
+      const types: TacticalAnchorType[] = ['choke_anchor', 'danger_zone', 'sniper_nest'];
+      const type = types[Math.floor(rng.float() * types.length)];
+      const pieces = anchorGenerators[type](flank, terrain, rng);
+      if (pieces.length > 0) {
+        const tooClose = anchors.some(a =>
+          Math.abs(a.position.x - pieces[0].position.x) <= MIN_ANCHOR_DISTANCE &&
+          Math.abs(a.position.y - pieces[0].position.y) <= MIN_ANCHOR_DISTANCE
+        );
+        if (!tooClose) {
+          terrain.push(...pieces);
+          anchors.push({ type, position: pieces[0].position, zoneId: flank.id });
+        }
+      }
+    }
+  }
+
+  return anchors;
+}
+
 export const generateTerrain = (
     theme: TerrainTheme,
     gridSize: { width: number; height: number },
@@ -646,8 +723,7 @@ export const generateTerrain = (
         placeZoneFeatures(zone, themeGenerator, attemptTerrain, rng);
       }
 
-      // Place tactical anchors (Task 5 will implement this call)
-      // placeTacticalAnchors(zones, attemptTerrain, rng);
+      placeTacticalAnchors(zones, attemptTerrain, rng);
 
       validateAndRepairConnectivity(attemptTerrain, zones, gridSize, rng);
 
