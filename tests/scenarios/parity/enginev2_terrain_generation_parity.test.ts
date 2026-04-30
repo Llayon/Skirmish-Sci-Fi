@@ -168,4 +168,36 @@ describe('Terrain Generation (V2 Structural Baseline)', () => {
             });
         });
     });
+
+    describe('Mission-aware baseline — Eliminate', () => {
+        const gridSize = { width: 32, height: 32 };
+
+        const themes: TerrainTheme[] = ['Industrial', 'Wilderness', 'AlienRuin', 'CrashSite'];
+
+        themes.forEach((theme) => {
+            it(`[${theme}] Eliminate terrain signature at seed=12345 matches snapshot`, () => {
+                const { terrain } = generateTerrain(theme, gridSize, [], createRng(12345), 'Eliminate');
+
+                const signature = {
+                    count: terrain.length,
+                    pieces: stripIds(terrain).map((t) => ({
+                        name: t.name,
+                        type: t.type,
+                        x: t.position.x,
+                        y: t.position.y,
+                        w: t.size.width,
+                        h: t.size.height,
+                        isDifficult: t.isDifficult,
+                        providesCover: t.providesCover,
+                        blocksLineOfSight: t.blocksLineOfSight,
+                        isImpassable: t.isImpassable,
+                        baseElevation: t.baseElevation,
+                        objectHeight: t.objectHeight,
+                    })),
+                };
+
+                expect(signature).toMatchSnapshot();
+            });
+        });
+    });
 });
