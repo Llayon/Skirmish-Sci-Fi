@@ -29,6 +29,11 @@ export interface Terrain3D {
    * When present, the 3D renderer loads this mesh instead of drawing a primitive.
    */
   modelRef?: string;
+  /**
+   * Path to an individual glTF/glb file for modular terrain loading.
+   * When present, takes priority over modelRef. Falls back to atlas or primitive.
+   */
+  modelPath?: string;
 }
 
 export interface UnitVitality3D {

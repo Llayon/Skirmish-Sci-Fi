@@ -121,6 +121,7 @@ function createTerrain(
       | "objectHeight"
       | "losBlockerHeight"
       | "modelRef"
+      | "modelPath"
     >
   > = {},
 ): Terrain {
@@ -139,6 +140,7 @@ function createTerrain(
     baseElevation: options.baseElevation ?? 0,
     objectHeight: options.objectHeight ?? 0,
     modelRef: options.modelRef,
+    modelPath: options.modelPath,
     ...(options.losBlockerHeight != null
       ? { losBlockerHeight: options.losBlockerHeight }
       : {}),
@@ -151,6 +153,7 @@ function createBuilding(
   size: { width: number; height: number },
   rng: GenCursor,
   modelRef?: string,
+  modelPath?: string,
 ): Terrain[] {
   const buildingTerrain: Terrain[] = [];
   const buildingId = `building_${rng.nextId()}`;
@@ -165,6 +168,7 @@ function createBuilding(
         isImpassable: true,
         objectHeight: 2,
         modelRef,
+        modelPath,
       }),
     ];
   }
@@ -215,6 +219,7 @@ function createBuilding(
         parentId: buildingId,
         objectHeight: 0,
         modelRef,
+        modelPath,
       },
     ),
   );
@@ -240,6 +245,7 @@ function createBuilding(
         baseElevation: 2,
         objectHeight: 0,
         modelRef,
+        modelPath,
       },
     ),
   );
@@ -357,6 +363,7 @@ const featureGenerators: Record<FeatureType, FeatureGenerator> = (() => {
         size,
         rng,
         "BldgLgCommsArray",
+        "/assets/modular-scifi/Column_Large_Straight.gltf",
       );
     },
     industrial_cluster: (rect, existing, rng) => {
@@ -466,6 +473,8 @@ const featureGenerators: Record<FeatureType, FeatureGenerator> = (() => {
           providesCover: false,
           blocksLineOfSight: false,
           objectHeight: 0,
+          // Modular glTF takes priority over atlas modelRef
+          modelPath: "/assets/modular-scifi/Platform_Round1.gltf",
           modelRef: "LandingPad",
         }),
       ];
