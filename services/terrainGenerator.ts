@@ -477,6 +477,134 @@ function placeZoneFeatures(
   }
 }
 
+function isWalkable(pos: Position, terrain: Terrain[], gridSize: { width: number; height: number }): boolean {
+  if (pos.x < 0 || pos.x >= gridSize.width || pos.y < 0 || pos.y >= gridSize.height) return false;
+  const cellTerrain = terrain.find(t =>
+    pos.x >= t.position.x && pos.x < t.position.x + t.size.width &&
+    pos.y >= t.position.y && pos.y < t.position.y + t.size.height
+  );
+  return !cellTerrain?.isImpassable;
+}
+
+function findPath(
+  start: Position,
+  end: Position,
+  terrain: Terrain[],
+  gridSize: { width: number; height: number }
+): Position[] | null {
+  const queue: Position[] = [start];
+  const visited = new Set<string>([`${start.x},${start.y}`]);
+  const parent = new Map<string, string>();
+
+  while (queue.length > 0) {
+    const current = queue.shift()!;
+    if (current.x === end.x && current.y === end.y) {
+      const path: Position[] = [current];
+      let key = `${current.x},${current.y}`;
+      while (parent.has(key)) {
+        const pKey = parent.get(key)!;
+        const [px, py] = pKey.split(',').map(Number);
+        path.unshift({ x: px, y: py });
+        key = pKey;
+      }
+      return path;
+    }
+
+    const neighbors = [
+      { x: current.x + 1, y: current.y },
+      { x: current.x - 1, y: current.y },
+      { x: current.x, y: current.y + 1 },
+      { x: current.x, y: current.y - 1 }
+    ];
+
+    for (const neighbor of neighbors) {
+      const nKey = `${neighbor.x},${neighbor.y}`;
+      if (!visited.has(nKey) && isWalkable(neighbor, terrain, gridSize)) {
+        visited.add(nKey);
+        parent.set(nKey, `${current.x},${current.y}`);
+        queue.push(neighbor);
+      }
+    }
+  }
+
+  return null;
+}
+
+function validateAndRepairConnectivity(
+  terrain: Terrain[],
+  zones: TacticalZoneSpec[],
+  gridSize: { width: number; height: number },
+  rng: GenCursor
+): void {
+  const playerZone = zones.find(z => z.id === 'player_edge')!;
+  const enemyZone = zones.find(z => z.id === 'enemy_edge')!;
+  const centralZone = zones.find(z => z.id === 'central_arena')!;
+
+  const playerCenter = { x: Math.floor(playerZone.bounds.x + playerZone.bounds.width / 2), y: playerZone.bounds.y };
+  const enemyCenter = { x: Math.floor(enemyZone.bounds.x + enemyZone.bounds.width / 2), y: enemyZone.bounds.y + enemyZone.bounds.height - 1 };
+  const centralCenter = { x: Math.floor(centralZone.bounds.x + centralZone.bounds.width / 2), y: Math.floor(centralZone.bounds.y + centralZone.bounds.height / 2) };
+
+  const mainPath = findPath(playerCenter, enemyCenter, terrain, gridSize);
+  const northFlank = zones.find(z => z.id === 'north_flank');
+  const southFlank = zones.find(z => z.id === 'south_flank');
+  const northPath = northFlank ? findPath({ x: northFlank.bounds.x, y: Math.floor(northFlank.bounds.y + northFlank.bounds.height / 2) }, centralCenter, terrain, gridSize) : null;
+  const southPath = southFlank ? findPath({ x: southFlank.bounds.x + southFlank.bounds.width - 1, y: Math.floor(southFlank.bounds.y + southFlank.bounds.height / 2) }, centralCenter, terrain, gridSize) : null;
+
+  // Repair main path
+  if (!mainPath) {
+    const midX = Math.floor(gridSize.width / 2);
+    for (let y = playerCenter.y; y >= enemyCenter.y; y--) {
+      const pos = { x: midX, y };
+      const blocker = terrain.find(t =>
+        pos.x >= t.position.x && pos.x < t.position.x + t.size.width &&
+        pos.y >= t.position.y && pos.y < t.position.y + t.size.height &&
+        t.isImpassable
+      );
+      if (blocker) {
+        if (blocker.name === 'Wall') {
+          terrain.push(createTerrain(rng, 'Door', 'Door', pos, { width: 1, height: 1 }, { isImpassable: false, providesCover: true, blocksLineOfSight: true, isInteractive: true, objectHeight: 0, losBlockerHeight: 2 }));
+        } else if (blocker.size.width === 1 && blocker.size.height === 1) {
+          const idx = terrain.indexOf(blocker);
+          if (idx !== -1) terrain.splice(idx, 1);
+        }
+        break;
+      }
+    }
+  }
+
+  // Repair north flank
+  if (!northPath && northFlank) {
+    const gapY = Math.floor(northFlank.bounds.y + northFlank.bounds.height / 2);
+    const gapX = northFlank.bounds.x + northFlank.bounds.width;
+    const blocker = terrain.find(t =>
+      gapX >= t.position.x && gapX < t.position.x + t.size.width &&
+      gapY >= t.position.y && gapY < t.position.y + t.size.height &&
+      t.isImpassable
+    );
+    if (blocker && blocker.size.width === 1 && blocker.size.height === 1) {
+      const idx = terrain.indexOf(blocker);
+      if (idx !== -1) terrain.splice(idx, 1);
+    }
+  }
+
+  // Repair south flank
+  if (!southPath && southFlank) {
+    const gapY = Math.floor(southFlank.bounds.y + southFlank.bounds.height / 2);
+    const gapX = southFlank.bounds.x - 1;
+    if (gapX >= 0) {
+      const blocker = terrain.find(t =>
+        gapX >= t.position.x && gapX < t.position.x + t.size.width &&
+        gapY >= t.position.y && gapY < t.position.y + t.size.height &&
+        t.isImpassable
+      );
+      if (blocker && blocker.size.width === 1 && blocker.size.height === 1) {
+        const idx = terrain.indexOf(blocker);
+        if (idx !== -1) terrain.splice(idx, 1);
+      }
+    }
+  }
+}
+
 export const generateTerrain = (
     theme: TerrainTheme,
     gridSize: { width: number; height: number },
@@ -506,16 +634,35 @@ export const generateTerrain = (
       };
     });
 
-    // Place features per zone
-    for (const zone of zones) {
-      placeZoneFeatures(zone, themeGenerator, terrain, rng);
+    let attempts = 0;
+    let valid = false;
+    let finalTerrain: Terrain[] = [];
+
+    while (attempts < 5 && !valid) {
+      attempts++;
+      const attemptTerrain: Terrain[] = [];
+
+      for (const zone of zones) {
+        placeZoneFeatures(zone, themeGenerator, attemptTerrain, rng);
+      }
+
+      // Place tactical anchors (Task 5 will implement this call)
+      // placeTacticalAnchors(zones, attemptTerrain, rng);
+
+      validateAndRepairConnectivity(attemptTerrain, zones, gridSize, rng);
+
+      // Final validation check
+      const playerCenter = { x: Math.floor(gridSize.width / 2), y: gridSize.height - 2 };
+      const enemyCenter = { x: Math.floor(gridSize.width / 2), y: 1 };
+      const path = findPath(playerCenter, enemyCenter, attemptTerrain, gridSize);
+
+      if (path) {
+        valid = true;
+        finalTerrain = attemptTerrain;
+      }
     }
 
-    // Place tactical anchors (Task 5 will implement this call)
-    // placeTacticalAnchors(zones, terrain, rng);
-
-    // Validate and repair connectivity (Task 4 will implement this)
-    // validateAndRepairConnectivity(terrain, zones, gridSize, rng);
+    terrain.push(...finalTerrain);
 
     // Place scatter in remaining free areas (global)
     const globalRect = { x: 0, y: 0, width: gridSize.width, height: gridSize.height };
