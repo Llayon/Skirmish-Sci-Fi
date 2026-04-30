@@ -1,7 +1,8 @@
 import React, { useState, useMemo, Suspense, lazy, useRef, useEffect } from 'react';
-import { useCampaignProgressStore, useUiStore, useMultiplayerStore } from '@/stores';
+import { useCampaignProgressStore, useUiStore, useMultiplayerStore, useBattleStore } from '@/stores';
 import { useTranslation } from '@/i18n';
 import Button from '@/components/ui/Button';
+import { setupQuickBattle } from '@/services/application/battleSetup';
 import { Play, FilePlus, FolderOpen, Settings, Loader, Users, Calendar, Coins, User, Radio, CircleDot, Zap } from 'lucide-react';
 import Modal from '@/components/ui/Modal';
 import Card from '@/components/ui/Card';
@@ -135,6 +136,7 @@ const MainMenu: React.FC = () => {
   const { t } = useTranslation();
   const { saveSlots, actions: campaignActions } = useCampaignProgressStore();
   const { setGameMode } = useUiStore(state => state.actions);
+  const { setNewBattle } = useBattleStore(state => state.actions);
   const { startMultiplayer } = useMultiplayerStore(state => state.actions);
 
   const [isLoadModalOpen, setLoadModalOpen] = useState(false);
@@ -340,9 +342,11 @@ const MainMenu: React.FC = () => {
       {isQuickBattleOpen && (
         <QuickBattleModal
           onClose={() => setQuickBattleOpen(false)}
-          onStart={(missionType) => {
+          onStart={async (missionType) => {
             setQuickBattleOpen(false);
-            console.log('Quick Battle mission selected:', missionType);
+            const battle = await setupQuickBattle(missionType);
+            setNewBattle(battle);
+            setGameMode('battle');
           }}
         />
       )}
