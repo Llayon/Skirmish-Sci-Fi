@@ -27,7 +27,7 @@ export const ModularTerrainMesh = ({
 }: ModularTerrainMeshProps) => {
   const { scene } = useGLTF(terrain.modelPath || "");
 
-  const meshData = useMemo(() => {
+  const meshGroup = useMemo(() => {
     if (!scene || !terrain.modelPath) return null;
     const mesh = findFirstMesh(scene);
     if (!mesh || !mesh.geometry) {
@@ -36,13 +36,19 @@ export const ModularTerrainMesh = ({
       );
       return null;
     }
-    return {
-      geometry: mesh.geometry.clone(),
-      originalName: mesh.name,
-    };
+
+    // Clone the entire mesh hierarchy to preserve materials and transforms
+    const cloned = mesh.clone();
+    cloned.traverse((child) => {
+      if (child.type === "Mesh" && (child as THREE.Mesh).geometry) {
+        (child as THREE.Mesh).geometry = (child as THREE.Mesh).geometry.clone();
+      }
+    });
+
+    return cloned;
   }, [scene, terrain.modelPath]);
 
-  if (!meshData) return null;
+  if (!meshGroup) return null;
 
   const centerCellX = terrain.position.x + (terrain.size.width - 1) / 2;
   const centerCellY = terrain.position.y + (terrain.size.height - 1) / 2;
@@ -54,15 +60,11 @@ export const ModularTerrainMesh = ({
   );
 
   return (
-    <mesh
+    <group
       position={[position.x, position.y, position.z]}
-      geometry={meshData.geometry}
-      castShadow
-      receiveShadow
-      raycast={() => null}
       userData={{ terrainId: terrain.id, terrainType: terrain.type }}
     >
-      <meshStandardMaterial color="#888888" roughness={0.7} metalness={0.3} />
-    </mesh>
+      <primitive object={meshGroup} castShadow receiveShadow />
+    </group>
   );
 };
