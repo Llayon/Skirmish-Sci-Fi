@@ -210,7 +210,12 @@ function createBuilding(
       "Interior",
       { x: pos.x + 1, y: pos.y + 1 },
       { width: size.width - 2, height: size.height - 2 },
-      { blocksLineOfSight: false, parentId: buildingId, objectHeight: 0, modelRef },
+      {
+        blocksLineOfSight: false,
+        parentId: buildingId,
+        objectHeight: 0,
+        modelRef,
+      },
     ),
   );
 
@@ -346,7 +351,13 @@ const featureGenerators: Record<FeatureType, FeatureGenerator> = (() => {
       const size = { width: rng.d6() + 4, height: rng.d6() + 4 };
       const pos = findFreeSpot(rect, size, existing, rng);
       if (!pos) return [];
-      return createBuilding("Large Structure", pos, size, rng, "BldgLgCommsArray");
+      return createBuilding(
+        "Large Structure",
+        pos,
+        size,
+        rng,
+        "BldgLgCommsArray",
+      );
     },
     industrial_cluster: (rect, existing, rng) => {
       const terrain: Terrain[] = [];
@@ -356,7 +367,13 @@ const featureGenerators: Record<FeatureType, FeatureGenerator> = (() => {
       if (towerPos) {
         // Create the central block
         terrain.push(
-          ...createBuilding("Control Tower", towerPos, towerSize, rng, "BldgLgCommsArray"),
+          ...createBuilding(
+            "Control Tower",
+            towerPos,
+            towerSize,
+            rng,
+            "BldgLgCommsArray",
+          ),
         );
 
         // Create surrounding individual equipment pieces

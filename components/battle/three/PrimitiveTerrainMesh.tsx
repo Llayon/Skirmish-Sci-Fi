@@ -1,17 +1,20 @@
-import { useEffect, useRef } from 'react';
-import type * as THREE from 'three';
-import { TILE_SIZE } from '@/constants/three';
-import { gridToWorld } from '@/services/three/coordinates';
-import type { GridSize } from '@/types/battle';
-import type { Terrain3D } from '@/types/battle3d';
-import { useTerrainMeshContext } from './contexts/TerrainMeshContext';
+import { useEffect, useRef } from "react";
+import type * as THREE from "three";
+import { TILE_SIZE } from "@/constants/three";
+import { gridToWorld } from "@/services/three/coordinates";
+import type { GridSize } from "@/types/battle";
+import type { Terrain3D } from "@/types/battle3d";
+import { useTerrainMeshContext } from "./contexts/TerrainMeshContext";
 
 interface PrimitiveTerrainMeshProps {
   terrain: Terrain3D;
   gridSize: GridSize;
 }
 
-export const PrimitiveTerrainMesh = ({ terrain, gridSize }: PrimitiveTerrainMeshProps) => {
+export const PrimitiveTerrainMesh = ({
+  terrain,
+  gridSize,
+}: PrimitiveTerrainMeshProps) => {
   const meshRef = useRef<THREE.Mesh>(null);
   const { register, unregister } = useTerrainMeshContext();
 
@@ -33,7 +36,11 @@ export const PrimitiveTerrainMesh = ({ terrain, gridSize }: PrimitiveTerrainMesh
   // (like a roof or interior over a 5x3 building) appear shifted.
   const centerCellX = terrain.position.x + (terrain.size.width - 1) / 2;
   const centerCellY = terrain.position.y + (terrain.size.height - 1) / 2;
-  const position = gridToWorld({ x: centerCellX, y: centerCellY }, gridSize, centerY);
+  const position = gridToWorld(
+    { x: centerCellX, y: centerCellY },
+    gridSize,
+    centerY,
+  );
 
   return (
     <mesh
@@ -58,28 +65,32 @@ function getTerrainGeometry(terrain: Terrain3D, visualHeight: number) {
   const fw = terrain.size.width * TILE_SIZE;
   const fh = terrain.size.height * TILE_SIZE;
   switch (terrain.type) {
-    case 'Wall':
+    case "Wall":
       return <boxGeometry args={[TILE_SIZE, visualHeight, TILE_SIZE * 0.2]} />;
-    case 'Barrel':
+    case "Barrel":
       return <cylinderGeometry args={[0.3, 0.35, visualHeight, 8]} />;
-    case 'Container':
+    case "Container":
       return <boxGeometry args={[TILE_SIZE * 2, visualHeight, TILE_SIZE]} />;
-    case 'Floor':
+    case "Floor":
       return <boxGeometry args={[fw, visualHeight, fh]} />;
-    case 'Obstacle':
+    case "Obstacle":
     default:
-      return <boxGeometry args={[TILE_SIZE * 0.8, visualHeight, TILE_SIZE * 0.8]} />;
+      return (
+        <boxGeometry args={[TILE_SIZE * 0.8, visualHeight, TILE_SIZE * 0.8]} />
+      );
   }
 }
 
 function getTerrainMaterial(terrain: Terrain3D) {
   const colors: Record<string, string> = {
-    Wall: '#666666',
-    Barrel: '#8B4513',
-    Container: '#2E5090',
-    Obstacle: '#555555',
-    Floor: '#1a1a2e',
+    Wall: "#666666",
+    Barrel: "#8B4513",
+    Container: "#2E5090",
+    Obstacle: "#555555",
+    Floor: "#1a1a2e",
   };
 
-  return <meshStandardMaterial color={colors[terrain.type] || colors.Obstacle} />;
+  return (
+    <meshStandardMaterial color={colors[terrain.type] || colors.Obstacle} />
+  );
 }

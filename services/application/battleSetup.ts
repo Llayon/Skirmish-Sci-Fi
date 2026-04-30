@@ -100,26 +100,38 @@ function createPlaceholderCharacter(name: string, classId: string): Character {
   return {
     id: `char_${name.toLowerCase()}_${Date.now()}_${Math.random().toString(36).slice(2, 7)}`,
     name,
-    raceId: 'baseline_human',
+    raceId: "baseline_human",
     classId,
-    backgroundId: 'mercenary',
-    motivationId: 'credits',
-    pronouns: 'they/them',
+    backgroundId: "mercenary",
+    motivationId: "credits",
+    pronouns: "they/them",
     xp: 0,
     injuries: [],
-    task: 'idle',
-    backstory: 'A hired gun for quick operations.',
-    stats: { reactions: 1, speed: 4, combat: 1, toughness: 3, savvy: 0, luck: 0 },
-    weapons: [{ instanceId: `w_${Date.now()}_${Math.random().toString(36).slice(2, 7)}`, weaponId: 'rifle' }],
+    task: "idle",
+    backstory: "A hired gun for quick operations.",
+    stats: {
+      reactions: 1,
+      speed: 4,
+      combat: 1,
+      toughness: 3,
+      savvy: 0,
+      luck: 0,
+    },
+    weapons: [
+      {
+        instanceId: `w_${Date.now()}_${Math.random().toString(36).slice(2, 7)}`,
+        weaponId: "rifle",
+      },
+    ],
     armor: undefined,
     screen: undefined,
     consumables: [],
     utilityDevices: [],
     implants: [],
     portraitUrl: `/assets/portraits/sci_fi_portrait_01.png`,
-    side: 'player',
+    side: "player",
     position: { x: -1, y: -1 },
-    status: 'active',
+    status: "active",
     actionsRemaining: 2,
     actionsTaken: {
       move: false,
@@ -136,12 +148,12 @@ function createPlaceholderCharacter(name: string, classId: string): Character {
 
 function createPlaceholderCrew(): Crew {
   return {
-    name: 'Quick Strike Team',
+    name: "Quick Strike Team",
     members: [
-      createPlaceholderCharacter('Alpha', 'soldier'),
-      createPlaceholderCharacter('Beta', 'soldier'),
-      createPlaceholderCharacter('Gamma', 'technician'),
-      createPlaceholderCharacter('Delta', 'scout'),
+      createPlaceholderCharacter("Alpha", "soldier"),
+      createPlaceholderCharacter("Beta", "soldier"),
+      createPlaceholderCharacter("Gamma", "technician"),
+      createPlaceholderCharacter("Delta", "scout"),
     ],
   };
 }
@@ -756,11 +768,11 @@ export const setupBattle = async (
 
 export const setupQuickBattle = async (
   missionType: MissionType,
-  difficulty: Difficulty = 'normal',
+  difficulty: Difficulty = "normal",
 ): Promise<Battle> => {
   const crew = createPlaceholderCrew();
-  return setupBattle(crew, difficulty, missionType, 'opportunity', undefined, {
-    forceTerrainTheme: 'Industrial',
+  return setupBattle(crew, difficulty, missionType, "opportunity", undefined, {
+    forceTerrainTheme: "Industrial",
   });
 };
 

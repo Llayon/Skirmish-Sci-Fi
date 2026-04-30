@@ -1,9 +1,9 @@
-import { useMemo } from 'react';
+import { useMemo } from "react";
 
-import { gridToWorld } from '@/services/three/coordinates';
-import type { GridSize } from '@/types/battle';
-import type { Terrain3D } from '@/types/battle3d';
-import { useTerrainAtlas } from '@/hooks/useTerrainAtlas';
+import { gridToWorld } from "@/services/three/coordinates";
+import type { GridSize } from "@/types/battle";
+import type { Terrain3D } from "@/types/battle3d";
+import { useTerrainAtlas } from "@/hooks/useTerrainAtlas";
 
 interface GLBTerrainMeshProps {
   terrain: Terrain3D;
@@ -43,11 +43,7 @@ export const GLBTerrainMesh = ({ terrain, gridSize }: GLBTerrainMeshProps) => {
       raycast={() => null}
       userData={{ terrainId: terrain.id, terrainType: terrain.type }}
     >
-      <meshStandardMaterial
-        color="#888888"
-        roughness={0.7}
-        metalness={0.3}
-      />
+      <meshStandardMaterial color="#888888" roughness={0.7} metalness={0.3} />
     </mesh>
   );
 };

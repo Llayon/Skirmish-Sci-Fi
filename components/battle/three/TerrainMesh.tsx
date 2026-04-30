@@ -1,7 +1,7 @@
-import type { GridSize } from '@/types/battle';
-import type { Terrain3D } from '@/types/battle3d';
-import { GLBTerrainMesh } from './GLBTerrainMesh';
-import { PrimitiveTerrainMesh } from './PrimitiveTerrainMesh';
+import type { GridSize } from "@/types/battle";
+import type { Terrain3D } from "@/types/battle3d";
+import { GLBTerrainMesh } from "./GLBTerrainMesh";
+import { PrimitiveTerrainMesh } from "./PrimitiveTerrainMesh";
 
 interface TerrainMeshProps {
   terrain: Terrain3D;
