@@ -29,6 +29,7 @@ export function generateTerrain(
         action.gridSize,
         action.worldTraits ?? [],
         state.rng,
+        action.missionType,
     );
 
     const events: BattleEvent[] = [{
