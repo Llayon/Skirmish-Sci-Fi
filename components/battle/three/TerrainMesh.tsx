@@ -1,3 +1,4 @@
+import { Suspense } from "react";
 import type { GridSize } from "@/types/battle";
 import type { Terrain3D } from "@/types/battle3d";
 import { GLBTerrainMesh } from "./GLBTerrainMesh";
@@ -10,12 +11,20 @@ interface TerrainMeshProps {
 }
 
 export const TerrainMesh = ({ terrain, gridSize }: TerrainMeshProps) => {
-  // Priority: modular individual glTF → atlas GLB → primitive
+  // Priority: modular individual glTF -> atlas GLB -> primitive
   if (terrain.modelPath) {
-    return <ModularTerrainMesh terrain={terrain} gridSize={gridSize} />;
+    return (
+      <Suspense fallback={<PrimitiveTerrainMesh terrain={terrain} gridSize={gridSize} />}>
+        <ModularTerrainMesh terrain={terrain} gridSize={gridSize} />
+      </Suspense>
+    );
   }
   if (terrain.modelRef) {
-    return <GLBTerrainMesh terrain={terrain} gridSize={gridSize} />;
+    return (
+      <Suspense fallback={<PrimitiveTerrainMesh terrain={terrain} gridSize={gridSize} />}>
+        <GLBTerrainMesh terrain={terrain} gridSize={gridSize} />
+      </Suspense>
+    );
   }
   return <PrimitiveTerrainMesh terrain={terrain} gridSize={gridSize} />;
 };

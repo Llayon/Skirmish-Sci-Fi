@@ -1,5 +1,6 @@
 import { useGLTF } from "@react-three/drei";
 import { useMemo } from "react";
+import * as THREE from "three";
 import { gridToWorld } from "@/services/three/coordinates";
 import type { GridSize } from "@/types/battle";
 import type { Terrain3D } from "@/types/battle3d";
@@ -9,28 +10,39 @@ interface ModularTerrainMeshProps {
   gridSize: GridSize;
 }
 
-/**
- * Loads an individual glTF file for a terrain piece.
- * Used with modular asset kits (e.g. Modular SciFi MegaKit).
- * Falls back to primitive if the file fails to load.
- */
+function findFirstMesh(node: THREE.Object3D): THREE.Mesh | null {
+  if (node.type === "Mesh") {
+    return node as THREE.Mesh;
+  }
+  for (const child of node.children) {
+    const found = findFirstMesh(child);
+    if (found) return found;
+  }
+  return null;
+}
+
 export const ModularTerrainMesh = ({
   terrain,
   gridSize,
 }: ModularTerrainMeshProps) => {
   const { scene } = useGLTF(terrain.modelPath || "");
 
-  const geometry = useMemo(() => {
+  const meshData = useMemo(() => {
     if (!scene || !terrain.modelPath) return null;
-    // Take the first mesh found in the glTF scene
-    const mesh = scene.children.find((child) => child.type === "Mesh") as
-      | THREE.Mesh
-      | undefined;
-    if (!mesh || !mesh.geometry) return null;
-    return mesh.geometry.clone();
+    const mesh = findFirstMesh(scene);
+    if (!mesh || !mesh.geometry) {
+      console.warn(
+        `[ModularTerrainMesh] No mesh found in ${terrain.modelPath}`,
+      );
+      return null;
+    }
+    return {
+      geometry: mesh.geometry.clone(),
+      originalName: mesh.name,
+    };
   }, [scene, terrain.modelPath]);
 
-  if (!geometry) return null;
+  if (!meshData) return null;
 
   const centerCellX = terrain.position.x + (terrain.size.width - 1) / 2;
   const centerCellY = terrain.position.y + (terrain.size.height - 1) / 2;
@@ -44,7 +56,7 @@ export const ModularTerrainMesh = ({
   return (
     <mesh
       position={[position.x, position.y, position.z]}
-      geometry={geometry}
+      geometry={meshData.geometry}
       castShadow
       receiveShadow
       raycast={() => null}
