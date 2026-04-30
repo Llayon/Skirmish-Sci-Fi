@@ -99,6 +99,11 @@ export interface Terrain {
    * conceal — they elevate. Set this flag explicitly to opt in.
    */
   concealsLineOfSight?: boolean;
+  /**
+   * Reference to a named mesh inside the GLB terrain atlas.
+   * When present, the 3D renderer loads this mesh instead of drawing a primitive.
+   */
+  modelRef?: string;
 }
 
 export type TerrainTheme =

@@ -24,6 +24,11 @@ export interface Terrain3D {
   /** Vertical thickness of the piece above its base. Walls and crates
    *  have a visible height; flat floors/roofs are near-zero. */
   height: number;
+  /**
+   * Reference to a named mesh inside the GLB terrain atlas.
+   * When present, the 3D renderer loads this mesh instead of drawing a primitive.
+   */
+  modelRef?: string;
 }
 
 export interface UnitVitality3D {
