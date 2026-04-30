@@ -1153,6 +1153,7 @@ function placeTacticalAnchors(
   zones: TacticalZoneSpec[],
   terrain: Terrain[],
   rng: GenCursor,
+  missionType?: string,
 ): PlacedAnchor[] {
   const anchors: PlacedAnchor[] = [];
   const centralZone = zones.find((z) => z.id === "central_arena");
@@ -1224,20 +1225,17 @@ function placeTacticalAnchors(
 
   // Place at least 1 anchor in central
   if (centralZone && rng.float() < centralZone.requirements.anchorChance) {
-    const types: TacticalAnchorType[] = [
-      "sniper_nest",
-      "objective_point",
-      "danger_zone",
-    ];
-    const type = types[Math.floor(rng.float() * types.length)];
+    let type: TacticalAnchorType;
+    if (missionType === 'Eliminate') {
+      type = 'objective_point'; // command_post maps to objective_point anchor type
+    } else {
+      const types: TacticalAnchorType[] = ['sniper_nest', 'objective_point', 'danger_zone'];
+      type = types[Math.floor(rng.float() * types.length)];
+    }
     const pieces = anchorGenerators[type](centralZone, terrain, rng);
     if (pieces.length > 0) {
       terrain.push(...pieces);
-      anchors.push({
-        type,
-        position: pieces[0].position,
-        zoneId: centralZone.id,
-      });
+      anchors.push({ type, position: pieces[0].position, zoneId: centralZone.id });
     }
   }
 
