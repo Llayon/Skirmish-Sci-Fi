@@ -1,7 +1,7 @@
 import { describe, it, expect } from "vitest";
 import { generateTerrain } from "./terrainGenerator";
 import { createRng } from "./engine/rng/rng";
-import { TerrainTheme, WorldTrait, MissionType } from "../types";
+import { TerrainTheme, WorldTrait } from "../types";
 
 const gridSize = { width: 32, height: 32 };
 
@@ -14,8 +14,14 @@ function stripIds(terrain: Record<string, unknown>[]) {
   });
 }
 
-function countCoverInZone(terrain: Record<string, unknown>[], zoneId: string): number {
-  const zoneBounds: Record<string, { x: number; y: number; width: number; height: number }> = {
+function countCoverInZone(
+  terrain: Record<string, unknown>[],
+  zoneId: string,
+): number {
+  const zoneBounds: Record<
+    string,
+    { x: number; y: number; width: number; height: number }
+  > = {
     central_arena: { x: 10, y: 10, width: 13, height: 13 },
     north_flank: { x: 0, y: 8, width: 9, height: 17 },
     south_flank: { x: 23, y: 8, width: 9, height: 17 },
@@ -26,9 +32,12 @@ function countCoverInZone(terrain: Record<string, unknown>[], zoneId: string): n
   let count = 0;
   for (let y = bounds.y; y < bounds.y + bounds.height; y++) {
     for (let x = bounds.x; x < bounds.x + bounds.width; x++) {
-      const cellTerrain = terrain.find((t: any) =>
-        x >= t.position.x && x < t.position.x + t.size.width &&
-        y >= t.position.y && y < t.position.y + t.size.height
+      const cellTerrain = terrain.find(
+        (t: Record<string, unknown>) =>
+          x >= t.position.x &&
+          x < t.position.x + t.size.width &&
+          y >= t.position.y &&
+          y < t.position.y + t.size.height,
       );
       if (cellTerrain?.providesCover) count++;
     }
@@ -126,38 +135,51 @@ describe("Mission-aware terrain generation (Eliminate)", () => {
       gridSize,
       [],
       createRng(9999),
-      "Eliminate"
+      "Eliminate",
     );
     const objectives = terrain.filter(
-      (t) => t.name?.includes("Objective") || t.name?.includes("Sniper Nest")
+      (t) => t.name?.includes("Objective") || t.name?.includes("Sniper Nest"),
     );
     expect(objectives.length).toBeGreaterThan(0);
   });
 
   it("Eliminate has denser central cover than generic", () => {
-    const generic = generateTerrain("Industrial", gridSize, [], createRng(12345));
+    const generic = generateTerrain(
+      "Industrial",
+      gridSize,
+      [],
+      createRng(12345),
+    );
     const eliminate = generateTerrain(
       "Industrial",
       gridSize,
       [],
       createRng(12345),
-      "Eliminate"
+      "Eliminate",
     );
 
     const genericCentral = countCoverInZone(generic.terrain, "central_arena");
-    const eliminateCentral = countCoverInZone(eliminate.terrain, "central_arena");
+    const eliminateCentral = countCoverInZone(
+      eliminate.terrain,
+      "central_arena",
+    );
 
     expect(eliminateCentral).toBeGreaterThanOrEqual(genericCentral);
   });
 
   it("Eliminate flanks are more open than generic", () => {
-    const generic = generateTerrain("Industrial", gridSize, [], createRng(12345));
+    const generic = generateTerrain(
+      "Industrial",
+      gridSize,
+      [],
+      createRng(12345),
+    );
     const eliminate = generateTerrain(
       "Industrial",
       gridSize,
       [],
       createRng(12345),
-      "Eliminate"
+      "Eliminate",
     );
 
     const genericNorth = countCoverInZone(generic.terrain, "north_flank");
@@ -172,12 +194,17 @@ describe("Mission-aware terrain generation (Eliminate)", () => {
       gridSize,
       [],
       createRng(9999),
-      undefined
+      undefined,
     );
-    const withoutParam = generateTerrain("Industrial", gridSize, [], createRng(9999));
+    const withoutParam = generateTerrain(
+      "Industrial",
+      gridSize,
+      [],
+      createRng(9999),
+    );
 
     expect(stripIds(withExplicit.terrain)).toEqual(
-      stripIds(withoutParam.terrain)
+      stripIds(withoutParam.terrain),
     );
   });
 });

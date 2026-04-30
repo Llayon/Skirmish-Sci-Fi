@@ -1,16 +1,21 @@
-import type { Battle, BattlePhase, GridSize, TerrainTheme } from '@/types/battle';
-import type { WorldTrait, MissionType } from '@/types/campaign';
-import type { RngState } from '../rng/rng';
-import type { Position } from '@/types/character';
-import type { JsonValue } from '../types';
+import type {
+  Battle,
+  BattlePhase,
+  GridSize,
+  TerrainTheme,
+} from "@/types/battle";
+import type { WorldTrait, MissionType } from "@/types/campaign";
+import type { RngState } from "../rng/rng";
+import type { Position } from "@/types/character";
+import type { JsonValue } from "../types";
 
 /**
  * Engine-specific log entry type.
  * Decoupled from application LogEntry to maintain boundary.
  */
 export interface EngineLogEntry {
-    key: string;
-    params?: Record<string, JsonValue>;
+  key: string;
+  params?: Record<string, JsonValue>;
 }
 
 /**
@@ -24,62 +29,148 @@ export const CURRENT_ENGINE_SCHEMA_VERSION = 1 as const;
  * Includes the Battle data model and the current RNG state.
  */
 export interface EngineBattleState {
-    schemaVersion: typeof CURRENT_ENGINE_SCHEMA_VERSION;
-    battle: Battle;
-    rng: RngState;
+  schemaVersion: typeof CURRENT_ENGINE_SCHEMA_VERSION;
+  battle: Battle;
+  rng: RngState;
 }
 
 /**
  * All possible actions the engine can process.
  * Add new actions here as discriminated union members.
  */
-export type BattleAction = 
-    | { type: 'ROLL_INITIATIVE' }
-    | { type: 'MOVE_PARTICIPANT'; participantId: string; to: Position }
-    | { type: 'SHOOT_ATTACK'; attackerId: string; targetId: string; weapon: { id: string; range: number; shots: number; damage: number; traits: string[] } }
-    | { type: 'BRAWL_ATTACK'; attackerId: string; targetId: string; weapon?: { id: string; damage: number; traits: string[] } }
-    | { type: 'ADVANCE_PHASE' }
-    | { type: 'END_TURN'; participantId?: string }
-    | { type: 'INTERACT_OBJECTIVE'; participantId: string; objectiveId: string }
-    | { type: 'MISSION_SETUP' }
-    | { type: 'USE_CONSUMABLE'; participantId: string; consumableId: string }
-    | { type: 'THROW_GRENADE'; attackerId: string; targetPos: Position; weapon: { id: string; range: number; damage: number; radius: number } }
-    | { type: 'PROCESS_AI_TURN'; participantId: string }
-    | { type: 'GENERATE_TERRAIN'; theme: TerrainTheme; gridSize: GridSize; worldTraits?: WorldTrait[]; missionType?: MissionType }
-    | { type: 'JUMP_DOWN'; participantId: string; to: Position };
+export type BattleAction =
+  | { type: "ROLL_INITIATIVE" }
+  | { type: "MOVE_PARTICIPANT"; participantId: string; to: Position }
+  | {
+      type: "SHOOT_ATTACK";
+      attackerId: string;
+      targetId: string;
+      weapon: {
+        id: string;
+        range: number;
+        shots: number;
+        damage: number;
+        traits: string[];
+      };
+    }
+  | {
+      type: "BRAWL_ATTACK";
+      attackerId: string;
+      targetId: string;
+      weapon?: { id: string; damage: number; traits: string[] };
+    }
+  | { type: "ADVANCE_PHASE" }
+  | { type: "END_TURN"; participantId?: string }
+  | { type: "INTERACT_OBJECTIVE"; participantId: string; objectiveId: string }
+  | { type: "MISSION_SETUP" }
+  | { type: "USE_CONSUMABLE"; participantId: string; consumableId: string }
+  | {
+      type: "THROW_GRENADE";
+      attackerId: string;
+      targetPos: Position;
+      weapon: { id: string; range: number; damage: number; radius: number };
+    }
+  | { type: "PROCESS_AI_TURN"; participantId: string }
+  | {
+      type: "GENERATE_TERRAIN";
+      theme: TerrainTheme;
+      gridSize: GridSize;
+      worldTraits?: WorldTrait[];
+      missionType?: MissionType;
+    }
+  | { type: "JUMP_DOWN"; participantId: string; to: Position };
 
 /**
  * Events emitted by the engine for UI/Animation consumption.
  * These are transient and not part of the persisted state.
  */
 export type BattleEvent =
-    | { type: 'REACTION_ROLLED'; participantId: string; roll: number; success: boolean }
-    | { type: 'TURN_ORDER_SET'; quick: string[]; slow: string[] }
-    | { type: 'PARTICIPANT_MOVED'; participantId: string; from: Position; to: Position }
-    | { type: 'SHOOT_DECLARED'; attackerId: string; targetId: string; weaponId: string }
-    | { type: 'SHOT_RESOLVED'; attackerId: string; targetId: string; hit: boolean; roll: number }
-    | { type: 'BRAWL_DECLARED'; attackerId: string; targetId: string }
-    | { type: 'BRAWL_RESOLVED'; attackerId: string; targetId: string; winnerId: string | null; loserId: string | null }
-    | { type: 'PHASE_CHANGED'; from: BattlePhase; to: BattlePhase }
-    | { type: 'ACTIVE_PARTICIPANT_SET'; participantId: string | null }
-    | { type: 'TURN_INDEX_SET'; index: number }
-    | { type: 'ROUND_INCREMENTED'; round: number }
-    | { type: 'CONSUMABLE_USED'; participantId: string; targetId?: string; consumableId: string }
-    | { type: 'AOE_IMPACT_DECLARED'; attackerId: string; targetPos: Position; radius: number; weaponId: string }
-    | { type: 'AOE_PARTICIPANT_HIT'; targetId: string; damage: number; roll: number; killed: boolean }
-    | { type: 'TERRAIN_GENERATED'; theme: TerrainTheme; pieceCount: number }
-    | { type: 'GOOD_SHOT_REROLL'; attackerId: string; targetId: string; reason: 'height_advantage'; original: number; rerolled: number }
-    | { type: 'FALL_DAMAGE_RESOLVED'; participantId: string; dropHeight: number; d6Roll: number; damage: number; toughness: number; outcome: 'unhurt' | 'stunned' | 'casualty' };
+  | {
+      type: "REACTION_ROLLED";
+      participantId: string;
+      roll: number;
+      success: boolean;
+    }
+  | { type: "TURN_ORDER_SET"; quick: string[]; slow: string[] }
+  | {
+      type: "PARTICIPANT_MOVED";
+      participantId: string;
+      from: Position;
+      to: Position;
+    }
+  | {
+      type: "SHOOT_DECLARED";
+      attackerId: string;
+      targetId: string;
+      weaponId: string;
+    }
+  | {
+      type: "SHOT_RESOLVED";
+      attackerId: string;
+      targetId: string;
+      hit: boolean;
+      roll: number;
+    }
+  | { type: "BRAWL_DECLARED"; attackerId: string; targetId: string }
+  | {
+      type: "BRAWL_RESOLVED";
+      attackerId: string;
+      targetId: string;
+      winnerId: string | null;
+      loserId: string | null;
+    }
+  | { type: "PHASE_CHANGED"; from: BattlePhase; to: BattlePhase }
+  | { type: "ACTIVE_PARTICIPANT_SET"; participantId: string | null }
+  | { type: "TURN_INDEX_SET"; index: number }
+  | { type: "ROUND_INCREMENTED"; round: number }
+  | {
+      type: "CONSUMABLE_USED";
+      participantId: string;
+      targetId?: string;
+      consumableId: string;
+    }
+  | {
+      type: "AOE_IMPACT_DECLARED";
+      attackerId: string;
+      targetPos: Position;
+      radius: number;
+      weaponId: string;
+    }
+  | {
+      type: "AOE_PARTICIPANT_HIT";
+      targetId: string;
+      damage: number;
+      roll: number;
+      killed: boolean;
+    }
+  | { type: "TERRAIN_GENERATED"; theme: TerrainTheme; pieceCount: number }
+  | {
+      type: "GOOD_SHOT_REROLL";
+      attackerId: string;
+      targetId: string;
+      reason: "height_advantage";
+      original: number;
+      rerolled: number;
+    }
+  | {
+      type: "FALL_DAMAGE_RESOLVED";
+      participantId: string;
+      dropHeight: number;
+      d6Roll: number;
+      damage: number;
+      toughness: number;
+      outcome: "unhurt" | "stunned" | "casualty";
+    };
 
 /**
  * Dependencies injected into the reducer.
  * Pure functions for RNG handling.
  */
 export interface EngineDeps {
-    rng: {
-        d6: (state: RngState) => { value: 1|2|3|4|5|6; next: RngState };
-        d100: (state: RngState) => { value: number; next: RngState };
-    };
+  rng: {
+    d6: (state: RngState) => { value: 1 | 2 | 3 | 4 | 5 | 6; next: RngState };
+    d100: (state: RngState) => { value: number; next: RngState };
+  };
 }
 
 /**
@@ -90,8 +181,8 @@ export interface EngineDeps {
  * - stateHash: Deterministic hash of the next state
  */
 export interface BattleEngineResult {
-    next: EngineBattleState;
-    events: BattleEvent[];
-    log: EngineLogEntry[];
-    stateHash: string;
+  next: EngineBattleState;
+  events: BattleEvent[];
+  log: EngineLogEntry[];
+  stateHash: string;
 }

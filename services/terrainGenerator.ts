@@ -1226,16 +1226,24 @@ function placeTacticalAnchors(
   // Place at least 1 anchor in central
   if (centralZone && rng.float() < centralZone.requirements.anchorChance) {
     let type: TacticalAnchorType;
-    if (missionType === 'Eliminate') {
-      type = 'objective_point'; // command_post maps to objective_point anchor type
+    if (missionType === "Eliminate") {
+      type = "objective_point"; // command_post maps to objective_point anchor type
     } else {
-      const types: TacticalAnchorType[] = ['sniper_nest', 'objective_point', 'danger_zone'];
+      const types: TacticalAnchorType[] = [
+        "sniper_nest",
+        "objective_point",
+        "danger_zone",
+      ];
       type = types[Math.floor(rng.float() * types.length)];
     }
     const pieces = anchorGenerators[type](centralZone, terrain, rng);
     if (pieces.length > 0) {
       terrain.push(...pieces);
-      anchors.push({ type, position: pieces[0].position, zoneId: centralZone.id });
+      anchors.push({
+        type,
+        position: pieces[0].position,
+        zoneId: centralZone.id,
+      });
     }
   }
 
@@ -1321,7 +1329,12 @@ export const generateTerrain = (
 
     placeInteractiveProps(attemptTerrain, gridSize, rng);
 
-    validateAndRepairConnectivity(attemptTerrain, overriddenZones, gridSize, rng);
+    validateAndRepairConnectivity(
+      attemptTerrain,
+      overriddenZones,
+      gridSize,
+      rng,
+    );
 
     // Final validation check
     const playerCenter = {
