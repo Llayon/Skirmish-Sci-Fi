@@ -171,6 +171,8 @@ function createBuilding(
 
   // Create walls as individual impassable blocks. Walls are 2 units tall
   // (rulebook: waist-to-shoulder height, blocks LoS for standing figures).
+  // Walls are individual 1×1 blocks — the GLB modelRef belongs to the
+  // building as a whole (interior, roof), not each wall segment.
   const wallOptions = {
     providesCover: true,
     blocksLineOfSight: true,
