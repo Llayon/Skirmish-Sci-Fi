@@ -1240,7 +1240,7 @@ function placeTacticalAnchors(
       return pieces;
     },
     evacuation_point: (zone, existing, rng) => {
-      const size = { width: 4, height: 4 };
+      const size = { width: 2, height: 2 };
       const pos = findFreeSpot(zone.bounds, size, existing, rng);
       if (!pos) return [];
       return [

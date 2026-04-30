@@ -208,3 +208,49 @@ describe("Mission-aware terrain generation (Eliminate)", () => {
     );
   });
 });
+
+describe("Mission-aware terrain generation (Protect)", () => {
+  it("Protect places evacuation point on player edge", () => {
+    const { terrain } = generateTerrain(
+      "Industrial",
+      gridSize,
+      [],
+      createRng(12345),
+      "Protect"
+    );
+    const evac = terrain.filter((t) => t.name.includes("Evacuation"));
+    expect(evac.length).toBeGreaterThan(0);
+  });
+
+  it("Protect has denser player edge than generic", () => {
+    const generic = generateTerrain("Industrial", gridSize, [], createRng(12345));
+    const protect = generateTerrain(
+      "Industrial",
+      gridSize,
+      [],
+      createRng(12345),
+      "Protect"
+    );
+
+    const genericPlayer = countCoverInZone(generic.terrain, "player_edge");
+    const protectPlayer = countCoverInZone(protect.terrain, "player_edge");
+
+    expect(protectPlayer).toBeGreaterThanOrEqual(genericPlayer);
+  });
+
+  it("Protect has open flanks for alternative routes", () => {
+    const generic = generateTerrain("Industrial", gridSize, [], createRng(12345));
+    const protect = generateTerrain(
+      "Industrial",
+      gridSize,
+      [],
+      createRng(12345),
+      "Protect"
+    );
+
+    const genericNorth = countCoverInZone(generic.terrain, "north_flank");
+    const protectNorth = countCoverInZone(protect.terrain, "north_flank");
+
+    expect(protectNorth).toBeLessThanOrEqual(genericNorth);
+  });
+});
