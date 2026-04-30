@@ -9,6 +9,7 @@ export type Terrain3DType =
 
 export interface Terrain3D {
   id: string;
+  name: string;
   type: Terrain3DType;
   /** Top-left grid cell of the footprint (matches Terrain.position). */
   position: Position;

@@ -96,4 +96,19 @@ describe('generateTerrain action', () => {
 
         expect(() => generateTerrain(state, baseAction)).toThrow(/scripted/i);
     });
+
+    it('can produce modelPath and modelRef for Industrial theme (seed 1)', () => {
+        const state = createMockState(1);
+        const action: BattleAction = {
+            type: 'GENERATE_TERRAIN',
+            theme: 'Industrial',
+            gridSize: { width: 32, height: 32 },
+        };
+
+        const { next } = generateTerrain(state, action);
+        const withModelPath = next.battle.terrain.filter((t) => t.modelPath);
+        const withModelRef = next.battle.terrain.filter((t) => t.modelRef);
+
+        expect(withModelPath.length + withModelRef.length).toBeGreaterThan(0);
+    });
 });

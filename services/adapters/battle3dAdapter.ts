@@ -71,6 +71,7 @@ function mapTerrainTo3D(t: Terrain): Terrain3D {
 
   return {
     id: t.id,
+    name: t.name,
     type,
     position: t.position,
     size: t.size,

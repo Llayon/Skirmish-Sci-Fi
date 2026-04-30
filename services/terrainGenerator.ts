@@ -89,7 +89,12 @@ function findFreeSpot(
 ): Position | null {
   for (let i = 0; i < 50; i++) {
     // Try 50 times to find a spot
-    if (rect.width < itemSize.width || rect.height < itemSize.height)
+    if (
+      itemSize.width <= 0 ||
+      itemSize.height <= 0 ||
+      rect.width < itemSize.width ||
+      rect.height < itemSize.height
+    )
       return null;
     const pos = {
       x: rect.x + Math.floor(rng.float() * (rect.width - itemSize.width + 1)),
@@ -161,6 +166,8 @@ function createBuilding(
   // Buildings must be at least 3x3 to have an interior
   if (size.width < 3 || size.height < 3) {
     // Solid block too small for an interior — treat as a 2-unit wall mass.
+    // This is the only place where a 3D modelPath makes sense for a building
+    // because the whole footprint can be covered by one modular mesh.
     return [
       createTerrain(rng, name, "Block", pos, size, {
         providesCover: true,
@@ -207,6 +214,9 @@ function createBuilding(
   }
 
   // Interior floor sits at ground level — figures inside stand on it at elevation 0.
+  // NOTE: we do NOT put modelPath on interior/roof. 3D models are for the
+  // exterior shell only (handled above for small blocks or by individual
+  // feature generators like landing_pad).  Atlas modelRef stays as fallback.
   buildingTerrain.push(
     createTerrain(
       rng,
@@ -219,7 +229,6 @@ function createBuilding(
         parentId: buildingId,
         objectHeight: 0,
         modelRef,
-        modelPath,
       },
     ),
   );
@@ -245,7 +254,6 @@ function createBuilding(
         baseElevation: 2,
         objectHeight: 0,
         modelRef,
-        modelPath,
       },
     ),
   );
@@ -380,6 +388,7 @@ const featureGenerators: Record<FeatureType, FeatureGenerator> = (() => {
             towerSize,
             rng,
             "BldgLgCommsArray",
+            "/assets/modular-scifi/Column_Large_Straight.gltf",
           ),
         );
 
@@ -492,6 +501,8 @@ const featureGenerators: Record<FeatureType, FeatureGenerator> = (() => {
               blocksLineOfSight: true,
               isImpassable: true,
               objectHeight: 1,
+              modelPath: "/assets/modular-scifi/Prop_Crate3.gltf",
+              modelRef: "CargoContainer",
             }),
           );
       }
@@ -502,13 +513,31 @@ const featureGenerators: Record<FeatureType, FeatureGenerator> = (() => {
       const size1 = { width: rng.d6() + 2, height: rng.d6() + 2 };
       const pos1 = findFreeSpot(rect, size1, existing, rng);
       if (pos1) {
-        t.push(...createBuilding("Building A", pos1, size1, rng));
+        t.push(
+          ...createBuilding(
+            "Building A",
+            pos1,
+            size1,
+            rng,
+            "BldgLgCommsArray",
+            "/assets/modular-scifi/Column_Simple.gltf",
+          ),
+        );
       }
 
       const size2 = { width: rng.d6() + 2, height: rng.d6() + 2 };
       const pos2 = findFreeSpot(rect, size2, [...existing, ...t], rng);
       if (pos2) {
-        t.push(...createBuilding("Building B", pos2, size2, rng));
+        t.push(
+          ...createBuilding(
+            "Building B",
+            pos2,
+            size2,
+            rng,
+            "BldgLgCommsArray",
+            "/assets/modular-scifi/Column_Simple.gltf",
+          ),
+        );
       }
       return t;
     },
@@ -563,6 +592,8 @@ const featureGenerators: Record<FeatureType, FeatureGenerator> = (() => {
               providesCover: true,
               blocksLineOfSight: false,
               objectHeight: 1,
+              modelPath: "/assets/modular-scifi/Prop_Barrel_Large.gltf",
+              modelRef: "Barrel",
             }),
           );
       }
@@ -1149,6 +1180,8 @@ function placeInteractiveProps(
               blocksLineOfSight: false,
               isInteractive: true,
               objectHeight: 1,
+              modelPath: "/assets/modular-scifi/Prop_Barrel_Large.gltf",
+              modelRef: "Barrel",
             }),
           );
           placed++;
@@ -1198,6 +1231,36 @@ function placeInteractiveProps(
         }),
       );
       doorsPlaced++;
+    }
+  }
+}
+
+function placeNotableFeatures(
+  themeGenerator: TerrainGeneratorSchema,
+  zones: TacticalZoneSpec[],
+  terrain: Terrain[],
+  rng: GenCursor,
+): void {
+  // Pick 1-2 notable features from the theme and try to place them in the
+  // central arena. This ensures signature terrain (e.g. landing pads,
+  // large structures) actually appear on the battlefield — the original
+  // generator defined them in notableFeatures but never consumed the list.
+  // We restrict to central_arena to avoid disrupting flank cover budgets
+  // that parity tests depend on.
+  const centralZone = zones.find((z) => z.id === "central_arena");
+  if (!centralZone) return;
+
+  const notableCount = rng.d6() > 3 ? 2 : 1;
+
+  for (let i = 0; i < notableCount; i++) {
+    const roll = Math.floor(rng.float() * themeGenerator.notableFeatures.length);
+    const featureType = themeGenerator.notableFeatures[roll];
+    const generator = featureGenerators[featureType];
+    if (!generator) continue;
+
+    const pieces = generator(centralZone.bounds, terrain, rng);
+    if (pieces.length > 0) {
+      terrain.push(...pieces);
     }
   }
 }
@@ -1268,6 +1331,8 @@ function placeTacticalAnchors(
               blocksLineOfSight: false,
               isInteractive: true,
               objectHeight: 1,
+              modelPath: "/assets/modular-scifi/Prop_Barrel_Large.gltf",
+              modelRef: "Barrel",
             }),
           );
         }
@@ -1413,6 +1478,8 @@ export const generateTerrain = (
     }
 
     placeTacticalAnchors(overriddenZones, attemptTerrain, rng, missionType);
+
+    placeNotableFeatures(themeGenerator, overriddenZones, attemptTerrain, rng);
 
     placeInteractiveProps(attemptTerrain, gridSize, rng);
 
