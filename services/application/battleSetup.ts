@@ -297,10 +297,11 @@ export const setupBattle = async (
   // 1. Determine Category & Subtable
   let category =
     options.forceEnemyCategory ||
-    ENEMY_ENCOUNTER_CATEGORY_TABLE.find((c) => {
-      const range = c.ranges[battleType === "rival" ? "rival" : battleType];
-      return range && campaign!.turn >= range[0] && campaign!.turn <= range[1];
-    })?.category ||
+    (campaign &&
+      ENEMY_ENCOUNTER_CATEGORY_TABLE.find((c) => {
+        const range = c.ranges[battleType === "rival" ? "rival" : battleType];
+        return range && campaign.turn >= range[0] && campaign.turn <= range[1];
+      })?.category) ||
     "Criminal Elements";
 
   if (battleType === "invasion") category = "Roving Threats";
