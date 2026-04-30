@@ -1,7 +1,7 @@
 import { describe, it, expect } from "vitest";
 import { generateTerrain } from "./terrainGenerator";
 import { createRng } from "./engine/rng/rng";
-import { TerrainTheme, WorldTrait } from "../types";
+import { TerrainTheme, WorldTrait, MissionType } from "../types";
 
 const gridSize = { width: 32, height: 32 };
 
@@ -12,6 +12,28 @@ function stripIds(terrain: Record<string, unknown>[]) {
     delete copy.parentId;
     return copy;
   });
+}
+
+function countCoverInZone(terrain: Record<string, unknown>[], zoneId: string): number {
+  const zoneBounds: Record<string, { x: number; y: number; width: number; height: number }> = {
+    central_arena: { x: 10, y: 10, width: 13, height: 13 },
+    north_flank: { x: 0, y: 8, width: 9, height: 17 },
+    south_flank: { x: 23, y: 8, width: 9, height: 17 },
+  };
+  const bounds = zoneBounds[zoneId];
+  if (!bounds) return 0;
+
+  let count = 0;
+  for (let y = bounds.y; y < bounds.y + bounds.height; y++) {
+    for (let x = bounds.x; x < bounds.x + bounds.width; x++) {
+      const cellTerrain = terrain.find((t: any) =>
+        x >= t.position.x && x < t.position.x + t.size.width &&
+        y >= t.position.y && y < t.position.y + t.size.height
+      );
+      if (cellTerrain?.providesCover) count++;
+    }
+  }
+  return count;
 }
 
 describe("Zone-based terrain generation", () => {
@@ -94,5 +116,68 @@ describe("Zone-based terrain generation", () => {
     );
     const crystals = terrain.filter((t) => t.name === "Crystal");
     expect(crystals.length).toBeGreaterThan(0);
+  });
+});
+
+describe("Mission-aware terrain generation (Eliminate)", () => {
+  it("Eliminate always places an objective_point anchor", () => {
+    const { terrain } = generateTerrain(
+      "Industrial",
+      gridSize,
+      [],
+      createRng(9999),
+      "Eliminate"
+    );
+    const objectives = terrain.filter(
+      (t) => t.name?.includes("Objective") || t.name?.includes("Sniper Nest")
+    );
+    expect(objectives.length).toBeGreaterThan(0);
+  });
+
+  it("Eliminate has denser central cover than generic", () => {
+    const generic = generateTerrain("Industrial", gridSize, [], createRng(12345));
+    const eliminate = generateTerrain(
+      "Industrial",
+      gridSize,
+      [],
+      createRng(12345),
+      "Eliminate"
+    );
+
+    const genericCentral = countCoverInZone(generic.terrain, "central_arena");
+    const eliminateCentral = countCoverInZone(eliminate.terrain, "central_arena");
+
+    expect(eliminateCentral).toBeGreaterThanOrEqual(genericCentral);
+  });
+
+  it("Eliminate flanks are more open than generic", () => {
+    const generic = generateTerrain("Industrial", gridSize, [], createRng(12345));
+    const eliminate = generateTerrain(
+      "Industrial",
+      gridSize,
+      [],
+      createRng(12345),
+      "Eliminate"
+    );
+
+    const genericNorth = countCoverInZone(generic.terrain, "north_flank");
+    const eliminateNorth = countCoverInZone(eliminate.terrain, "north_flank");
+
+    expect(eliminateNorth).toBeLessThanOrEqual(genericNorth);
+  });
+
+  it("Generic map without missionType is unchanged", () => {
+    const withExplicit = generateTerrain(
+      "Industrial",
+      gridSize,
+      [],
+      createRng(9999),
+      undefined
+    );
+    const withoutParam = generateTerrain("Industrial", gridSize, [], createRng(9999));
+
+    expect(stripIds(withExplicit.terrain)).toEqual(
+      stripIds(withoutParam.terrain)
+    );
   });
 });
