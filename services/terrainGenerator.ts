@@ -120,6 +120,7 @@ function createTerrain(
       | "baseElevation"
       | "objectHeight"
       | "losBlockerHeight"
+      | "modelRef"
     >
   > = {},
 ): Terrain {
@@ -137,6 +138,7 @@ function createTerrain(
     parentId: options.parentId,
     baseElevation: options.baseElevation ?? 0,
     objectHeight: options.objectHeight ?? 0,
+    modelRef: options.modelRef,
     ...(options.losBlockerHeight != null
       ? { losBlockerHeight: options.losBlockerHeight }
       : {}),

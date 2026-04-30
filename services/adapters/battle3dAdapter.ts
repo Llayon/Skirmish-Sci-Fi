@@ -64,6 +64,7 @@ function mapTerrainTo3D(t: Terrain): Terrain3D {
     size: t.size,
     baseElevation,
     height,
+    modelRef: t.modelRef,
   };
 }
 
