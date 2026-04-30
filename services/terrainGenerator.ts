@@ -404,6 +404,79 @@ const ZONE_TEMPLATES: TacticalZoneSpec[] = [
 const MAX_ANCHORS = 3;
 const MIN_ANCHOR_DISTANCE = 8;
 
+function countCoverCells(terrain: Terrain[], zone: TacticalZoneSpec): number {
+  let count = 0;
+  const zb = zone.bounds;
+  for (let y = zb.y; y < zb.y + zb.height; y++) {
+    for (let x = zb.x; x < zb.x + zb.width; x++) {
+      const cellTerrain = terrain.find(t =>
+        x >= t.position.x && x < t.position.x + t.size.width &&
+        y >= t.position.y && y < t.position.y + t.size.height
+      );
+      if (cellTerrain?.providesCover) count++;
+    }
+  }
+  return count;
+}
+
+function placeZoneFeatures(
+  zone: TacticalZoneSpec,
+  themeGenerator: TerrainGeneratorSchema,
+  terrain: Terrain[],
+  rng: GenCursor
+): void {
+  const zb = zone.bounds;
+  let coverCells = countCoverCells(terrain, zone);
+
+  // Step 2a: Place elevation if needed
+  if (zone.requirements.needsElevation) {
+    const elevFeatures = ['large_structure', 'building'] as FeatureType[];
+    const featureType = elevFeatures[Math.floor(rng.float() * elevFeatures.length)];
+    const generator = featureGenerators[featureType];
+    if (generator) {
+      const pieces = generator(zb, terrain, rng);
+      terrain.push(...pieces);
+      coverCells = countCoverCells(terrain, zone);
+    }
+  }
+
+  // Step 2b: Fill regular features until cover target reached
+  const targetCover = zone.requirements.minCoverCells + Math.floor(rng.float() * (zone.requirements.maxCoverCells - zone.requirements.minCoverCells));
+  let attempts = 0;
+  while (coverCells < targetCover && attempts < 20) {
+    attempts++;
+    const roll = rng.d6();
+    let featureType: FeatureType;
+    const weightedKeys = Object.keys(zone.themeWeights) as FeatureType[];
+    if (weightedKeys.length > 0) {
+      const totalWeight = weightedKeys.reduce((sum, k) => sum + (zone.themeWeights[k] ?? 1), 0);
+      let pick = rng.float() * totalWeight;
+      featureType = weightedKeys[0];
+      for (const key of weightedKeys) {
+        pick -= (zone.themeWeights[key] ?? 1);
+        if (pick <= 0) { featureType = key; break; }
+      }
+    } else {
+      featureType = themeGenerator.regularFeatures[roll - 1];
+    }
+
+    const generator = featureGenerators[featureType];
+    if (generator) {
+      const pieces = generator(zb, terrain, rng);
+      terrain.push(...pieces);
+      coverCells = countCoverCells(terrain, zone);
+    }
+  }
+
+  // Step 2c: Place scatter to fill remaining space (respecting maxCover)
+  const scatterCount = rng.d6();
+  for (let i = 0; i < scatterCount && coverCells < zone.requirements.maxCoverCells; i++) {
+    const pieces = featureGenerators.scatter(zb, terrain, rng);
+    terrain.push(...pieces);
+    coverCells = countCoverCells(terrain, zone);
+  }
+}
+
 export const generateTerrain = (
     theme: TerrainTheme,
     gridSize: { width: number; height: number },
@@ -414,54 +487,42 @@ export const generateTerrain = (
     const terrain: Terrain[] = [];
     const themeGenerator = TERRAIN_THEME_GENERATORS[theme];
 
-    // Step 1: Define Quarters
-    const halfW = Math.floor(gridSize.width / 2);
-    const halfH = Math.floor(gridSize.height / 2);
-    const quarters = [
-        { x: 0, y: 0, width: halfW, height: halfH }, // top-left
-        { x: halfW, y: 0, width: gridSize.width - halfW, height: halfH }, // top-right
-        { x: 0, y: halfH, width: halfW, height: gridSize.height - halfH }, // bottom-left
-        { x: halfW, y: halfH, width: gridSize.width - halfW, height: gridSize.height - halfH }, // bottom-right
-    ];
-    const centerRect: Rect = { x: halfW - 4, y: halfH - 4, width: 8, height: 8 };
+    // Scale zones to grid size
+    const scaleX = gridSize.width / 32;
+    const scaleY = gridSize.height / 32;
+    const zones = ZONE_TEMPLATES.map(z => {
+      const x = Math.floor(z.bounds.x * scaleX);
+      const y = Math.floor(z.bounds.y * scaleY);
+      const width = Math.max(3, Math.floor(z.bounds.width * scaleX));
+      const height = Math.max(3, Math.floor(z.bounds.height * scaleY));
+      return {
+        ...z,
+        bounds: {
+          x,
+          y,
+          width: Math.min(width, gridSize.width - x),
+          height: Math.min(height, gridSize.height - y)
+        }
+      };
+    });
 
-    // Step 2: The Center Notable Feature
-    const notableRoll = rng.d6();
-    const notableFeatureType = themeGenerator.notableFeatures[notableRoll - 1];
-    const notableGen = featureGenerators[notableFeatureType];
-    if (notableGen) {
-        terrain.push(...notableGen(centerRect, terrain, rng));
+    // Place features per zone
+    for (const zone of zones) {
+      placeZoneFeatures(zone, themeGenerator, terrain, rng);
     }
 
-    // Step 3 & 4: Quarters and Scatter
-    for (const quarter of quarters) {
-        // Regular Features
-        const featuresToPlace = [rng.d6(), rng.d6(), rng.d6(), rng.d6()].map(roll => themeGenerator.regularFeatures[roll - 1]);
+    // Place tactical anchors (Task 5 will implement this call)
+    // placeTacticalAnchors(zones, terrain, rng);
 
-        const sectorW = Math.floor(quarter.width / 2);
-        const sectorH = Math.floor(quarter.height / 2);
-        const sectors = [
-            { x: quarter.x, y: quarter.y, width: sectorW, height: sectorH },
-            { x: quarter.x + sectorW, y: quarter.y, width: quarter.width - sectorW, height: sectorH },
-            { x: quarter.x, y: quarter.y + sectorH, width: sectorW, height: quarter.height - sectorH },
-            { x: quarter.x + sectorW, y: quarter.y + sectorH, width: quarter.width - sectorW, height: quarter.height - sectorH },
-        ];
+    // Validate and repair connectivity (Task 4 will implement this)
+    // validateAndRepairConnectivity(terrain, zones, gridSize, rng);
 
-        featuresToPlace.forEach((featureType, i) => {
-            const generator = featureGenerators[featureType];
-            if(generator) {
-                // Place feature somewhere in the quarter, trying to put it in its sector
-                const newPieces = generator(sectors[i], terrain, rng);
-                terrain.push(...newPieces);
-            }
-        });
-
-        // Scatter
-        const scatterCount = rng.d6();
-        for (let i = 0; i < scatterCount; i++) {
-            const scatterPieces = featureGenerators.scatter(quarter, terrain, rng);
-            terrain.push(...scatterPieces);
-        }
+    // Place scatter in remaining free areas (global)
+    const globalRect = { x: 0, y: 0, width: gridSize.width, height: gridSize.height };
+    const globalScatterCount = rng.d6() + 2;
+    for (let i = 0; i < globalScatterCount; i++) {
+      const pieces = featureGenerators.scatter(globalRect, terrain, rng);
+      terrain.push(...pieces);
     }
 
     // Add Crystals for world trait
@@ -478,4 +539,4 @@ export const generateTerrain = (
     }
 
     return { terrain, rng: rng.getState() };
-}
+};
