@@ -82,8 +82,7 @@ export const ModularTerrainMesh = ({
     const box = new THREE.Box3().setFromObject(meshGroup);
     const size = new THREE.Vector3();
     box.getSize(size);
-    const min = new THREE.Vector3();
-    box.getMin(min);
+    const min = box.min;
 
     if (size.x === 0 || size.y === 0 || size.z === 0) {
       return { scale: [1, 1, 1] as const, yOffset: 0 };
