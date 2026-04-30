@@ -1,5 +1,5 @@
 import type { Battle, BattlePhase, GridSize, TerrainTheme } from '@/types/battle';
-import type { WorldTrait } from '@/types/campaign';
+import type { WorldTrait, MissionType } from '@/types/campaign';
 import type { RngState } from '../rng/rng';
 import type { Position } from '@/types/character';
 import type { JsonValue } from '../types';
@@ -45,7 +45,7 @@ export type BattleAction =
     | { type: 'USE_CONSUMABLE'; participantId: string; consumableId: string }
     | { type: 'THROW_GRENADE'; attackerId: string; targetPos: Position; weapon: { id: string; range: number; damage: number; radius: number } }
     | { type: 'PROCESS_AI_TURN'; participantId: string }
-    | { type: 'GENERATE_TERRAIN'; theme: TerrainTheme; gridSize: GridSize; worldTraits?: WorldTrait[] }
+    | { type: 'GENERATE_TERRAIN'; theme: TerrainTheme; gridSize: GridSize; worldTraits?: WorldTrait[]; missionType?: MissionType }
     | { type: 'JUMP_DOWN'; participantId: string; to: Position };
 
 /**
