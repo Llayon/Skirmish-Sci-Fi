@@ -1,16 +1,24 @@
-export * from './items';
-export * from './character';
-export * from './campaign';
-export * from './battle';
-export * from './battle3d';
-export * from './multiplayer';
+export * from "./items";
+export * from "./character";
+export * from "./campaign";
+export * from "./battle";
+export * from "./battle3d";
+export * from "./multiplayer";
 
-import type { FeatureType } from './battle';
-import type { Position } from './character';
+import type { FeatureType } from "./battle";
+import type { Position } from "./character";
 
-export type TacticalAnchorType = 'sniper_nest' | 'objective_point' | 'choke_anchor' | 'danger_zone';
+export type TacticalAnchorType =
+  | "sniper_nest"
+  | "objective_point"
+  | "choke_anchor"
+  | "danger_zone";
 
-export type InteractiveTerrainType = 'door' | 'explosive_barrel' | 'hackable_turret' | 'lockable_door';
+export type InteractiveTerrainType =
+  | "door"
+  | "explosive_barrel"
+  | "hackable_turret"
+  | "lockable_door";
 
 export interface TacticalZoneSpec {
   id: string;

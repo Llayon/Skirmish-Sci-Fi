@@ -1,6 +1,11 @@
-import type { GridSize, Position, ParticipantStatus } from './battle';
+import type { GridSize, Position, ParticipantStatus } from "./battle";
 
-export type Terrain3DType = 'Wall' | 'Barrel' | 'Container' | 'Obstacle' | 'Floor';
+export type Terrain3DType =
+  | "Wall"
+  | "Barrel"
+  | "Container"
+  | "Obstacle"
+  | "Floor";
 
 export interface Terrain3D {
   id: string;
@@ -29,7 +34,7 @@ export interface UnitVitality3D {
 
 export interface Unit3D {
   id: string;
-  type: 'character' | 'enemy';
+  type: "character" | "enemy";
   position: Position;
   status: ParticipantStatus;
   stunTokens: number;

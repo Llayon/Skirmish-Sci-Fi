@@ -1,5 +1,4 @@
-
-import type { CharacterWeapon } from './items';
+import type { CharacterWeapon } from "./items";
 
 export interface CharacterStats {
   reactions: number;
@@ -15,12 +14,12 @@ export interface Position {
   y: number;
 }
 
-export type ParticipantStatus = 'active' | 'stunned' | 'casualty' | 'dazed';
+export type ParticipantStatus = "active" | "stunned" | "casualty" | "dazed";
 
 export interface ActiveEffect {
   sourceId: string;
-  sourceName: string; 
-  duration: number; 
+  sourceName: string;
+  duration: number;
   statModifiers?: Partial<CharacterStats>;
   fleeFrom?: Position;
   fleeDistance?: number;
@@ -30,31 +29,57 @@ export interface ActiveEffect {
 }
 
 export interface Injury {
-    id: string;
-    effect: string; 
-    recoveryTurns: number; 
+  id: string;
+  effect: string;
+  recoveryTurns: number;
 }
 
 export interface InjuryResultData {
-    id: string;
-    descriptionKey: string;
-    recoveryTurns?: '1d3' | '1d6' | '1d3+1' | number;
-    isDead?: boolean;
-    equipmentEffect?: 'damaged' | 'lost';
-    // Allow surgeryCost to be a number after the dice roll is resolved.
-    surgeryCost?: '1d6' | number;
-    xpGain?: number;
+  id: string;
+  descriptionKey: string;
+  recoveryTurns?: "1d3" | "1d6" | "1d3+1" | number;
+  isDead?: boolean;
+  equipmentEffect?: "damaged" | "lost";
+  // Allow surgeryCost to be a number after the dice roll is resolved.
+  surgeryCost?: "1d6" | number;
+  xpGain?: number;
 }
 
 export type StatUpgrade = {
-    stat: keyof CharacterStats;
-    cost: number;
+  stat: keyof CharacterStats;
+  cost: number;
 };
 
-export type TaskType = 'idle' | 'explore' | 'trade' | 'train' | 'heal' | 'find_patron' | 'recruit' | 'track_rival' | 'repair' | 'decoy_rival';
+export type TaskType =
+  | "idle"
+  | "explore"
+  | "trade"
+  | "train"
+  | "heal"
+  | "find_patron"
+  | "recruit"
+  | "track_rival"
+  | "repair"
+  | "decoy_rival";
 
-export type RaceId = 'baseline_human' | 'bot' | 'engineer' | 'kerin' | 'soulless' | 'precursor' | 'swift' | 'feral';
-export type SpecialAbility = 'kerin_brawl' | 'precursor_event' | 'swift_fly' | 'swift_volley' | 'feral_initiative' | 'feral_reaction_fumble' | 'kerin_must_brawl' | 'hulker_rules';
+export type RaceId =
+  | "baseline_human"
+  | "bot"
+  | "engineer"
+  | "kerin"
+  | "soulless"
+  | "precursor"
+  | "swift"
+  | "feral";
+export type SpecialAbility =
+  | "kerin_brawl"
+  | "precursor_event"
+  | "swift_fly"
+  | "swift_volley"
+  | "feral_initiative"
+  | "feral_reaction_fumble"
+  | "kerin_must_brawl"
+  | "hulker_rules";
 
 export interface Motivation {
   id: string;
@@ -70,7 +95,14 @@ export interface Class {
   starting_rolls: string[];
 }
 
-export type AdvancedTrainingId = 'pilot' | 'mechanic' | 'medical' | 'merchant' | 'security' | 'broker' | 'bot_technician';
+export type AdvancedTrainingId =
+  | "pilot"
+  | "mechanic"
+  | "medical"
+  | "merchant"
+  | "security"
+  | "broker"
+  | "bot_technician";
 
 export interface AdvancedTrainingCourse {
   id: AdvancedTrainingId;
@@ -80,7 +112,7 @@ export interface AdvancedTrainingCourse {
 }
 
 export interface Character {
-  id:string;
+  id: string;
   isLeader?: boolean;
   name: string;
   pronouns: string;
@@ -93,11 +125,11 @@ export interface Character {
   upgradesAvailable?: number;
   consumables: string[];
   weapons: CharacterWeapon[];
-  armor?: string; 
-  screen?: string; 
+  armor?: string;
+  screen?: string;
   implants: string[];
   utilityDevices: string[];
-  side: 'player' | 'enemy' | 'neutral';
+  side: "player" | "enemy" | "neutral";
   backstory: string;
   injuries: Injury[];
   task: TaskType;
@@ -107,7 +139,11 @@ export interface Character {
   justRecovered?: boolean;
   geneticKitDiscount?: boolean;
   nanoDocProtection?: boolean;
-  damagedEquipment?: { instanceId: string, type: 'weapon' | 'armor' | 'screen', weaponId?: string }[];
+  damagedEquipment?: {
+    instanceId: string;
+    type: "weapon" | "armor" | "screen";
+    weaponId?: string;
+  }[];
   advancedTraining?: AdvancedTrainingId | null;
   portraitUrl?: string;
   upgradedStats?: (keyof CharacterStats)[];
@@ -128,7 +164,7 @@ export interface Character {
   activeEffects: ActiveEffect[];
   consumablesUsedThisTurn: number;
   deflectorFieldUsedThisBattle?: boolean;
-  inoperableWeapons?: string[]; 
+  inoperableWeapons?: string[];
   utilityDevicesUsed?: string[];
   lastTargetId?: string;
   knockedOut?: boolean;
@@ -172,7 +208,14 @@ export interface CrewType {
   stats: Partial<CharacterStats>;
 }
 
-export type AIType = 'Aggressive' | 'Tactical' | 'Cautious' | 'Rampaging' | 'Defensive' | 'Beast' | 'Guardian';
+export type AIType =
+  | "Aggressive"
+  | "Tactical"
+  | "Cautious"
+  | "Rampaging"
+  | "Defensive"
+  | "Beast"
+  | "Guardian";
 
 export interface EnemyTemplate {
   id: string;
@@ -188,21 +231,21 @@ export interface EnemyTemplate {
 
 export interface Enemy {
   id: string;
-  name: string; 
+  name: string;
   raceId?: RaceId;
   classId?: string;
   stats: CharacterStats;
   ai: AIType;
-  weapons: CharacterWeapon[]; 
-  armor?: string; 
+  weapons: CharacterWeapon[];
+  armor?: string;
   screen?: string;
-  portraitUrl?: string; 
+  portraitUrl?: string;
   panicRange?: [number, number];
   isFearless?: boolean;
   isSpecialist?: boolean;
   isLieutenant?: boolean;
   isUnique?: boolean;
-  side: 'player' | 'enemy' | 'neutral';
+  side: "player" | "enemy" | "neutral";
   // Battle-specific fields
   position: Position;
   status: ParticipantStatus;
@@ -220,8 +263,8 @@ export interface Enemy {
   consumablesUsedThisTurn: number;
   consumables: string[];
   deflectorFieldUsedThisBattle?: boolean;
-  guardedBy?: string; 
-  inoperableWeapons?: string[]; 
+  guardedBy?: string;
+  inoperableWeapons?: string[];
   utilityDevices: string[];
   utilityDevicesUsed?: string[];
   lastTargetId?: string;
@@ -229,4 +272,6 @@ export interface Enemy {
   hasFiredThisRound?: boolean;
 }
 
-export type BattleParticipant = ({ type: 'character' } & Character) | ({ type: 'enemy' } & Enemy);
+export type BattleParticipant =
+  | ({ type: "character" } & Character)
+  | ({ type: "enemy" } & Enemy);
