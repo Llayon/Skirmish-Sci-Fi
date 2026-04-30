@@ -751,6 +751,24 @@ const MISSION_OVERRIDES: Record<string, ZoneOverrides> = {
       maxCoverCells: 20,
     },
   },
+  Protect: {
+    player_edge: {
+      minCoverCells: 15,
+      maxCoverCells: 25,
+    },
+    central_arena: {
+      minCoverCells: 30,
+      maxCoverCells: 50,
+    },
+    north_flank: {
+      minCoverCells: 10,
+      maxCoverCells: 20,
+    },
+    south_flank: {
+      minCoverCells: 10,
+      maxCoverCells: 20,
+    },
+  },
 };
 
 function applyMissionOverrides(
@@ -1221,6 +1239,20 @@ function placeTacticalAnchors(
       }
       return pieces;
     },
+    evacuation_point: (zone, existing, rng) => {
+      const size = { width: 4, height: 4 };
+      const pos = findFreeSpot(zone.bounds, size, existing, rng);
+      if (!pos) return [];
+      return [
+        createTerrain(rng, "Evacuation Point", "Area", pos, size, {
+          providesCover: true,
+          blocksLineOfSight: false,
+          isImpassable: false,
+          baseElevation: 1,
+          objectHeight: 0,
+        }),
+      ];
+    },
   };
 
   // Place at least 1 anchor in central
@@ -1244,6 +1276,22 @@ function placeTacticalAnchors(
         position: pieces[0].position,
         zoneId: centralZone.id,
       });
+    }
+  }
+
+  // Place evacuation point on player_edge for Protect
+  if (missionType === "Protect") {
+    const playerZone = zones.find((z) => z.id === "player_edge");
+    if (playerZone) {
+      const pieces = anchorGenerators["evacuation_point"](playerZone, terrain, rng);
+      if (pieces.length > 0) {
+        terrain.push(...pieces);
+        anchors.push({
+          type: "evacuation_point",
+          position: pieces[0].position,
+          zoneId: playerZone.id,
+        });
+      }
     }
   }
 
