@@ -21,7 +21,8 @@ export const ThreeCanvas = ({ gridSize, children }: ThreeCanvasProps) => {
       <color attach="background" args={['#0b1220']} />
       <ambientLight intensity={1.2} />
       <hemisphereLight intensity={0.8} groundColor="#0b0f1a" />
-      <directionalLight position={[30, 60, 30]} intensity={1.4} castShadow />
+      <directionalLight position={[30, 60, 30]} intensity={2.0} castShadow />
+      <pointLight position={[0, 20, 0]} intensity={0.8} distance={60} />
       <Environment preset="city" />
       <OrbitControls
         makeDefault

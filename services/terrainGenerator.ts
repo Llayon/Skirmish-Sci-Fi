@@ -555,6 +555,8 @@ const featureGenerators: Record<FeatureType, FeatureGenerator> = (() => {
           blocksLineOfSight: true,
           isImpassable: false,
           objectHeight: 1,
+          modelPath: "/assets/modular-scifi/WallBand_Straight_Broken.gltf",
+          modelRef: "Barricade",
         }),
       ];
     },

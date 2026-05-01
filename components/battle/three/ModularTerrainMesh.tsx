@@ -10,6 +10,20 @@ interface ModularTerrainMeshProps {
   gridSize: GridSize;
 }
 
+/**
+ * Per-model scale multipliers. The auto-scale logic fits the mesh bbox into
+ * the terrain footprint; these values multiply that result so individual
+ * assets can be tuned to look good on the grid.
+ */
+const MODEL_SCALE_MULTIPLIERS: Record<string, number> = {
+  "/assets/modular-scifi/Prop_Barrel_Large.gltf": 1.5,
+  "/assets/modular-scifi/Prop_Crate3.gltf": 1.2,
+  "/assets/modular-scifi/Prop_Crate4.gltf": 1.2,
+  "/assets/modular-scifi/Column_Large_Straight.gltf": 1.0,
+  "/assets/modular-scifi/Column_Simple.gltf": 1.0,
+  "/assets/modular-scifi/Platform_Round1.gltf": 1.0,
+};
+
 function findFirstMesh(node: THREE.Object3D): THREE.Mesh | null {
   if (node.type === "Mesh") {
     return node as THREE.Mesh;
@@ -94,10 +108,11 @@ export const ModularTerrainMesh = ({
     // model does not collapse to a line. For vertical props scale to height.
     const targetH = terrain.height > 0.1 ? terrain.height : size.y;
 
+    const multiplier = modelPath ? (MODEL_SCALE_MULTIPLIERS[modelPath] ?? 1.0) : 1.0;
     const s: [number, number, number] = [
-      targetW / size.x,
-      targetH / size.y,
-      targetD / size.z,
+      (targetW / size.x) * multiplier,
+      (targetH / size.y) * multiplier,
+      (targetD / size.z) * multiplier,
     ];
 
     // Shift the model down so its bounding-box bottom sits at local y=0.
