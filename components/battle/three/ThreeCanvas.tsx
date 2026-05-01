@@ -1,6 +1,6 @@
 import { useMemo, type ReactNode } from 'react';
 import { Canvas } from '@react-three/fiber';
-import { OrbitControls } from '@react-three/drei';
+import { OrbitControls, Environment } from '@react-three/drei';
 import { TILE_SIZE } from '@/constants/three';
 import type { GridSize } from '@/types/battle';
 
@@ -19,9 +19,10 @@ export const ThreeCanvas = ({ gridSize, children }: ThreeCanvasProps) => {
   return (
     <Canvas className="w-full h-full" camera={{ position: cameraPosition, fov: 50, near: 0.1, far: 4000 }}>
       <color attach="background" args={['#0b1220']} />
-      <ambientLight intensity={0.9} />
-      <hemisphereLight intensity={0.6} groundColor="#0b0f1a" />
+      <ambientLight intensity={1.2} />
+      <hemisphereLight intensity={0.8} groundColor="#0b0f1a" />
       <directionalLight position={[30, 60, 30]} intensity={1.4} castShadow />
+      <Environment preset="city" />
       <OrbitControls
         makeDefault
         enableRotate
